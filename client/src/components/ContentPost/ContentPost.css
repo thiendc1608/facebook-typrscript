@@ -1,0 +1,7 @@
+input::-webkit-input-placeholder {
+    font-size: 20px;
+}
+
+.place-holder-center::placeholder {
+    color: #F6B3C5;
+}
