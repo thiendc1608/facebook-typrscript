@@ -7,8 +7,8 @@ export const userAPI = {
         return axiosClient.get(url, {params: userId})
     },
 
-    getAllUser: (userId: string): Promise<CustomResponse & {allUser: UserType[], allMadeFriend: UserType[]}> => {
-        const url:string = `user/all-user/${userId}`
+    getOtherUsers: (userId: string): Promise<CustomResponse & {allUser: UserType[], allMadeFriend: UserType[]}> => {
+        const url:string = `user/other-users/${userId}`
         return axiosClient.get(url)
     },
 
@@ -21,4 +21,10 @@ export const userAPI = {
         const url:string = `user/confirm-friend/${userId}`
         return axiosClient.post(url, data)
     },
+
+    getAllUsers: (): Promise<CustomResponse & {userList: UserType[]}> => {
+        const url:string = "user/all-users"
+        return axiosClient.get(url)
+    },
+
 }

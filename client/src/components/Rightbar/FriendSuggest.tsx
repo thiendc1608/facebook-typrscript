@@ -51,6 +51,11 @@ FriendSuggestProps) => {
         prevRequests.filter((request) => request === data.sender)
       );
     });
+    return () => {
+      socket.off("get_friend_request");
+      socket.off("friendRequestConfirmed");
+      socket.off("friendRequestCancelled");
+    };
   }, [setFriendSuggestList, socket]);
 
   const handleAddOrRemoveFriend = async (friend: UserType) => {

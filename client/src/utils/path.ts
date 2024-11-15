@@ -26,7 +26,7 @@ export const path = {
     GAMING_PLAY: "gaming/play",
     FACEBOOK_PAY: "facebook_pay",
     ADS_ACTIVITY: "ads/activity",
-    MESSENGER: "messenger/t",
+    MESSENGER: "messenger/t/:userId",
     REELS: "reels",
     STORIES: "stories/create",
     STORIES_ID: "stories/:id",

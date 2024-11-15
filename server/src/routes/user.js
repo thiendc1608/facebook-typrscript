@@ -4,7 +4,8 @@ import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/all-user/:userId", userController.getAllUser);
+router.get("/other-users/:userId", userController.getOtherUsers);
+router.get("/all-users", userController.getAllUsers);
 // router.get("/current-user", verifyToken, userController.getCurrentUser);
 // router.post(
 //   "/add-remove-friend",

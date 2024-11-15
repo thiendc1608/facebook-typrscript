@@ -12,7 +12,8 @@ import {
   setNotifications,
 } from "@/redux/notificationSlice";
 import ShowNotification from "@/components/Header/Notification/ShowNotification";
-import ShowMessage from "@/components/Header/Notification/ShowMessage";
+import ShowMessage from "@/components/Header/Messenger/ShowMessage";
+import ShowChatting from "@/components/Header/Messenger/ShowChatting";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -20,7 +21,7 @@ const Home = () => {
     (state: { user: UserState }) => state.user
   );
   const socket = useContext(SocketContext);
-  const { isOpenNotifications, isOpenMessage } = useSelector(
+  const { isOpenNotifications, isOpenMessage, isOpenChatting } = useSelector(
     (state: { notification: notificationState }) => state.notification
   );
 
@@ -43,6 +44,10 @@ const Home = () => {
         })
       );
     });
+    return () => {
+      socket.off("get_friend_request");
+      socket.off("friendRequestConfirmed");
+    };
   }, [socket]);
 
   useEffect(() => {
@@ -69,7 +74,8 @@ const Home = () => {
       <div className="flex-1 fixed top-[56px] right-0 w-[360px]">
         <Rightbar />
         {isOpenNotifications && <ShowNotification socket={socket} />}
-        {isOpenMessage && <ShowMessage socket={socket} />}
+        {isOpenMessage && <ShowMessage />}
+        {isOpenChatting && <ShowChatting />}
       </div>
     </div>
   );

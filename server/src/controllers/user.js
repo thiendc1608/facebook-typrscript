@@ -25,7 +25,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
   });
 });
 
-const getAllUser = asyncHandler(async (req, res) => {
+const getOtherUsers = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
   const allMadeFriend = await db.Friend.findAll({
@@ -36,17 +36,17 @@ const getAllUser = asyncHandler(async (req, res) => {
       status_id: 2,
     },
   });
-  const allUser = await db.User.findAll({
+  const otherUsers = await db.User.findAll({
     where: {
       id: { [Sequelize.Op.ne]: userId },
     },
     raw: true,
   });
 
-  const allUserNotFriend = allUser.filter(
+  const allUserNotFriend = otherUsers.filter(
     (user) => !allMadeFriend.some((id) => id.friends.id === user.id)
   );
-  if (!allUser) {
+  if (!otherUsers) {
     return res.status(404).json({
       success: false,
       message: "Not found any other user",
@@ -123,4 +123,27 @@ const confirmFriendRequest = asyncHandler(async (req, res) => {
   });
 });
 
-export { getCurrentUser, getAllUser, addAndRemoveFriend, confirmFriendRequest };
+const getAllUsers = asyncHandler(async (req, res) => {
+  const userList = await db.User.findAll({
+    raw: true,
+  });
+  if (!userList) {
+    return res.status(404).json({
+      success: false,
+      message: "Users not found",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Get all users successfully",
+    userList,
+  });
+});
+
+export {
+  getCurrentUser,
+  getOtherUsers,
+  addAndRemoveFriend,
+  confirmFriendRequest,
+  getAllUsers,
+};

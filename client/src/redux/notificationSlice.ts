@@ -4,6 +4,7 @@ import { createSlice } from "@reduxjs/toolkit";
 export interface notificationState {
     isOpenNotifications: boolean
     isOpenMessage: boolean
+    isOpenChatting: boolean
     notifications: NotificationType[]
 }
 
@@ -12,6 +13,7 @@ const notificationSlice = createSlice({
   initialState: {
     isOpenNotifications: false,
     isOpenMessage: false,
+    isOpenChatting: false,
     notifications: []
   } as notificationState,
   reducers: {
@@ -20,6 +22,9 @@ const notificationSlice = createSlice({
     },
     setIsOpenMessage: (state, action) => {
       state.isOpenMessage = action.payload
+    },
+    setIsOpenChatting: (state, action) => {
+      state.isOpenChatting = action.payload
     },
     setNotifications: (state, action) => {
       const updatedItem = action.payload;
@@ -38,6 +43,6 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { setIsOpenNotifications, setNotifications, setIsOpenMessage } = notificationSlice.actions;
+export const { setIsOpenNotifications, setNotifications, setIsOpenMessage, setIsOpenChatting } = notificationSlice.actions;
 const notificationReducer = notificationSlice.reducer;
 export default notificationReducer;
