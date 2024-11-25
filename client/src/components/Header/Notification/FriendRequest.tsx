@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 interface FriendRequestProps {
-  socket: Socket;
+  socket: Socket | null;
 }
 const FriendRequest = ({ socket }: FriendRequestProps) => {
   const dispatch = useDispatch();
@@ -34,7 +34,7 @@ const FriendRequest = ({ socket }: FriendRequestProps) => {
       currentUser!.id
     );
     if (response.success) {
-      socket.emit("confirm_friend_request", {
+      socket?.emit("confirm_friend_request", {
         receiver: friend,
         sender: currentUser,
       });

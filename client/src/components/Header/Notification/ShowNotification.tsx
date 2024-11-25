@@ -4,7 +4,7 @@ import { BsThreeDots } from "react-icons/bs";
 import { Socket } from "socket.io-client";
 
 interface ShowNotificationProps {
-  socket: Socket;
+  socket: Socket | null;
 }
 const ShowNotification = ({ socket }: ShowNotificationProps) => {
   return (

@@ -24,6 +24,8 @@ export default {
         forgetPw: "2px 2px 2px 1px rgba(0, 0, 0, 0.2)",
         bgContent: "inset 0 0 0 2px #fff, 0 0 5px 0 rgba(0, 0, 0, .2)",
         stories: "0 1px 4px rgba(0, 0, 0, 0.1)",
+        optionConversation:
+          "0 12px 28px 0 rgba(0, 0, 0, .2), 0 2px 4px 0 rgba(0, 0, 0, .1)",
       },
       backgroundSize: {
         100: "100%",

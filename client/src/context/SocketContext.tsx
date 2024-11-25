@@ -1,36 +1,35 @@
-// SocketContext.js
-import { createContext, useState, useEffect, useMemo } from "react";
+// SocketContext.tsx
+import React, { createContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-type SocketProviderProps = {
-  children: React.ReactNode;
-};
+// Định nghĩa kiểu dữ liệu cho context
+interface SocketContextType {
+  socket: Socket | null; // Kiểu 'Socket' từ 'socket.io-client'
+}
 
-// URL của server WebSocket
-const SOCKET_URL = "http://localhost:5000";
+export const SocketContext = createContext<SocketContextType>({ socket: null });
 
-// Tạo context
-export const SocketContext = createContext<Socket>({} as Socket);
+const SOCKET_SERVER_URL = "http://localhost:8000"; // Địa chỉ server Socket của bạn
 
-// Socket Provider: Cung cấp kết nối WebSocket cho ứng dụng
-export const SocketProvider = ({ children }: SocketProviderProps) => {
-  const [socket, setSocket] = useState<Socket>();
+// Tạo SocketProvider để cung cấp socket cho các component con
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    // Tạo kết nối WebSocket khi component được mount
-    const socketIo = io(SOCKET_URL);
-    setSocket(socketIo);
+    // Tạo kết nối Socket khi component mount
+    const newSocket = io(SOCKET_SERVER_URL);
+    setSocket(newSocket);
 
     // Cleanup khi component unmount
     return () => {
-      socketIo.disconnect();
+      newSocket.close();
     };
   }, []);
 
-  const socketValue = useMemo(() => socket ?? io(SOCKET_URL), [socket]);
-
   return (
-    <SocketContext.Provider value={socketValue}>
+    <SocketContext.Provider value={{ socket }}>
       {children}
     </SocketContext.Provider>
   );

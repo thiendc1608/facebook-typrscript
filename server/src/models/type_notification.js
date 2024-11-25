@@ -13,13 +13,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   TypeNotification.init(
     {
-      name: DataTypes.ENUM(
-        "like",
-        "comment",
-        "message",
-        "tag",
-        "friend_request"
-      ),
+      name: DataTypes.ENUM("like", "comment", "message", "friend_request"),
     },
     {
       sequelize,

@@ -1,0 +1,32 @@
+div[contentEditable="true"]:empty::before {
+  content: "Aa";  /* Nội dung của placeholder */
+  color: #aaa;  /* Màu sắc placeholder */
+  pointer-events: none;  /* Ngăn không cho chuột tương tác với placeholder */
+  visibility: visible;
+}
+
+
+/* Khi người dùng bắt đầu nhập, placeholder biến mất */
+.editable-div:not(:empty)::before {
+  visibility: hidden;
+}
+
+/* width */
+.custom-scroll-bar::-webkit-scrollbar {
+  width: 1px;
+}
+
+/* Track */
+.custom-scroll-bar::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+.custom-scroll-bar::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+.custom-scroll-bar::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}

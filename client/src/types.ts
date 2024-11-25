@@ -18,23 +18,23 @@ export type FormData = {
 };
 
 export type UserType = {
-  id:string;
+  id: string;
   lastName: string;
   firstName: string;
   gender: UserGender;
   email: string;
   password: string;
-  role: "admin" | "user",
-  phone: number,
-  address: string,
-  avatar: string,
-  cover_picture: string,
-  status_id: number,
-  describe_yourself: string,
-  relationship_id: number,
-  date_of_birth: string,
-  lastActive: string,
-}
+  role: "admin" | "user";
+  phone: number;
+  address: string;
+  avatar: string;
+  cover_picture: string;
+  status_id: number;
+  describe_yourself: string;
+  relationship_id: number;
+  date_of_birth: string;
+  lastActive: string;
+};
 
 export type ChangePasswordType = {
   email?: string;
@@ -61,7 +61,7 @@ export const RegisterSchema = z.object({
     .string()
     .min(2, { message: "Must be 2 or more characters long" })
     .max(20, "Name is too long"),
-    gender: z.enum([UserGender.Male, UserGender.Female]),
+  gender: z.enum([UserGender.Male, UserGender.Female]),
   email: z.string().regex(emailRegex, {
     message: "Invalid email format",
   }),
@@ -127,17 +127,12 @@ export interface emojiType {
   subGroup: string;
 }
 
-export interface showEmojiType {
-  emojiList: emojiType[];
-  isShowEmoji: boolean;
-}
-
 export interface postType {
   textPost: string;
   isTagName: boolean;
   isCheckIn: number;
   isChooseGIF: boolean;
-  locationTag: dataProvinceType,
+  locationTag: dataProvinceType;
   locationList: dataProvinceType[];
 }
 
@@ -159,39 +154,79 @@ export interface ProvinceType {
 }
 
 export interface dataFontType {
-  id: number,
-  name: string,
+  id: number;
+  name: string;
   font: string;
 }
 
 export interface reelType {
-  isCreateText: boolean,
+  isCreateText: boolean;
   selectBg: {
-    id: number,
-    srcImg: string,
-  },
-  changeFont: dataFontType,
-  typeTextReel: string,
+    id: number;
+    srcImg: string;
+  };
+  changeFont: dataFontType;
+  typeTextReel: string;
 }
 
 export interface storyDataType {
-  id: string,
-  user_id: string,
-  video_url?: string,
-  thumbnail_url?: string,
-  caption?: string,
-  mode_privacy: string,
-  user?: UserType,
-  createdAt?: Date,
-  updatedAt?: Date,
+  id: string;
+  user_id: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  caption?: string;
+  mode_privacy: string;
+  user?: UserType;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface userListStoryType {
-  [user_id: string]: storyDataType[]
+  [user_id: string]: storyDataType[];
 }
 
 export interface NotificationType {
   user: UserType;
   timeSend: number;
   message: string;
+}
+
+export interface conversationType {
+  id: string;
+  user_id: string;
+  conversation_name: string;
+  type_conversation: string;
+  group_image: string;
+  pinned?: boolean;
+  unread?: number;
+  time?: Date;
+}
+
+export interface participantsType {
+  conversation_id: string;
+  user_id: string;
+  joined_at: Date;
+}
+
+export interface messageType {
+  id: string;
+  conversation_id: string;
+  type_msg: string;
+  sub_type: string;
+  user_id?: string;
+  message?: string;
+  image_url?: string[];
+  file_url?: string | null;
+  audio_record_url?: string | null;
+  send_at: Date;
+}
+
+export interface imageCloudinaryType {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  path: string;
+  size: number;
+  filename: string;
 }

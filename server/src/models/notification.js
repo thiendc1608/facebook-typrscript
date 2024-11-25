@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       type_id: DataTypes.INTEGER,
       source_id: DataTypes.STRING,
       message: DataTypes.TEXT("long"),
-      id_read: DataTypes.ENUM("read", "not read"),
+      is_read: DataTypes.BOOLEAN,
     },
     {
       sequelize,

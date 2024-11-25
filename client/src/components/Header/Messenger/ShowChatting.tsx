@@ -1,29 +1,38 @@
 import { IoIosArrowDown } from "react-icons/io";
 import { GoDash } from "react-icons/go";
 import { IoCloseOutline } from "react-icons/io5";
-import { CiImageOn } from "react-icons/ci";
-import { BsEmojiSmile } from "react-icons/bs";
-import { BiSolidLike } from "react-icons/bi";
 import { useDispatch } from "react-redux";
 import { setIsOpenChatting } from "@/redux/notificationSlice";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+// import { SocketContext } from "@/context/SocketContext";
+import { cn } from "@/lib/utils";
+import "./Messenger.css";
+import SendMessage from "./SendMessage";
 
 const ShowChatting = () => {
+  // const socket = useContext(SocketContext);
   const dispatch = useDispatch();
   const [changeColor, setChangeColor] = useState<string>("#0866ff");
+  const [selectImageList, setSelectedImageList] = useState<File[]>([]);
+  const divRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const inputParentElement = document.getElementById("inputChatParent");
     const inputElement = document.getElementById("inputChat");
+    if (divRef.current) {
+      divRef.current.focus();
+      inputElement?.focus();
+    }
     document.addEventListener("click", (event) => {
+      event.stopPropagation();
       // Kiểm tra nếu người dùng click ra ngoài inputElement
       if (
-        event.target !== inputParentElement &&
-        !inputParentElement?.contains(event.target as Node)
+        event.target !== divRef.current &&
+        !divRef.current?.contains(event.target as Node)
       ) {
         inputElement?.blur(); // Mất focus
         setChangeColor("#b6b9be");
-        console.log("Input lost focus");
       } else {
         inputElement?.focus(); // focus
         setChangeColor("#0866ff");
@@ -31,11 +40,47 @@ const ShowChatting = () => {
     });
   }, []);
 
+  useEffect(() => {
+    if (contentRef.current)
+      if (selectImageList.length === 0) {
+        if (inputRef.current!.clientHeight === 36) {
+          contentRef.current.style.height = `${
+            347 + 36 - inputRef.current!.clientHeight
+          }px`;
+        } else {
+          const match = contentRef.current.style.height.match(/\d+/);
+          if (match) {
+            contentRef.current.style.height = `${Number(match[0]) - 16}px`;
+          }
+        }
+      } else {
+        if (inputRef.current!.clientHeight === 36) {
+          contentRef.current.style.height = `${
+            347 - 72 + 36 - inputRef.current!.clientHeight
+          }px`;
+        } else {
+          const match = contentRef.current.style.height.match(/\d+/);
+          if (match) {
+            contentRef.current.style.height = `${Number(match[0]) - 20}px`;
+            contentRef.current.style.maxHeight =
+              contentRef.current.style.height;
+          }
+        }
+      }
+  }, [selectImageList, inputRef.current?.clientHeight]);
+
+  useEffect(() => {
+    inputRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, []);
+
   return (
     <div className="fixed bottom-0 right-[80px]">
       <div
         className="w-[328px] h-[455px] bg-white rounded-lg shadow-default"
-        id="inputChatParent"
+        tabIndex={0}
+        ref={divRef}
       >
         <div className="p-2 h-[48px] shadow-default">
           <div className="flex items-center justify-between">
@@ -60,13 +105,22 @@ const ShowChatting = () => {
                 size={24}
                 color={changeColor}
                 className="cursor-pointer"
-                onClick={() => dispatch(setIsOpenChatting(false))}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  dispatch(setIsOpenChatting(false));
+                }}
               />
             </div>
           </div>
         </div>
-        <div>
-          <div className="w-full h-[347px] overflow-auto">
+        <div className="flex flex-col h-full">
+          <div
+            ref={contentRef}
+            className={cn(
+              "flex-1 max-h-[347px] w-full overflow-auto",
+              selectImageList.length > 0 && "max-h-[calc(347px-72px)]"
+            )}
+          >
             <div className="h-[20px]"></div>
             <div className="pt-5 px-3 pb-3">
               <div className="flex flex-col items-center justify-center gap-3">
@@ -81,38 +135,12 @@ const ShowChatting = () => {
               </div>
             </div>
           </div>
-          <div className="w-full h-[60px] shadow-bgContent flex items-center">
-            <div className="py-3 px-1 flex items-center gap-2 w-full">
-              <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
-                <label htmlFor="choose image" className="cursor-pointer">
-                  <CiImageOn
-                    size={30}
-                    title="Đính kèm file"
-                    color={changeColor}
-                  />
-                </label>
-                <input type="file" id="choose image" hidden />
-              </div>
-              <div className="w-full relative bg-[#F0F2F5] rounded-3xl overflow-hidden">
-                <input
-                  id="inputChat"
-                  type="text"
-                  placeholder="Aa"
-                  className="p-1 bg-[#F0F2F5] h-[36px] w-full outline-none pl-3 text-[17px]"
-                  autoFocus
-                />
-                <BsEmojiSmile
-                  size={20}
-                  color={changeColor}
-                  title="Chọn biểu tượng cảm xúc"
-                  className="absolute top-[50%] translate-y-[-50%] right-[10px]"
-                />
-              </div>
-              <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
-                <BiSolidLike size={30} title="Gửi like" color={changeColor} />
-              </div>
-            </div>
-          </div>
+          <SendMessage
+            setSelectedImageList={setSelectedImageList}
+            selectImageList={selectImageList}
+            changeColor={changeColor}
+            ref={inputRef}
+          />
         </div>
       </div>
     </div>

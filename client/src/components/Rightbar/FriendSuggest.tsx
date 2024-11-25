@@ -17,7 +17,7 @@ const FriendSuggest = ({
   setFriendSuggestList,
 }: // friendRequestList,
 FriendSuggestProps) => {
-  const socket = useContext(SocketContext);
+  const { socket } = useContext(SocketContext);
   const [friendRequests, setFriendRequests] = useState<UserType[]>([]);
   const currentUser = useSelector(
     (state: { user: UserState }) => state.user.currentUser
@@ -25,14 +25,14 @@ FriendSuggestProps) => {
   const [isAddFriend, setIsAddFriend] = useState(true);
 
   useEffect(() => {
-    socket.emit("add_user", currentUser);
+    socket?.emit("add_user", currentUser);
   }, [currentUser, socket]);
 
   useEffect(() => {
-    socket.on("get_friend_request", (data) => {
+    socket?.on("get_friend_request", (data) => {
       setFriendRequests((prevRequests) => [...prevRequests, data.sender]);
     });
-    socket.on("friendRequestConfirmed", (data) => {
+    socket?.on("friendRequestConfirmed", (data) => {
       setFriendRequests((prevRequests) =>
         prevRequests.filter(
           (request) =>
@@ -46,15 +46,15 @@ FriendSuggestProps) => {
         )
       );
     });
-    socket.on("friendRequestCancelled", (data) => {
+    socket?.on("friendRequestCancelled", (data) => {
       setFriendRequests((prevRequests) =>
         prevRequests.filter((request) => request === data.sender)
       );
     });
     return () => {
-      socket.off("get_friend_request");
-      socket.off("friendRequestConfirmed");
-      socket.off("friendRequestCancelled");
+      socket?.off("get_friend_request");
+      socket?.off("friendRequestConfirmed");
+      socket?.off("friendRequestCancelled");
     };
   }, [setFriendSuggestList, socket]);
 
@@ -69,12 +69,12 @@ FriendSuggestProps) => {
     if (response.success) {
       if (response.message.includes("Remove friend request")) {
         setIsAddFriend(true);
-        socket.emit("cancel_friend_request", {
+        socket?.emit("cancel_friend_request", {
           receiver: friend,
           sender: currentUser,
         });
       } else {
-        socket.emit("send_friend_request", {
+        socket?.emit("send_friend_request", {
           receiver: friend,
           sender: currentUser,
           timeSend: new Date(),
@@ -92,7 +92,7 @@ FriendSuggestProps) => {
       currentUser!.id
     );
     if (response.success) {
-      socket.emit("confirm_friend_request", {
+      socket?.emit("confirm_friend_request", {
         receiver: friend,
         sender: currentUser,
       });

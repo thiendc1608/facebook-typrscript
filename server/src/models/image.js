@@ -1,7 +1,7 @@
 "use strict";
 import { Model } from "sequelize";
 module.exports = (sequelize, DataTypes) => {
-  class Post extends Model {
+  class Image extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,20 +9,20 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Image.hasOne(models.Message, {
+        foreignKey: "image_id",
+        as: "imagesInfo",
+      });
     }
   }
-  Post.init(
+  Image.init(
     {
-      user_id: DataTypes.STRING,
-      post_content: DataTypes.TEXT("long"),
-      media_location: DataTypes.JSON(DataTypes.TEXT("long")),
-      feeling: DataTypes.STRING,
-      activity: DataTypes.STRING,
+      message_image: DataTypes.JSON(DataTypes.TEXT("long")),
     },
     {
       sequelize,
-      modelName: "Post",
+      modelName: "Image",
     }
   );
-  return Post;
+  return Image;
 };

@@ -4,7 +4,7 @@ import { IoIosArrowDown } from "react-icons/io";
 
 const InformationConservation = () => {
   return (
-    <div className="pt-4 pb-3 border-l-2 border-solid border-[#E5E5E5] h-[calc(100vh-56px)]">
+    <div className="absolute top-0 right-0 w-[33.33%] pt-4 pb-3 border-l-2 border-solid border-[#E5E5E5] h-[calc(100vh-56px)]">
       <div className="flex flex-col items-center justify-between">
         <div className="flex flex-col items-center gap-3">
           <img

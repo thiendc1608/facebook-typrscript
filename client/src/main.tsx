@@ -186,7 +186,7 @@ createRoot(document.getElementById("root")!).render(
     </SocketProvider>
     <ToastContainer
       position="top-right"
-      autoClose={1000}
+      autoClose={300}
       hideProgressBar={false}
       newestOnTop
       closeOnClick

@@ -1,14 +1,44 @@
+import { SocketContext } from "@/context/SocketContext";
 import { setIsOpenChatting, setIsOpenMessage } from "@/redux/notificationSlice";
 import { UserType } from "@/types";
+import { memo, useContext } from "react";
 import { useDispatch } from "react-redux";
+import anonymousAvatar from "@/assets/images/default_avatar.jpg";
+// import { conversationAPI } from "@/apis/conversationApi";
 
 interface ShowSearchUserProps {
   searchList: UserType[];
   query: string;
+  setIsFocusSearch: React.Dispatch<React.SetStateAction<boolean>>;
+  setQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const ShowSearchUser = ({ searchList, query }: ShowSearchUserProps) => {
+const ShowSearchUser = ({
+  searchList,
+  query,
+  setIsFocusSearch,
+  setQuery,
+}: ShowSearchUserProps) => {
+  const { socket } = useContext(SocketContext);
   const dispatch = useDispatch();
+
+  const handleOnClickUser = async (
+    e: React.MouseEvent<HTMLDivElement>,
+    user: UserType
+  ) => {
+    e.stopPropagation();
+    dispatch(setIsOpenMessage(false));
+    dispatch(setIsOpenChatting(true));
+    setIsFocusSearch(false);
+    setQuery("");
+    socket?.emit("start_conversation", {
+      user_id: user.id,
+      conversation_name: user,
+      type_conversation: "private",
+      group_image: `${anonymousAvatar}`,
+    });
+  };
+
   return (
     <>
       {searchList.length > 0 ? (
@@ -19,10 +49,7 @@ const ShowSearchUser = ({ searchList, query }: ShowSearchUserProps) => {
           >
             <div
               className="flex items-center gap-2 hover:bg-[#F2F2F2] rounded-lg cursor-pointer py-2 px-2"
-              onClick={() => {
-                dispatch(setIsOpenMessage(false));
-                dispatch(setIsOpenChatting(true));
-              }}
+              onClick={(e) => handleOnClickUser(e, user)}
             >
               <img
                 src={user.avatar || ""}
@@ -49,4 +76,4 @@ const ShowSearchUser = ({ searchList, query }: ShowSearchUserProps) => {
   );
 };
 
-export default ShowSearchUser;
+export default memo(ShowSearchUser);

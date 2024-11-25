@@ -14,19 +14,22 @@ import {
 import ShowNotification from "@/components/Header/Notification/ShowNotification";
 import ShowMessage from "@/components/Header/Messenger/ShowMessage";
 import ShowChatting from "@/components/Header/Messenger/ShowChatting";
+import { fetchDirectConversations } from "@/redux/conversationSlice";
+import { useAppDispatch } from "@/redux/store";
 
 const Home = () => {
   const dispatch = useDispatch();
+  const dispatchConversation = useAppDispatch();
   const { isLogin, currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const socket = useContext(SocketContext);
+  const { socket } = useContext(SocketContext);
   const { isOpenNotifications, isOpenMessage, isOpenChatting } = useSelector(
     (state: { notification: notificationState }) => state.notification
   );
 
   useEffect(() => {
-    socket.on("get_friend_request", (data) => {
+    socket?.on("get_friend_request", (data) => {
       dispatch(
         setNotifications({
           user: data.sender,
@@ -35,7 +38,7 @@ const Home = () => {
         })
       );
     });
-    socket.on("friendRequestConfirmed", (data) => {
+    socket?.on("friendRequestConfirmed", (data) => {
       dispatch(
         setNotifications({
           user: data.receiver,
@@ -45,10 +48,10 @@ const Home = () => {
       );
     });
     return () => {
-      socket.off("get_friend_request");
-      socket.off("friendRequestConfirmed");
+      socket?.off("get_friend_request");
+      socket?.off("friendRequestConfirmed");
     };
-  }, [socket]);
+  }, [socket, dispatch]);
 
   useEffect(() => {
     const handleCloseNotification = (e: Event) => {
@@ -59,6 +62,10 @@ const Home = () => {
     document.addEventListener("click", handleCloseNotification);
     return () => document.removeEventListener("click", handleCloseNotification);
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatchConversation(fetchDirectConversations());
+  }, [dispatchConversation]);
 
   if (!isLogin && !currentUser) return <Navigate to="/login" replace={true} />;
 

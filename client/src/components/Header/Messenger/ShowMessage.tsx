@@ -18,7 +18,7 @@ const ShowMessage = () => {
 
   return (
     <div
-      className="absolute top-0 right-4 bg-white rounded-lg w-[360px] h-[calc(100vh-80px)] shadow-default"
+      className="absolute top-0 right-4 bg-white rounded-lg w-[360px] h-[calc(100vh-80px)] shadow-default z-[100]"
       id="message"
     >
       <ChatUserList />
