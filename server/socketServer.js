@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { Server } from "socket.io";
 import db from "./src/models/index.js";
+import { Op, Sequelize } from "sequelize";
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -85,40 +86,125 @@ io.on("connection", (socket) => {
   });
 
   socket.on("start_conversation", async (data) => {
-    const { user_id, conversation_name, type_conversation, group_image } = data;
-    await db.Conversation.findOrCreate({
-      where: {
-        user_id,
-      },
-      defaults: {
-        id: uuidv4(),
-        user_id,
-        conversation_name: `${conversation_name.lastName} ${conversation_name.firstName}`,
+    const {
+      sender_id,
+      receiver_id,
+      conversation_name,
+      type_conversation,
+      group_image,
+    } = data;
+
+    const userIds = [sender_id, receiver_id];
+    let values = [];
+    if (type_conversation === "private") {
+      // Kiểm tra xem cuộc trò chuyện cá nhân giữa 2 người đã tồn tại chưa
+      const existingConversation = await db.Conversation.findAll({
+        subQuery: false,
+        where: {
+          type_conversation: "private",
+        },
+        include: {
+          model: db.Member,
+          as: "members",
+          where: {
+            user_id: {
+              [Op.in]: userIds, // Kiểm tra các người dùng đã có cuộc trò chuyện cá nhân với nhau chưa
+            },
+          },
+          required: true, // Đảm bảo rằng cuộc trò chuyện phải có ít nhất 2 người tham gia
+          attributes: [], // Không cần lấy thuộc tính của ConversationMember, chỉ cần kiểm tra sự tồn tại
+        },
+        group: ["Conversation.id"], // Đảm bảo tìm kiếm theo từng cuộc trò chuyện
+        having: Sequelize.literal(
+          `COUNT(DISTINCT Members.user_id) = ${userIds.length}`
+        ), // Đảm bảo rằng có đúng 2 người tham gia vào cuộc trò chuyện
+        raw: true,
+      });
+      values = existingConversation;
+    } else if (type === "group") {
+      // Kiểm tra xem tên nhóm có tồn tại chưa
+      const existingGroupConversation = await Conversation.findOne({
+        where: {
+          type: "group",
+          conversation_name,
+        },
+      });
+
+      if (existingGroupConversation) {
+        return res.status(400).json({
+          message: "A group conversation with this name already exists.",
+          conversation: existingGroupConversation,
+        });
+      }
+    }
+
+    let conversationId = uuidv4();
+    if (values.length === 0) {
+      await db.Conversation.create({
+        id: conversationId,
+        conversation_name,
         type_conversation,
         group_image,
+      });
+
+      const members = userIds.map((userId) => ({
+        conversation_id: conversationId,
+        user_id: userId,
+        joined_at: new Date(),
+      }));
+      await db.Member.bulkCreate(members);
+    }
+
+    const newConversationId = values.length > 0 ? values[0].id : conversationId;
+    const info_conversation = await db.Conversation.findAll({
+      where: {
+        id: newConversationId,
       },
+      include: [
+        {
+          model: db.Member,
+          as: "members",
+          attributes: ["user_id", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
+          include: [
+            {
+              model: db.User,
+              attributes: ["firstName", "lastName", "avatar"],
+              as: "user",
+            },
+          ],
+        },
+      ],
+      attributes: { exclude: ["type_conversation", "createdAt", "updatedAt"] },
       raw: true,
+      nest: true,
     });
 
-    const new_conversation = await db.Conversation.findOne({
-      where: {
-        user_id,
-      },
-      raw: true,
-    });
+    const new_conversation = info_conversation.find(
+      (elm) => elm.members.user_id !== sender_id
+    );
 
     socket.emit("start_chat", { new_conversation });
   });
 
   socket.on("send_message", async (data) => {
-    const { receiver_id, message } = data;
+    const { receiver_id, message, timeMessage } = data;
     const to_user = await db.User.findOne({
       where: { id: receiver_id },
       raw: true,
     });
+    const from_user = await db.User.findOne({
+      where: { id: message.sender_id },
+      raw: true,
+    });
     const receiveUser = getUser(to_user);
+    const senderUser = getUser(from_user);
     io.to(receiveUser?.socketId).emit("new_message", {
       message,
+      timeMessage,
+    });
+    io.to(senderUser?.socketId).emit("new_message", {
+      message,
+      timeMessage,
     });
   });
 });

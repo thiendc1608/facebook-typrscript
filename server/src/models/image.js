@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Image.hasOne(models.Message, {
         foreignKey: "image_id",
-        as: "imagesInfo",
+        as: "imageInfo",
       });
     }
   }

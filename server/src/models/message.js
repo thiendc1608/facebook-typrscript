@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
       conversation_id: DataTypes.STRING,
       type_msg: DataTypes.STRING,
       sub_type: DataTypes.ENUM("doc, link, image, reply, record, text"),
-      user_id: DataTypes.STRING,
+      sender_id: DataTypes.STRING,
       message: DataTypes.TEXT("long"),
       image_id: DataTypes.STRING,
       file_url: DataTypes.STRING,

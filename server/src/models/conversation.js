@@ -13,11 +13,19 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "conversation_id",
         as: "conversation",
       });
+      Conversation.hasMany(models.Member, {
+        foreignKey: "conversation_id",
+        as: "members",
+      });
+      Conversation.belongsToMany(models.User, {
+        through: "Member",
+        foreignKey: "conversation_id",
+        as: "user",
+      });
     }
   }
   Conversation.init(
     {
-      user_id: DataTypes.STRING,
       conversation_name: DataTypes.STRING,
       type_conversation: DataTypes.STRING,
       group_image: DataTypes.STRING,

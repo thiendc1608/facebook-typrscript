@@ -24,6 +24,7 @@ import { SocketContext } from "@/context/SocketContext";
 import { cn } from "@/lib/utils";
 import { conversationAPI } from "@/apis/conversationApi";
 import { toast } from "react-toastify";
+import { UserState } from "@/redux/userSlice";
 
 const ChatUserList = () => {
   const { socket } = useContext(SocketContext)!;
@@ -34,15 +35,23 @@ const ChatUserList = () => {
   const [, startTransaction] = useTransition();
   const [optionConversation, setOptionConversation] = useState<boolean>(false);
   const [isFocusSearch, setIsFocusSearch] = useState<boolean>(false);
-  const { private_chat } = useSelector(
+  const { currentUser } = useSelector(
+    (state: { user: UserState }) => state.user
+  );
+  const { conversations } = useSelector(
+    (state: { conversation: chattingUserType }) =>
+      state.conversation.private_chat
+  );
+  const { room_id } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-
   const dispatchConversation = useAppDispatch();
 
   useEffect(() => {
-    dispatchConversation(fetchDirectConversations());
-  }, [dispatchConversation]);
+    if (currentUser?.id) {
+      dispatchConversation(fetchDirectConversations(currentUser.id));
+    }
+  }, [dispatchConversation, currentUser]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,16 +84,9 @@ const ChatUserList = () => {
         "start_chat",
         (data: { new_conversation: conversationType }) => {
           const { new_conversation } = data;
-
-          const existing_conversation = private_chat.conversations.some(
-            (el) => el?.conversation_name === new_conversation.conversation_name
-          );
-
-          if (!existing_conversation) {
-            dispatch(addToConventions({ conversation: new_conversation }));
-            dispatch(selectRoom({ room_id: new_conversation.id }));
-            dispatch(setCurrentConversation(new_conversation));
-          }
+          dispatch(addToConventions({ conversation: new_conversation }));
+          dispatch(selectRoom({ room_id: new_conversation.id }));
+          dispatch(setCurrentConversation(new_conversation));
         }
       );
     }
@@ -102,6 +104,29 @@ const ChatUserList = () => {
     } else {
       toast.error(response.message);
     }
+  };
+
+  const handleOnClickConversation = (
+    e: React.MouseEvent<HTMLDivElement>,
+    conversation: conversationType
+  ) => {
+    e.preventDefault();
+    dispatch(selectRoom({ room_id: conversation.id }));
+
+    socket?.emit("start_conversation", {
+      sender_id: currentUser?.id,
+      receiver_id: conversation.members.user_id,
+      conversation_name:
+        conversation.conversation_name !== null
+          ? conversation.conversation_name
+          : null,
+      type_conversation:
+        conversation.conversation_name !== null ? "group" : "private",
+      group_image:
+        conversation.conversation_name !== null
+          ? conversation.group_image
+          : null,
+    });
   };
 
   return (
@@ -166,27 +191,36 @@ const ChatUserList = () => {
               </span>
             </div>
             <div className="px-2 h-full">
-              {private_chat.conversations?.length > 0 ? (
-                private_chat.conversations.map((conversation) => (
+              {conversations?.length > 0 ? (
+                conversations.map((conversation) => (
                   <div
                     key={conversation.id}
                     className={cn(
                       "relative w-full h-[68px] rounded-lg flex items-center gap-3 cursor-pointer z-0",
-                      conversation.id === private_chat.current_conversation?.id
+                      conversation.id === room_id
                         ? "bg-[#EBF5FF]"
                         : "hover:bg-[#F2F2F2]"
                     )}
+                    onClick={(e) => handleOnClickConversation(e, conversation)}
                   >
                     <div className="p-[6px]">
                       <img
-                        src={conversation?.group_image}
+                        src={
+                          conversation?.group_image ||
+                          conversation?.members?.user?.avatar
+                        }
                         alt="anh"
                         className="w-[56px] h-[56px] object-cover rounded-full"
                       />
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="text-[#080809] text-[15px] font-bold">
-                        {`${conversation.conversation_name}`}
+                        {`${
+                          conversation?.conversation_name ||
+                          conversation?.members?.user?.lastName +
+                            " " +
+                            conversation?.members?.user?.firstName
+                        }`.trim()}
                       </span>
                       <div className="flex items-baseline text-[#65686c] text-[13px] gap-1">
                         <span>Bạn đã gửi một file đính kèm</span>

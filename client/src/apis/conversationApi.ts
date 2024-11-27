@@ -1,28 +1,13 @@
 import { imageCloudinaryType, messageType } from "./../types";
-import { conversationType, CustomResponse, participantsType } from "@/types";
+import { conversationType, CustomResponse } from "@/types";
 import axiosClient from "./axiosClient";
 
-interface participantType {
-  conversation_id: string;
-  participants: { user_id: string }[];
-  join_at: Date;
-}
 export const conversationAPI = {
-  createConversation: (data: participantType): Promise<CustomResponse> => {
-    const url = "conversation/create-conversation";
-    return axiosClient.post(url, data);
-  },
-
-  getAllConversation: (): Promise<
-    CustomResponse & { conversations: conversationType[] }
-  > => {
-    const url = "conversation/get-all-conversation";
+  getAllConversation: (
+    current_id: string
+  ): Promise<CustomResponse & { conversations: conversationType[] }> => {
+    const url = `conversation/get-all-conversation/${current_id}`;
     return axiosClient.get(url);
-  },
-
-  addParticipant: (data: participantsType): Promise<CustomResponse> => {
-    const url = "conversation/add-participant";
-    return axiosClient.post(url, data);
   },
 
   deleteConversation: (conversation_id: string): Promise<CustomResponse> => {

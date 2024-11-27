@@ -26,6 +26,7 @@ export default {
         stories: "0 1px 4px rgba(0, 0, 0, 0.1)",
         optionConversation:
           "0 12px 28px 0 rgba(0, 0, 0, .2), 0 2px 4px 0 rgba(0, 0, 0, .1)",
+        headerContent: "0 0 4px rgba(0, 0, 0, 0.2)",
       },
       backgroundSize: {
         100: "100%",

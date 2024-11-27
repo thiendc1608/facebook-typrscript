@@ -62,7 +62,6 @@ axiosClient.interceptors.request.use(
     //     'Authorization': `Bearer ${accessToken}`,
     //   });
     // }
-    
 
     return config;
   },

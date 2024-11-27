@@ -19,7 +19,7 @@ module.exports = {
         type: Sequelize.ENUM("doc", "link", "image", "reply", "record", "text"),
         defaultValue: "text",
       },
-      user_id: {
+      sender_id: {
         type: Sequelize.STRING,
       },
       message: {

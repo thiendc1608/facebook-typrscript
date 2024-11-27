@@ -5,8 +5,10 @@ const fileUploader = require("../config/cloundinary.config.js");
 
 const router = express.Router();
 
-router.post("/create-conversation", conversationController.createConversation);
-router.get("/get-all-conversation", conversationController.getAllConversation);
+router.get(
+  "/get-all-conversation/:current_id",
+  conversationController.getAllConversation
+);
 router.delete(
   "/delete-conversation/:conversation_id",
   conversationController.deleteConversation
@@ -18,7 +20,7 @@ router.get(
 
 router.post(
   "/images/upload",
-  fileUploader.array("image_url", 10),
+  fileUploader.array("imageInfo", 10),
   conversationController.uploadImage
 );
 

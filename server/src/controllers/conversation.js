@@ -3,54 +3,40 @@ import db from "../models";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
 
-const createConversation = asyncHandler(async (req, res) => {
-  const { conversation_id, participants, join_at } = req.body;
-  let new_participants = [];
-  const checkUser = await db.Participant.findAll({
-    where: {
-      conversation_id,
-    },
-    raw: true,
-  });
-  if (checkUser !== null) {
-    new_participants = participants.filter((user) =>
-      checkUser.some((el) => el.user_id !== user.id)
-    );
-  }
-
-  new_participants =
-    new_participants.length !== participants.length ? participants : [];
-
-  const participantsList = new_participants.map((user) => ({
-    conversation_id,
-    user_id: user.user_id,
-    join_at,
-  }));
-  await db.Participant.bulkCreate(participantsList, {
-    validate: true, // Validate data before inserting
-    ignoreDuplicates: true, // Ignore duplicate entries
-  });
-
-  return res.status(200).json({
-    success: true,
-    message: "Create conversation successfully",
-  });
-});
-
 const getAllConversation = asyncHandler(async (req, res) => {
+  const { current_id } = req.params;
   const conversations = await db.Conversation.findAll({
+    include: [
+      {
+        model: db.Member,
+        as: "members",
+        attributes: ["user_id", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
+        include: [
+          {
+            model: db.User,
+            attributes: ["firstName", "lastName", "avatar"],
+            as: "user",
+          },
+        ],
+      },
+    ],
     raw: true,
+    nest: true,
   });
+
   if (!conversations) {
     return res.status(404).json({
       success: false,
       message: "Conversations not found",
     });
   }
+  const newConversation = conversations.filter(
+    (conversation) => conversation.members.user_id !== current_id
+  );
   return res.status(200).json({
     success: true,
     message: "Get all conversation successfully",
-    conversations,
+    conversations: newConversation,
   });
 });
 
@@ -78,14 +64,15 @@ const getAllMessage = asyncHandler(async (req, res) => {
     order: [["createdAt", "ASC"]],
     include: [
       {
-        model: db.Conversation,
-        attributes: ["conversation_name", "group_image"],
-        as: "conversation",
+        model: db.Image,
+        attributes: ["message_image"],
+        as: "imageInfo",
       },
     ],
     raw: true,
     nest: true,
   });
+
   if (messages === null) {
     return res.status(404).json({
       success: false,
@@ -112,31 +99,31 @@ const uploadImage = asyncHandler(async (req, res) => {
 const createMessage = asyncHandler(async (req, res) => {
   const {
     conversation_id,
-    user_id,
+    sender_id,
     type_msg,
     send_at,
     file_url,
     audio_record_url,
     sub_type,
-    image_url,
+    imageInfo,
     message,
   } = req.body;
   let imagesId = uuidv4();
   const messageCreated = await db.Message.create({
     conversation_id,
-    user_id,
+    sender_id,
     type_msg,
     send_at,
     file_url,
     message,
     audio_record_url,
     sub_type,
-    image_id: image_url ? imagesId : null,
+    image_id: imageInfo?.message_image ? imagesId : null,
   });
-  image_url &&
+  imageInfo &&
     (await db.Image.create({
       id: imagesId,
-      message_image: image_url || [],
+      message_image: imageInfo?.message_image || [],
     }));
   if (!messageCreated) {
     return res.status(404).json({
@@ -168,7 +155,6 @@ export {
   deleteConversation,
   getAllMessage,
   createMessage,
-  createConversation,
   uploadImage,
   deleteImage,
 };

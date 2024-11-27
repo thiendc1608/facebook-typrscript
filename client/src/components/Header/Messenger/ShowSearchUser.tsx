@@ -2,8 +2,8 @@ import { SocketContext } from "@/context/SocketContext";
 import { setIsOpenChatting, setIsOpenMessage } from "@/redux/notificationSlice";
 import { UserType } from "@/types";
 import { memo, useContext } from "react";
-import { useDispatch } from "react-redux";
-import anonymousAvatar from "@/assets/images/default_avatar.jpg";
+import { useDispatch, useSelector } from "react-redux";
+import { UserState } from "@/redux/userSlice";
 // import { conversationAPI } from "@/apis/conversationApi";
 
 interface ShowSearchUserProps {
@@ -21,8 +21,11 @@ const ShowSearchUser = ({
 }: ShowSearchUserProps) => {
   const { socket } = useContext(SocketContext);
   const dispatch = useDispatch();
+  const { currentUser } = useSelector(
+    (state: { user: UserState }) => state.user
+  );
 
-  const handleOnClickUser = async (
+  const handleOnClickUser = (
     e: React.MouseEvent<HTMLDivElement>,
     user: UserType
   ) => {
@@ -31,11 +34,13 @@ const ShowSearchUser = ({
     dispatch(setIsOpenChatting(true));
     setIsFocusSearch(false);
     setQuery("");
+
     socket?.emit("start_conversation", {
-      user_id: user.id,
-      conversation_name: user,
+      sender_id: currentUser?.id,
+      receiver_id: user.id,
+      conversation_name: null,
       type_conversation: "private",
-      group_image: `${anonymousAvatar}`,
+      group_image: null,
     });
   };
 

@@ -1,7 +1,6 @@
 import { conversationAPI } from "@/apis/conversationApi";
 import { conversationType, messageType } from "@/types";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { v4 as uuidv4 } from "uuid";
 
 export interface chattingUserType {
   private_chat: {
@@ -36,26 +35,8 @@ const conversationSlice = createSlice({
       state.private_chat.conversations.push(action.payload.conversation);
     },
     addToMessage: (state, action) => {
-      if (state.private_chat.current_messages.length > 0) {
-        const last_message =
-          state.private_chat.current_messages[
-            state.private_chat.current_messages.length - 1
-          ];
-
-        if (
-          (new Date().getTime() - new Date(last_message.send_at).getTime()) /
-            1000 >
-          2 * 60
-        ) {
-          const timeMessage = {
-            id: uuidv4(),
-            conversation_id: action.payload.messages.conversation_id,
-            type_msg: "divider",
-            sub_type: "text",
-            send_at: action.payload.messages.send_at,
-          };
-          state.private_chat.current_messages.push(timeMessage as messageType);
-        }
+      if (action.payload.timeMessage) {
+        state.private_chat.current_messages.push(action.payload.timeMessage);
       }
       state.private_chat.current_messages.push(action.payload.messages);
     },
@@ -91,9 +72,9 @@ export default conversationReducer;
 
 export const fetchDirectConversations = createAsyncThunk(
   "conversation/fetchAllConversation",
-  async (_, { rejectWithValue }) => {
+  async (current_id: string, { rejectWithValue }) => {
     try {
-      const response = await conversationAPI.getAllConversation();
+      const response = await conversationAPI.getAllConversation(current_id);
       return response;
     } catch (err: unknown) {
       return rejectWithValue(err);

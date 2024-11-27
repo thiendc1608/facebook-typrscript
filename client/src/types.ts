@@ -193,29 +193,33 @@ export interface NotificationType {
 
 export interface conversationType {
   id: string;
-  user_id: string;
-  conversation_name: string;
-  type_conversation: string;
-  group_image: string;
+  conversation_name: string | null;
+  group_image: string | null;
   pinned?: boolean;
   unread?: number;
   time?: Date;
+  members: {
+    user_id: string;
+    joined_at: Date;
+    user: Pick<UserType, "id" | "firstName" | "lastName" | "avatar">;
+  };
 }
 
-export interface participantsType {
+export interface membersType {
+  id: number;
   conversation_id: string;
-  user_id: string;
-  joined_at: Date;
+  members_conversation: string[];
 }
 
 export interface messageType {
-  id: string;
   conversation_id: string;
   type_msg: string;
   sub_type: string;
-  user_id?: string;
+  sender_id?: string;
   message?: string;
-  image_url?: string[];
+  imageInfo?: {
+    message_image: string[];
+  };
   file_url?: string | null;
   audio_record_url?: string | null;
   send_at: Date;
