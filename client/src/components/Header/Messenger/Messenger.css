@@ -1,10 +1,9 @@
 div[contentEditable="true"]:empty::before {
-  content: "Aa";  /* Nội dung của placeholder */
-  color: #aaa;  /* Màu sắc placeholder */
-  pointer-events: none;  /* Ngăn không cho chuột tương tác với placeholder */
+  content: "Aa"; /* Nội dung của placeholder */
+  color: #aaa; /* Màu sắc placeholder */
+  pointer-events: none; /* Ngăn không cho chuột tương tác với placeholder */
   visibility: visible;
 }
-
 
 /* Khi người dùng bắt đầu nhập, placeholder biến mất */
 .editable-div:not(:empty)::before {
@@ -18,15 +17,36 @@ div[contentEditable="true"]:empty::before {
 
 /* Track */
 .custom-scroll-bar::-webkit-scrollbar-track {
-  background: #f1f1f1; 
+  background: #f1f1f1;
 }
- 
+
 /* Handle */
 .custom-scroll-bar::-webkit-scrollbar-thumb {
-  background: #888; 
+  background: #888;
 }
 
 /* Handle on hover */
 .custom-scroll-bar::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #555;
+}
+
+.loader {
+  border: 8px solid #f3f3f3; /* Light grey */
+  border-top: 8px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  animation: spin 1s linear infinite;
+  margin-top: 16px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

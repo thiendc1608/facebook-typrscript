@@ -25,10 +25,6 @@ FriendSuggestProps) => {
   const [isAddFriend, setIsAddFriend] = useState(true);
 
   useEffect(() => {
-    socket?.emit("add_user", currentUser);
-  }, [currentUser, socket]);
-
-  useEffect(() => {
     socket?.on("get_friend_request", (data) => {
       setFriendRequests((prevRequests) => [...prevRequests, data.sender]);
     });

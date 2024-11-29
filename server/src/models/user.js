@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "user_id",
         as: "conversation_user",
       });
+      User.hasMany(models.Message, {
+        foreignKey: "sender_id",
+        as: "senderInfo",
+      });
     }
   }
   User.init(
@@ -37,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       address: DataTypes.STRING,
       avatar: DataTypes.TEXT("long"),
       cover_picture: DataTypes.TEXT("long"),
-      status_id: DataTypes.INTEGER,
+      status: DataTypes.ENUM("online", "offline"),
       describe_yourself: DataTypes.STRING,
       relationship_id: DataTypes.INTEGER,
       date_of_birth: DataTypes.STRING,

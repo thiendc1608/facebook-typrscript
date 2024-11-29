@@ -1,5 +1,5 @@
 import EmojiPicker, { EmojiStyle, SkinTones } from "emoji-picker-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 interface EmEmojiProps {
   activeSkinTone: SkinTones;
@@ -14,10 +14,13 @@ interface EmEmojiProps {
 
 interface EmojiPickerProps {
   setPickerOpen: (pickerOpen: boolean) => void;
+  setEmoji: (emoji: string) => void;
 }
-const EmojiPickerComponent = ({ setPickerOpen }: EmojiPickerProps) => {
+const EmojiPickerComponent = ({
+  setPickerOpen,
+  setEmoji,
+}: EmojiPickerProps) => {
   const pickerRef = useRef<HTMLDivElement>(null);
-  const [emoji, setEmoji] = useState<string>("");
 
   useEffect(() => {
     const pickerEle = (e: MouseEvent) => {
@@ -35,7 +38,7 @@ const EmojiPickerComponent = ({ setPickerOpen }: EmojiPickerProps) => {
 
   return (
     <div
-      className="absolute bottom-[60px] right-[-50px] z-[100] shadow-default overflow-hidden rounded-lg"
+      className="absolute bottom-[60px] right-0 z-[100] shadow-blurEmoji overflow-hidden rounded-lg"
       ref={pickerRef}
     >
       <EmojiPicker

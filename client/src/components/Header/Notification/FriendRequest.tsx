@@ -41,7 +41,6 @@ const FriendRequest = ({ socket }: FriendRequestProps) => {
       dispatch(setIsOpenNotifications(false));
     }
   };
-  console.log(notifications);
 
   return (
     <>

@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
-import { BsEmojiSmile } from "react-icons/bs";
+import { TfiFaceSmile } from "react-icons/tfi";
 import { CiImageOn } from "react-icons/ci";
 import { IoCloseOutline } from "react-icons/io5";
 import { RiImageAddFill } from "react-icons/ri";
 import EmojiPickerComponent from "./EmojiPicker";
-import { BiSend, BiSolidLike } from "react-icons/bi";
-import { useContext, useRef, useState } from "react";
+import { BiSend } from "react-icons/bi";
+import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
 import { useSelector } from "react-redux";
@@ -13,8 +13,10 @@ import { UserState } from "@/redux/userSlice";
 import { chattingUserType } from "@/redux/conversationSlice";
 import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
+import "./Messenger.css";
 
 const Form = () => {
+  const [emoji, setEmoji] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>("");
   const [optimisticImages, setOptimisticImages] = useState<File[]>([]);
@@ -30,6 +32,16 @@ const Form = () => {
   );
   const { socket } = useContext(SocketContext);
   const divRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const defaultMessage = {
+    conversation_id: private_chat.current_conversation?.id ?? "",
+    sender_id: currentUser!.id,
+    type_msg: "msg",
+    send_at: new Date(),
+    file_url: null,
+    audio_record_url: null,
+    sub_type: "text",
+  };
 
   const handleChangeMessage = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if ((e.target as HTMLElement).innerHTML.trim() === "<br>") {
@@ -37,10 +49,30 @@ const Form = () => {
     }
     setInputValue((e.target as HTMLElement).innerText ?? "");
   };
-  console.log(inputValue);
+
+  useEffect(() => {
+    if (divRef.current) {
+      const editableDiv = divRef.current;
+      editableDiv.focus();
+
+      const selection = window.getSelection();
+      const range = selection?.getRangeAt(0);
+
+      range?.deleteContents();
+      const emojiNode = document.createTextNode(emoji);
+      range?.insertNode(emojiNode);
+
+      range?.setStartAfter(emojiNode);
+      range?.setEndAfter(emojiNode);
+
+      selection?.removeAllRanges();
+      selection?.addRange(range!);
+    }
+  }, [emoji]);
 
   const handleSelectImage = async (files: File[]) => {
     // const imageList: File[] = [];
+    setLoading(true);
     const data = new FormData();
     for (const file of files) {
       if (file.type !== "image/png" && file.type !== "image/jpeg") {
@@ -50,15 +82,21 @@ const Form = () => {
       setOptimisticImages((prev) => [...prev, file]);
       data.append("imageInfo", file);
     }
-    const response = await conversationAPI.createImages(data);
-    if (response.success) {
-      setSelectedImageList((prev) => [
-        ...prev,
-        ...response.images.map((image) => image.path),
-      ]);
-      setFileNameCloundinaryList((prev) => [...prev, ...response.images]);
-    } else {
-      toast.error(response.message);
+    try {
+      const response = await conversationAPI.uploadImages(data);
+      if (response.success) {
+        setSelectedImageList((prev) => [
+          ...prev,
+          ...response.images.map((image) => image.path),
+        ]);
+        setFileNameCloundinaryList((prev) => [...prev, ...response.images]);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false); // Hide loading spinner after API call
     }
   };
 
@@ -90,15 +128,6 @@ const Form = () => {
       }
     }
 
-    const defaultMessage = {
-      conversation_id: private_chat.current_conversation?.id ?? "",
-      sender_id: currentUser!.id,
-      type_msg: "msg",
-      send_at: new Date(),
-      file_url: null,
-      audio_record_url: null,
-      sub_type: "text",
-    };
     let timeMessage: messageType | null = null;
     if (private_chat.current_messages?.length > 0) {
       const last_message =
@@ -141,6 +170,37 @@ const Form = () => {
     });
   };
 
+  const handleClickLike = async () => {
+    let timeMessage: messageType | null = null;
+    if (private_chat.current_messages?.length > 0) {
+      const last_message =
+        private_chat.current_messages[private_chat.current_messages.length - 1];
+
+      if (
+        (new Date().getTime() - new Date(last_message.send_at).getTime()) /
+          1000 >
+        10 * 60
+      ) {
+        timeMessage = {
+          conversation_id: defaultMessage.conversation_id,
+          type_msg: "divider",
+          sub_type: "text",
+          send_at: defaultMessage.send_at,
+        };
+        await conversationAPI.createMessage(timeMessage);
+      }
+    }
+    const message = {
+      ...defaultMessage,
+      message: "👍",
+    } as messageType;
+    await conversationAPI.createMessage(message);
+    socket?.emit("send_message", {
+      receiver_id: private_chat.current_conversation?.members?.user?.id,
+      message,
+      timeMessage,
+    });
+  };
   return (
     <form
       className={cn(
@@ -177,17 +237,22 @@ const Form = () => {
                       key={idx}
                       className="relative min-w-[48px] h-[48px] rounded-lg bg-[#e2e5e9]"
                     >
-                      <img
-                        src={URL.createObjectURL(imageList)}
-                        alt="anh"
-                        className="w-[48px] h-[48px] object-contain"
-                      />
-                      <div
-                        className="absolute top-[-8px] right-[-8px] bg-white rounded-full w-[24px] h-[24px] flex items-center justify-center cursor-pointer shadow-default"
-                        onClick={() => handleDeleteImage(idx, imageList)}
-                      >
-                        <IoCloseOutline size={18} />
-                      </div>
+                      {loading && <div className="loader"></div>}
+                      {!loading && (
+                        <>
+                          <img
+                            src={URL.createObjectURL(imageList)}
+                            alt="anh"
+                            className="w-[48px] h-[48px] object-contain"
+                          />
+                          <div
+                            className="absolute top-[-8px] right-[-8px] bg-white rounded-full w-[24px] h-[24px] flex items-center justify-center cursor-pointer shadow-default"
+                            onClick={() => handleDeleteImage(idx, imageList)}
+                          >
+                            <IoCloseOutline size={18} />
+                          </div>
+                        </>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -197,13 +262,13 @@ const Form = () => {
               <div
                 ref={divRef}
                 contentEditable={true}
-                className="relative p-1 bg-[#F0F2F5] min-h-[36px] w-[calc(100%-40px)] outline-none pl-3 break-all text-wrap break-words whitespace-pre-wrap text-[15px] flex items-center editable-div leading-5"
+                className="relative p-1 bg-[#F0F2F5] min-h-[36px] w-[calc(100%-40px)] outline-none pl-3 break-all text-[15px] flex items-center editable-div leading-5"
                 onKeyUp={(e: React.KeyboardEvent<HTMLDivElement>) =>
                   handleChangeMessage(e)
                 }
               />
-              <div className="absolute bottom-[10px] right-[10px] cursor-pointer shadow-default">
-                <BsEmojiSmile
+              <div className="absolute bottom-[8px] right-[10px] cursor-pointer shadow-headerContent rounded-full z-[99]">
+                <TfiFaceSmile
                   size={20}
                   color="#0866ff"
                   title="Chọn biểu tượng cảm xúc"
@@ -215,7 +280,12 @@ const Form = () => {
         </div>
       </>
 
-      {pickerOpen && <EmojiPickerComponent setPickerOpen={setPickerOpen} />}
+      {pickerOpen && (
+        <EmojiPickerComponent
+          setPickerOpen={setPickerOpen}
+          setEmoji={setEmoji}
+        />
+      )}
       {inputValue || optimisticImages.length > 0 ? (
         <button
           className="w-[36px] h-[36px] cursor-pointer flex items-center"
@@ -224,8 +294,11 @@ const Form = () => {
           <BiSend size={26} title="Gửi" color="#0866ff" />
         </button>
       ) : (
-        <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
-          <BiSolidLike size={26} title="Gửi like" color="#0866ff" />
+        <div
+          className="w-[36px] h-[36px] cursor-pointer flex items-center text-[20px]"
+          onClick={handleClickLike}
+        >
+          👍
         </div>
       )}
     </form>

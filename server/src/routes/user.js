@@ -22,4 +22,6 @@ router.get("/current-user", userController.getCurrentUser);
 router.post("/add-remove-friend/:userId", userController.addAndRemoveFriend);
 router.post("/confirm-friend/:userId", userController.confirmFriendRequest);
 
+router.put("/update-status/:userId", userController.updateStatus);
+
 export default router;

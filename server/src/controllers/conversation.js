@@ -68,6 +68,11 @@ const getAllMessage = asyncHandler(async (req, res) => {
         attributes: ["message_image"],
         as: "imageInfo",
       },
+      {
+        model: db.User,
+        attributes: ["firstName", "lastName", "avatar"],
+        as: "senderInfo",
+      },
     ],
     raw: true,
     nest: true,

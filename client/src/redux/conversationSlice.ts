@@ -1,12 +1,12 @@
 import { conversationAPI } from "@/apis/conversationApi";
-import { conversationType, messageType } from "@/types";
+import { conversationType, allMessageType } from "@/types";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 export interface chattingUserType {
   private_chat: {
     conversations: conversationType[];
     current_conversation: conversationType | null;
-    current_messages: messageType[];
+    current_messages: allMessageType[];
   };
   room_id: string;
   // group_chat: any;

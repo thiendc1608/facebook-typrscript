@@ -225,6 +225,16 @@ export interface messageType {
   send_at: Date;
 }
 
+export interface senderInfoType {
+  senderInfo: {
+    firstName: string;
+    lastName: string;
+    avatar: string;
+  };
+}
+
+export type allMessageType = messageType & senderInfoType;
+
 export interface imageCloudinaryType {
   fieldname: string;
   originalname: string;

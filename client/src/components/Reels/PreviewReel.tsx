@@ -118,8 +118,6 @@ const PreviewReel = ({ imagePostReel, isCreateText }: PreviewReelProps) => {
     setIsMouseDown(true);
     setInitMouseX(event.clientX);
     setInitMouseY(event.clientY);
-    console.log(imageReel!.offsetLeft);
-    console.log({ containerReel });
 
     setInitImageX(imageReel!.offsetLeft - containerReel!.offsetLeft);
     setInitImageY(imageReel!.offsetTop - containerReel!.offsetTop);

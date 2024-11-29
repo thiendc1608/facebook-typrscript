@@ -10,7 +10,6 @@ const Map = () => {
   const { locationTag } = useSelector(
     (state: { post: postType }) => state.post
   );
-  console.log(locationTag);
 
   useEffect(() => {
     const map = leaflet

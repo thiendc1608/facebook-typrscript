@@ -19,6 +19,11 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "id",
         as: "imageInfo",
       });
+      Message.belongsTo(models.User, {
+        foreignKey: "sender_id",
+        targetKey: "id",
+        as: "senderInfo",
+      });
     }
   }
   Message.init(

@@ -26,7 +26,6 @@ const register = async (req, res) => {
     };
 
     const validatedData = userRegisterSchema.parse(userData);
-
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(validatedData.password, salt);
     const response = await db.User.findOrCreate({
@@ -45,7 +44,6 @@ const register = async (req, res) => {
         date_of_birth: validatedData.date_of_birth,
       },
     });
-    console.log(response);
 
     if (response[1] === false) {
       return res

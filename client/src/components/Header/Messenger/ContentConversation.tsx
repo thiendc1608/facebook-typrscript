@@ -14,6 +14,7 @@ import Timeline from "./ContentMessage/Timeline";
 import MediaMsg from "./ContentMessage/MediaMsg";
 import TextMsg from "./ContentMessage/TextMsg";
 import { GoArrowDown } from "react-icons/go";
+import { UserState } from "@/redux/userSlice";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
@@ -25,6 +26,9 @@ const ContentConversation = () => {
   const contentRef = useRef<null | HTMLDivElement>(null);
   const scrollButton = useRef<null | HTMLDivElement>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const { currentUser } = useSelector(
+    (state: { user: UserState }) => state.user
+  );
 
   useEffect(() => {
     if (room_id != "") {
@@ -36,7 +40,13 @@ const ContentConversation = () => {
     socket?.on(
       "new_message",
       async (data: {
-        message: messageType;
+        message: messageType & {
+          senderInfo: {
+            firstName: string;
+            lastName: string;
+            avatar: string;
+          };
+        };
         timeMessage: messageType | null;
       }) => {
         const message = data.message;
@@ -65,7 +75,7 @@ const ContentConversation = () => {
           block: "end",
         });
       }
-    }, 500);
+    }, 800);
     return () => clearTimeout(timer);
   }, [private_chat.current_messages]);
 
@@ -162,8 +172,11 @@ const ContentConversation = () => {
             </span>
           </div>
         </div>
-        <div className="flex flex-col items-start gap-2">
-          {private_chat.current_messages?.map((el) => {
+        <div className="flex flex-col gap-5">
+          {private_chat.current_messages?.map((el, index: number) => {
+            const nextMessage = private_chat.current_messages[index + 1];
+            const showAvatar =
+              nextMessage?.sender_id !== el.sender_id || !nextMessage;
             switch (el.type_msg) {
               case "divider":
                 return (
@@ -176,7 +189,11 @@ const ContentConversation = () => {
                   case "image":
                     return (
                       // Media Message
-                      <MediaMsg el={el} />
+                      <MediaMsg
+                        el={el}
+                        currentUser={currentUser}
+                        showAvatar={showAvatar}
+                      />
                     );
 
                   // case "doc":
@@ -199,7 +216,11 @@ const ContentConversation = () => {
                   default:
                     return (
                       // Text Message
-                      <TextMsg el={el} />
+                      <TextMsg
+                        el={el}
+                        currentUser={currentUser}
+                        showAvatar={showAvatar}
+                      />
                     );
                 }
 

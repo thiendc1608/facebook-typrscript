@@ -118,7 +118,6 @@ const CreateStoriesView = () => {
     ) {
       setAuthorStoryIndex(0);
       setStoryIndex(0);
-      console.log("ok");
 
       // window.location.href = `/${path.HOME}`;
     } else {

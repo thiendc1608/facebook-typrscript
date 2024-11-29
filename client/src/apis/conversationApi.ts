@@ -1,4 +1,4 @@
-import { imageCloudinaryType, messageType } from "./../types";
+import { allMessageType, imageCloudinaryType, messageType } from "./../types";
 import { conversationType, CustomResponse } from "@/types";
 import axiosClient from "./axiosClient";
 
@@ -17,7 +17,7 @@ export const conversationAPI = {
 
   getAllMessage: (
     conversation_id: string
-  ): Promise<CustomResponse & { messages: messageType[] }> => {
+  ): Promise<CustomResponse & { messages: allMessageType[] }> => {
     const url = `conversation/get-all-message/${conversation_id}`;
     return axiosClient.get(url);
   },
@@ -27,7 +27,7 @@ export const conversationAPI = {
     return axiosClient.post(url, data);
   },
 
-  createImages: (
+  uploadImages: (
     data: FormData
   ): Promise<
     CustomResponse & {
@@ -45,5 +45,18 @@ export const conversationAPI = {
   deleteImages: (data: string): Promise<CustomResponse> => {
     const url = `conversation/delete-image/${data}`;
     return axiosClient.delete(url);
+  },
+
+  getOtherUserInConversation: (
+    conversation_id: string
+  ): Promise<
+    CustomResponse & {
+      listUserConversation: {
+        user_id: string;
+      }[];
+    }
+  > => {
+    const url = `conversation/get-other-user-conversation/${conversation_id}`;
+    return axiosClient.get(url);
   },
 };

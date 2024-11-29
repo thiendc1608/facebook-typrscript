@@ -16,6 +16,7 @@ import ShowMessage from "@/components/Header/Messenger/ShowMessage";
 import ShowChatting from "@/components/Header/Messenger/ShowChatting";
 import { fetchDirectConversations } from "@/redux/conversationSlice";
 import { useAppDispatch } from "@/redux/store";
+import { userAPI } from "@/apis/userApi";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -27,6 +28,10 @@ const Home = () => {
   const { isOpenNotifications, isOpenMessage, isOpenChatting } = useSelector(
     (state: { notification: notificationState }) => state.notification
   );
+
+  useEffect(() => {
+    socket?.emit("add_user", currentUser);
+  }, [currentUser, socket]);
 
   useEffect(() => {
     socket?.on("get_friend_request", (data) => {
@@ -64,8 +69,19 @@ const Home = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatchConversation(fetchDirectConversations());
-  }, [dispatchConversation]);
+    if (currentUser?.id) {
+      dispatchConversation(fetchDirectConversations(currentUser.id));
+    }
+  }, [currentUser, dispatchConversation]);
+
+  useEffect(() => {
+    async function updateStatus() {
+      if (currentUser?.id) {
+        await userAPI.updateStatusUser("online", currentUser.id);
+      }
+    }
+    updateStatus();
+  }, [currentUser]);
 
   if (!isLogin && !currentUser) return <Navigate to="/login" replace={true} />;
 

@@ -1,7 +1,5 @@
 import { Sequelize } from "sequelize";
 import db from "../models";
-import { raw } from "body-parser";
-
 const asyncHandler = require("express-async-handler");
 
 const getCurrentUser = asyncHandler(async (req, res) => {
@@ -140,10 +138,30 @@ const getAllUsers = asyncHandler(async (req, res) => {
   });
 });
 
+const updateStatus = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { status } = req.body;
+  await db.User.update(
+    {
+      status,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  return res.status(200).json({
+    success: true,
+    message: "Update status successfully",
+  });
+});
+
 export {
   getCurrentUser,
   getOtherUsers,
   addAndRemoveFriend,
   confirmFriendRequest,
   getAllUsers,
+  updateStatus,
 };

@@ -112,7 +112,7 @@ io.on("connection", (socket) => {
             },
           },
           required: true, // Đảm bảo rằng cuộc trò chuyện phải có ít nhất 2 người tham gia
-          attributes: [], // Không cần lấy thuộc tính của ConversationMember, chỉ cần kiểm tra sự tồn tại
+          attributes: [], // Không cần lấy thuộc tính của member, chỉ cần kiểm tra sự tồn tại
         },
         group: ["Conversation.id"], // Đảm bảo tìm kiếm theo từng cuộc trò chuyện
         having: Sequelize.literal(
@@ -198,12 +198,20 @@ io.on("connection", (socket) => {
     });
     const receiveUser = getUser(to_user);
     const senderUser = getUser(from_user);
+    const newMessage = {
+      ...message,
+      senderInfo: {
+        firstName: from_user.firstName,
+        lastName: from_user.lastName,
+        avatar: from_user.avatar,
+      },
+    };
     io.to(receiveUser?.socketId).emit("new_message", {
-      message,
+      message: newMessage,
       timeMessage,
     });
     io.to(senderUser?.socketId).emit("new_message", {
-      message,
+      message: newMessage,
       timeMessage,
     });
   });

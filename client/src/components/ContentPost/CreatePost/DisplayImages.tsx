@@ -5,8 +5,6 @@ const DisplayImages = ({
 }: {
   listObjectImage: listObjectImageType[];
 }) => {
-  console.log(listObjectImage);
-
   return (
     <div className="w-full h-full">
       {listObjectImage.length === 1 && (
