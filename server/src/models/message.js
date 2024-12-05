@@ -24,6 +24,11 @@ module.exports = (sequelize, DataTypes) => {
         targetKey: "id",
         as: "senderInfo",
       });
+      // Mối quan hệ giữa Message và MessageReact
+      Message.hasMany(models.MessageReact, {
+        foreignKey: "message_id", // Giả sử message_id là khóa ngoại trong bảng MessageReact
+        as: "messageReact",
+      });
     }
   }
   Message.init(

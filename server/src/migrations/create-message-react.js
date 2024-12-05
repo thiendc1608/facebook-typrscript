@@ -2,19 +2,16 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("Emotions", {
+    await queryInterface.createTable("MessageReacts", {
       id: {
         allowNull: false,
         primaryKey: true,
         autoIncrement: true,
         type: Sequelize.INTEGER,
       },
-      emotion_name: {
-        type: Sequelize.ENUM("like", "heart", "haha", "wow", "sad", "angry"),
-      },
-      emotion_icon: {
-        type: Sequelize.STRING,
-      },
+      message_id: { type: Sequelize.STRING },
+      emoji_dropper_id: { type: Sequelize.STRING },
+      emoji_icon: { type: Sequelize.STRING },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
@@ -26,6 +23,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("Emotions");
+    await queryInterface.dropTable("MessageReacts");
   },
 };

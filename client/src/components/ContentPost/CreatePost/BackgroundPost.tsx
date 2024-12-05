@@ -5,7 +5,7 @@ import { BsEmojiSmile } from "react-icons/bs";
 import { FaAngleLeft } from "react-icons/fa6";
 import { backGroundContent } from "@/utils/path";
 import { useDispatch, useSelector } from "react-redux";
-import { ImageVideoState, postType, showEmojiType } from "@/types";
+import { ImageVideoState, postType } from "@/types";
 import { RiImageAddFill } from "react-icons/ri";
 import { IoIosClose } from "react-icons/io";
 import {
@@ -14,7 +14,7 @@ import {
   editImages,
   removeImageVideoTag,
 } from "@/redux/imageVideoSlice";
-import { showEmoji } from "@/redux/emojiSlice";
+import { showEmoji, showEmojiType } from "@/redux/emojiSlice";
 import { setTextPost } from "@/redux/postSlice";
 import { MdEdit } from "react-icons/md";
 import DisplayImages from "./DisplayImages";

@@ -2,6 +2,8 @@ import asyncHandler from "express-async-handler";
 import db from "../models";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
+import { Sequelize } from "sequelize";
+import { raw } from "body-parser";
 
 const getAllConversation = asyncHandler(async (req, res) => {
   const { current_id } = req.params;
@@ -59,6 +61,8 @@ const deleteConversation = asyncHandler(async (req, res) => {
 
 const getAllMessage = asyncHandler(async (req, res) => {
   const { conversation_id } = req.params;
+
+  // Lấy tất cả các tin nhắn
   const messages = await db.Message.findAll({
     where: { conversation_id },
     order: [["createdAt", "ASC"]],
@@ -73,22 +77,46 @@ const getAllMessage = asyncHandler(async (req, res) => {
         attributes: ["firstName", "lastName", "avatar"],
         as: "senderInfo",
       },
+      {
+        model: db.MessageReact,
+        attributes: ["message_id", "emoji_dropper_id", "emoji_icon"],
+        as: "messageReact",
+        include: [
+          {
+            model: db.User,
+            attributes: ["firstName", "lastName", "avatar"],
+            as: "userReact",
+          },
+        ],
+      },
     ],
-    raw: true,
     nest: true,
   });
 
-  if (messages === null) {
+  // Lấy tất cả các phản ứng (reactions) của tin nhắn
+  const countReactMes = await db.MessageReact.findAll({
+    attributes: [
+      "message_id",
+      "emoji_icon",
+      [Sequelize.fn("COUNT", Sequelize.col("emoji_icon")), "count"],
+    ],
+    group: ["message_id", "emoji_icon"], // Nhóm theo message_id và emoji_icon
+    raw: true,
+  });
+
+  if (!messages || messages.length === 0) {
     return res.status(404).json({
       success: false,
       message: "Messages not found",
       messages,
     });
   }
+
   return res.status(200).json({
     success: true,
     message: "Get all messages successfully",
     messages,
+    countReactMes,
   });
 });
 
@@ -103,6 +131,7 @@ const uploadImage = asyncHandler(async (req, res) => {
 
 const createMessage = asyncHandler(async (req, res) => {
   const {
+    id,
     conversation_id,
     sender_id,
     type_msg,
@@ -115,6 +144,7 @@ const createMessage = asyncHandler(async (req, res) => {
   } = req.body;
   let imagesId = uuidv4();
   const messageCreated = await db.Message.create({
+    id,
     conversation_id,
     sender_id,
     type_msg,

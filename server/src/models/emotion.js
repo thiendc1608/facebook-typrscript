@@ -15,8 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       emotion_name: DataTypes.ENUM(
         "like",
-        "love",
-        "favorite",
+        "heart",
         "haha",
         "wow",
         "sad",

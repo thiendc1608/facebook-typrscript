@@ -13,6 +13,7 @@ import { UserState } from "@/redux/userSlice";
 import { chattingUserType } from "@/redux/conversationSlice";
 import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
+import { v4 as uuidv4 } from "uuid";
 import "./Messenger.css";
 
 const Form = () => {
@@ -27,13 +28,14 @@ const Form = () => {
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const { private_chat } = useSelector(
+  const { private_chat, reply_message } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const { socket } = useContext(SocketContext);
   const divRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const defaultMessage = {
+    id: uuidv4(),
     conversation_id: private_chat.current_conversation?.id ?? "",
     sender_id: currentUser!.id,
     type_msg: "msg",
@@ -69,6 +71,13 @@ const Form = () => {
       selection?.addRange(range!);
     }
   }, [emoji]);
+
+  useEffect(() => {
+    if (divRef.current) {
+      const editableDiv = divRef.current;
+      editableDiv.focus();
+    }
+  }, [reply_message]);
 
   const handleSelectImage = async (files: File[]) => {
     // const imageList: File[] = [];
@@ -128,6 +137,10 @@ const Form = () => {
       }
     }
 
+    // Hàm delay trả về một Promise để có thể sử dụng async/await
+    const delay = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
     let timeMessage: messageType | null = null;
     if (private_chat.current_messages?.length > 0) {
       const last_message =
@@ -139,12 +152,14 @@ const Form = () => {
         10 * 60
       ) {
         timeMessage = {
+          id: uuidv4(),
           conversation_id: defaultMessage.conversation_id,
           type_msg: "divider",
           sub_type: "text",
           send_at: defaultMessage.send_at,
         };
         await conversationAPI.createMessage(timeMessage);
+        delay(1000);
       }
     }
     const message = {
@@ -182,6 +197,7 @@ const Form = () => {
         10 * 60
       ) {
         timeMessage = {
+          id: uuidv4(),
           conversation_id: defaultMessage.conversation_id,
           type_msg: "divider",
           sub_type: "text",

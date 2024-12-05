@@ -1,8 +1,8 @@
 import { showModal } from "@/redux/modalSlice";
-import { ImageVideoState, postType, showEmojiType } from "@/types";
+import { ImageVideoState, postType } from "@/types";
 import { useDispatch, useSelector } from "react-redux";
 import ShowEmoji from "../ContentPost/CreatePost/ShowEmoji";
-import { showEmoji } from "@/redux/emojiSlice";
+import { showEmoji, showEmojiType } from "@/redux/emojiSlice";
 import { FaArrowLeft } from "react-icons/fa6";
 import { RiImageAddFill } from "react-icons/ri";
 import { Button } from "../ui/button";
@@ -33,7 +33,7 @@ const Modal = ({ children }: ModalProps) => {
     (state: { post: postType }) => state.post
   );
   const [location, setLocation] = useState<string>("");
-  const searchLocationQuery = useDebounce(location);
+  const searchLocationQuery = useDebounce(location, 500);
 
   useEffect(() => {
     if (searchLocationQuery) {

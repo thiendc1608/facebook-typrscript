@@ -16,7 +16,6 @@ import {
   fetchDirectConversations,
   selectRoom,
   setCurrentConversation,
-  setListOtherUserId,
   // setCurrentConversation,
 } from "@/redux/conversationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -91,6 +90,9 @@ const ChatUserList = () => {
         }
       );
     }
+    return () => {
+      socket?.off("start_chat");
+    };
   }, [socket, dispatch]);
 
   const handleDeleteConversation = async (conversation_id: string) => {
@@ -104,30 +106,16 @@ const ChatUserList = () => {
     }
   };
 
-  const handleOnClickConversation = async (
+  const handleOnClickConversation = (
     e: React.MouseEvent<HTMLDivElement>,
     conversation: conversationType
   ) => {
     e.preventDefault();
     dispatch(selectRoom({ room_id: conversation.id }));
-    const response = await conversationAPI.getOtherUserInConversation(
-      conversation.id
-    );
-    let listOtherUsersId: { user_id: string }[] = [];
-    if (response.success) {
-      const filterUser = response.listUserConversation.filter(
-        (user) => user.user_id !== currentUser?.id
-      );
-      listOtherUsersId = filterUser;
-    }
-    const list_receiver_id = listOtherUsersId.map((user) =>
-      Object.values(user).join(", ")
-    );
-    dispatch(setListOtherUserId(list_receiver_id));
 
     socket?.emit("start_conversation", {
       sender_id: currentUser?.id,
-      receiver_id: list_receiver_id,
+      receiver_id: conversation.members.user_id,
       conversation_name:
         conversation.conversation_name !== null
           ? conversation.conversation_name

@@ -33,7 +33,6 @@ const removeUser = (socketId) => {
 };
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
   // take userId and socketId
   socket.on("add_user", (user) => {
     addUser(user, socket.id);
@@ -198,6 +197,7 @@ io.on("connection", (socket) => {
     });
     const receiveUser = getUser(to_user);
     const senderUser = getUser(from_user);
+
     const newMessage = {
       ...message,
       senderInfo: {
@@ -214,5 +214,85 @@ io.on("connection", (socket) => {
       message: newMessage,
       timeMessage,
     });
+  });
+
+  socket.on("send_react_message", async (data) => {
+    const { message_id, emoji_dropper_id, emoji_icon } = data;
+    // Tìm thông tin người nhận và người gửi từ DB
+    const existingReaction = await db.MessageReact.findOne({
+      where: {
+        message_id,
+        emoji_dropper_id,
+      },
+      raw: true,
+    });
+
+    let filteredReactionData = {};
+    if (!existingReaction) {
+      await db.MessageReact.create({
+        message_id,
+        emoji_dropper_id,
+        emoji_icon,
+      });
+      filteredReactionData.message = "Create react message successfully";
+    } else {
+      if (existingReaction.emoji_icon !== emoji_icon) {
+        await db.MessageReact.update(
+          {
+            emoji_icon,
+          },
+          {
+            where: {
+              message_id,
+              emoji_dropper_id,
+            },
+          }
+        );
+        filteredReactionData.message = "Update react message successfully";
+      } else {
+        if (
+          existingReaction.message_id === message_id &&
+          existingReaction.emoji_dropper_id === emoji_dropper_id &&
+          existingReaction.emoji_icon === emoji_icon
+        ) {
+          await db.MessageReact.destroy({
+            where: {
+              message_id,
+              emoji_dropper_id,
+              emoji_icon,
+            },
+          });
+          filteredReactionData.message = "Delete react message successfully";
+        }
+      }
+    }
+
+    const to_user = await db.User.findOne({
+      where: { id: data.receiver_id },
+      raw: true,
+    });
+    const from_user = await db.User.findOne({
+      where: { id: data.emoji_dropper_id },
+      raw: true,
+    });
+
+    // Lấy socketId của người nhận và người gửi
+    const receiveUser = getUser(to_user);
+    const senderUser = getUser(from_user);
+
+    // Phát sự kiện tới người nhận
+    if (receiveUser?.socketId) {
+      io.to(receiveUser.socketId).emit("new_react_message", {
+        data: { message_id, emoji_dropper_id, emoji_icon },
+        filteredReactionData,
+      });
+    }
+
+    if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
+      io.to(senderUser.socketId).emit("new_react_message", {
+        data: { message_id, emoji_dropper_id, emoji_icon },
+        filteredReactionData,
+      });
+    }
   });
 });

@@ -14,9 +14,13 @@ import {
 import ShowNotification from "@/components/Header/Notification/ShowNotification";
 import ShowMessage from "@/components/Header/Messenger/ShowMessage";
 import ShowChatting from "@/components/Header/Messenger/ShowChatting";
-import { fetchDirectConversations } from "@/redux/conversationSlice";
+import {
+  fetchDirectConversations,
+  setEmojiList,
+} from "@/redux/conversationSlice";
 import { useAppDispatch } from "@/redux/store";
 import { userAPI } from "@/apis/userApi";
+import emojiAPI from "@/apis/emojiApi";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -82,6 +86,16 @@ const Home = () => {
     }
     updateStatus();
   }, [currentUser]);
+
+  useEffect(() => {
+    const fetchEmoji = async () => {
+      const response = await emojiAPI.getEmoji();
+      if (response.success) {
+        dispatch(setEmojiList(response.emojiList));
+      }
+    };
+    fetchEmoji();
+  }, [dispatch]);
 
   if (!isLogin && !currentUser) return <Navigate to="/login" replace={true} />;
 

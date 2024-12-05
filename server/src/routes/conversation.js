@@ -29,9 +29,5 @@ router.delete(
   conversationController.deleteImage
 );
 router.post("/create-message", conversationController.createMessage);
-router.get(
-  "/get-other-user-conversation/:conversation_id",
-  conversationController.getOtherUsersInConversation
-);
 
 export default router;

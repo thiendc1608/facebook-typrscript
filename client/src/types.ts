@@ -212,6 +212,7 @@ export interface membersType {
 }
 
 export interface messageType {
+  id: string;
   conversation_id: string;
   type_msg: string;
   sub_type: string;
@@ -233,7 +234,30 @@ export interface senderInfoType {
   };
 }
 
-export type allMessageType = messageType & senderInfoType;
+export interface reactMesType {
+  emoji_icon: string;
+  count: number;
+}
+export interface messageReactType {
+  messageReact:
+    | {
+        message_id: string;
+        emoji_dropper_id: string;
+        emoji_icon: string;
+        userReact: {
+          id: string;
+          firstName: string;
+          lastName: string;
+          avatar: string;
+        };
+      }[]
+    | [];
+  countReactMes: {
+    [message_id: string]: reactMesType[] | [];
+  };
+}
+
+export type allMessageType = messageType & senderInfoType & messageReactType;
 
 export interface imageCloudinaryType {
   fieldname: string;
@@ -243,4 +267,10 @@ export interface imageCloudinaryType {
   path: string;
   size: number;
   filename: string;
+}
+
+export interface emotionType {
+  id: number;
+  emotion_name: string;
+  emotion_icon: string;
 }

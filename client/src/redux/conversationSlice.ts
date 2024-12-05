@@ -1,6 +1,16 @@
 import { conversationAPI } from "@/apis/conversationApi";
-import { conversationType, allMessageType } from "@/types";
+import emojiAPI from "@/apis/emojiApi";
+import {
+  conversationType,
+  allMessageType,
+  emotionType,
+  reactMesType,
+} from "@/types";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+
+type GroupedItem = {
+  [message_id: string]: { emoji_icon: string; count: number }[];
+};
 
 export interface chattingUserType {
   private_chat: {
@@ -9,6 +19,8 @@ export interface chattingUserType {
     current_messages: allMessageType[];
   };
   room_id: string;
+  emojiList: emotionType[];
+  reply_message: allMessageType | null;
   // group_chat: any;
 }
 
@@ -21,11 +33,35 @@ const conversationSlice = createSlice({
       current_messages: [],
     },
     room_id: "",
+    emojiList: [],
+    reply_message: null,
     // group_chat: {},
   } as chattingUserType,
   reducers: {
+    setReplyMsg: (state, action) => {
+      state.reply_message = action.payload;
+    },
+    setEmojiList: (state, action) => {
+      state.emojiList = action.payload;
+    },
     setCurrentConversation: (state, action) => {
       state.private_chat.current_conversation = action.payload;
+    },
+    addToReactMessage: (state, action) => {
+      state.private_chat.current_messages =
+        state.private_chat.current_messages.map((el) => {
+          if (el.id === action.payload.message_id) {
+            return {
+              ...el,
+              messageReact: [...el.messageReact, action.payload],
+              countReactMes: {
+                ...el.countReactMes,
+                [el.id]: [{ emoji_icon: action.payload.emoji_icon, count: 1 }],
+              },
+            };
+          }
+          return el;
+        });
     },
     addToConventions: (state, action) => {
       state.private_chat.conversations =
@@ -55,7 +91,52 @@ const conversationSlice = createSlice({
       state.private_chat.conversations = action.payload.conversations;
     });
     builder.addCase(fetchAllMessage.fulfilled, (state, action) => {
-      state.private_chat.current_messages = action.payload.messages;
+      if (action.payload.countReactMes) {
+        const result: GroupedItem = action.payload.countReactMes.reduce(
+          (acc: GroupedItem, item) => {
+            const key = item.message_id;
+
+            // Nếu chưa có key trong accumulator, tạo mới mảng
+            if (!acc[key]) {
+              acc[key] = [];
+            }
+
+            // Thêm icon và count vào mảng tương ứng với message_id
+            acc[key].push({ emoji_icon: item.emoji_icon, count: item.count });
+
+            return acc;
+          },
+          {}
+        );
+
+        let list_current: allMessageType[] = [];
+        list_current = action.payload.messages.map(
+          (message: allMessageType) => {
+            const listReact: reactMesType[] = [];
+            if (message.id === Object.keys(result)[0]) {
+              listReact.push(...result[message.id]);
+            }
+            return { ...message, countReactMes: { [message.id]: listReact } };
+          }
+        );
+        state.private_chat.current_messages = list_current;
+      } else {
+        state.private_chat.current_messages = action.payload.messages;
+      }
+    });
+    builder.addCase(getAllUserReactMessage.fulfilled, (state, action) => {
+      const list_current = state.private_chat.current_messages.map(
+        (message: allMessageType) => {
+          if (
+            message.id ===
+            Object.keys(action.payload.reactMessageList.countReactMes)[0]
+          ) {
+            return { ...message, ...action.payload.reactMessageList };
+          }
+          return message;
+        }
+      );
+      state.private_chat.current_messages = list_current;
     });
   },
 });
@@ -66,6 +147,9 @@ export const {
   selectRoom,
   deleteConversation,
   addToMessage,
+  setEmojiList,
+  addToReactMessage,
+  setReplyMsg,
 } = conversationSlice.actions;
 const conversationReducer = conversationSlice.reducer;
 export default conversationReducer;
@@ -90,6 +174,18 @@ export const fetchAllMessage = createAsyncThunk(
   ) => {
     try {
       const response = await conversationAPI.getAllMessage(conversation_id);
+      return response;
+    } catch (err: unknown) {
+      return rejectWithValue(err);
+    }
+  }
+);
+
+export const getAllUserReactMessage = createAsyncThunk(
+  "conversation/getAllUserReactMessage",
+  async (message_id: string, { rejectWithValue }) => {
+    try {
+      const response = await emojiAPI.getAllUserReactMessage(message_id);
       return response;
     } catch (err: unknown) {
       return rejectWithValue(err);

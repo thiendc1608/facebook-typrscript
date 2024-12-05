@@ -8,19 +8,20 @@ import {
 } from "@/redux/conversationSlice";
 import { useAppDispatch } from "@/redux/store";
 import { SocketContext } from "@/context/SocketContext";
-import { messageType } from "@/types";
+import { allMessageType, messageType } from "@/types";
 import Form from "./Form";
 import Timeline from "./ContentMessage/Timeline";
 import MediaMsg from "./ContentMessage/MediaMsg";
 import TextMsg from "./ContentMessage/TextMsg";
 import { GoArrowDown } from "react-icons/go";
 import { UserState } from "@/redux/userSlice";
+import ReplyMessage from "./ContentMessage/ReplyMessage";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
   const { socket } = useContext(SocketContext);
 
-  const { room_id, private_chat } = useSelector(
+  const { room_id, private_chat, reply_message } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const contentRef = useRef<null | HTMLDivElement>(null);
@@ -40,13 +41,7 @@ const ContentConversation = () => {
     socket?.on(
       "new_message",
       async (data: {
-        message: messageType & {
-          senderInfo: {
-            firstName: string;
-            lastName: string;
-            avatar: string;
-          };
-        };
+        message: allMessageType;
         timeMessage: messageType | null;
       }) => {
         const message = data.message;
@@ -242,6 +237,8 @@ const ContentConversation = () => {
         </button>
       </div>
       <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
+        {reply_message?.conversation_id ===
+          private_chat.current_conversation?.id && <ReplyMessage />}
         <Form />
       </div>
     </div>
