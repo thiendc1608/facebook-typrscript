@@ -8,9 +8,9 @@ import { BiSend } from "react-icons/bi";
 import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { UserState } from "@/redux/userSlice";
-import { chattingUserType } from "@/redux/conversationSlice";
+import { chattingUserType, setReplyMsg } from "@/redux/conversationSlice";
 import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
 import { v4 as uuidv4 } from "uuid";
@@ -34,6 +34,8 @@ const Form = () => {
   const { socket } = useContext(SocketContext);
   const divRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
+
   const defaultMessage = {
     id: uuidv4(),
     conversation_id: private_chat.current_conversation?.id ?? "",
@@ -42,6 +44,9 @@ const Form = () => {
     send_at: new Date(),
     file_url: null,
     audio_record_url: null,
+    reply_text_id:
+      reply_message?.sub_type !== "image" ? reply_message?.id : null,
+    reply_image_id: reply_message ? reply_message.image_id : null,
     sub_type: "text",
   };
 
@@ -125,7 +130,7 @@ const Form = () => {
       if (selectImageList.length > 0) {
         newMessage.push(
           ["imageInfo", { message_image: selectImageList }],
-          ["sub_type", "image"]
+          reply_message ? ["sub_type", "reply"] : ["sub_type", "image"]
         );
         if (inputValue.trim()) {
           newMessage.push(["message", inputValue]);
@@ -133,6 +138,9 @@ const Form = () => {
       } else {
         if (inputValue.trim()) {
           newMessage.push(["message", inputValue]);
+          if (reply_message) {
+            newMessage.push(["sub_type", "reply"]);
+          }
         }
       }
     }
@@ -177,10 +185,12 @@ const Form = () => {
       setOptimisticImages([]);
       setSelectedImageList([]);
       setFileNameCloundinaryList([]);
+      dispatch(setReplyMsg(null));
     }
+
     socket?.emit("send_message", {
       receiver_id: private_chat.current_conversation?.members?.user?.id,
-      message,
+      message: response.messageCreated,
       timeMessage,
     });
   };

@@ -1,16 +1,17 @@
 import { chattingUserType, setReplyMsg } from "@/redux/conversationSlice";
-import { UserState } from "@/redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { IoIosClose } from "react-icons/io";
+import { UserType } from "@/types";
 
-const ReplyMessage = () => {
+interface ReplyFormProps {
+  currentUser?: UserType | null;
+}
+const ReplyForm = ({ currentUser }: ReplyFormProps) => {
   const dispatch = useDispatch();
   const { reply_message } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-  const { currentUser } = useSelector(
-    (state: { user: UserState }) => state.user
-  );
+
   return (
     <div className="absolute bottom-[100%] left-0 w-full h-[46.69px] z-[999] bg-white">
       <div className="pt-[10px] px-[15px] pb-[3px] border-t border-[#d0d3d7] h-full flex items-center justify-between">
@@ -23,7 +24,7 @@ const ReplyMessage = () => {
             }`}
           </span>
           <span className="text-[#65686c] text-[13px] line-clamp-1 text-ellipsis whitespace-nowrap">
-            {reply_message?.message}
+            {reply_message?.image_id ? "Hình ảnh" : reply_message?.message}
           </span>
         </div>
         <div className="w-[28px] h-[28px] rounded-full hover:bg-[#f2f2f2] flex items-center justify-center cursor-pointer">
@@ -34,4 +35,4 @@ const ReplyMessage = () => {
   );
 };
 
-export default ReplyMessage;
+export default ReplyForm;

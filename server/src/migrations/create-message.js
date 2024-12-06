@@ -21,6 +21,12 @@ module.exports = {
       sender_id: {
         type: Sequelize.STRING,
       },
+      reply_text_id: {
+        type: Sequelize.STRING,
+      },
+      reply_image_id: {
+        type: Sequelize.STRING,
+      },
       message: {
         type: Sequelize.TEXT("long"),
       },

@@ -15,7 +15,8 @@ import MediaMsg from "./ContentMessage/MediaMsg";
 import TextMsg from "./ContentMessage/TextMsg";
 import { GoArrowDown } from "react-icons/go";
 import { UserState } from "@/redux/userSlice";
-import ReplyMessage from "./ContentMessage/ReplyMessage";
+import ReplyForm from "./ContentMessage/ReplyForm";
+import ReplyMsg from "./ContentMessage/ReplyMsg";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
@@ -38,6 +39,8 @@ const ContentConversation = () => {
   }, [room_id, dispatch]);
 
   useEffect(() => {
+    socket?.off("new_message");
+
     socket?.on(
       "new_message",
       async (data: {
@@ -56,8 +59,21 @@ const ContentConversation = () => {
         }
       }
     );
+
+    socket?.on(
+      "update_remove_message",
+      async (data: { message: allMessageType | null | string }) => {
+        const message = data.message;
+        dispatch(
+          addToMessage({
+            messages: message,
+          })
+        );
+      }
+    );
     return () => {
       socket?.off("new_message");
+      socket?.off("update_remove_message");
     };
   }, [socket, dispatch, private_chat]);
 
@@ -202,11 +218,15 @@ const ContentConversation = () => {
                   //     <LinkMsg el={el} menu={menu} />
                   //   );
 
-                  // case "reply":
-                  //   return (
-                  //     //  ReplyMessage
-                  //     <ReplyMsg el={el} menu={menu} />
-                  //   );
+                  case "reply":
+                    return (
+                      //  ReplyMessage
+                      <ReplyMsg
+                        el={el}
+                        currentUser={currentUser}
+                        showAvatar={showAvatar}
+                      />
+                    );
 
                   default:
                     return (
@@ -238,7 +258,9 @@ const ContentConversation = () => {
       </div>
       <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
         {reply_message?.conversation_id ===
-          private_chat.current_conversation?.id && <ReplyMessage />}
+          private_chat.current_conversation?.id && (
+          <ReplyForm currentUser={currentUser} />
+        )}
         <Form />
       </div>
     </div>

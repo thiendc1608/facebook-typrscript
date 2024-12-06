@@ -2,8 +2,7 @@ import asyncHandler from "express-async-handler";
 import db from "../models";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
-import { Sequelize } from "sequelize";
-import { raw } from "body-parser";
+import { Op, Sequelize } from "sequelize";
 
 const getAllConversation = asyncHandler(async (req, res) => {
   const { current_id } = req.params;
@@ -89,6 +88,20 @@ const getAllMessage = asyncHandler(async (req, res) => {
           },
         ],
       },
+      {
+        model: db.Message, // Kết hợp với chính bảng Message để lấy thông tin tin nhắn trả lời
+        as: "info_reply", // Alias cho tin nhắn trả lời
+        required: false, // Không bắt buộc phải có tin nhắn trả lời
+        where: { id: Sequelize.col("message.reply_text_id") }, // Điều kiện join: reply_text_id của message phải trùng với id của message
+        attributes: ["sender_id", "message"],
+        include: [
+          {
+            model: db.User, // Lấy thông tin người trả lời từ bảng User
+            as: "senderInfo", // Alias cho người trả lời
+            attributes: ["firstName", "lastName"], // Lấy id và name của người trả lời
+          },
+        ],
+      },
     ],
     nest: true,
   });
@@ -137,6 +150,8 @@ const createMessage = asyncHandler(async (req, res) => {
     type_msg,
     send_at,
     file_url,
+    reply_text_id,
+    reply_image_id,
     audio_record_url,
     sub_type,
     imageInfo,
@@ -149,6 +164,8 @@ const createMessage = asyncHandler(async (req, res) => {
     sender_id,
     type_msg,
     send_at,
+    reply_text_id,
+    reply_image_id,
     file_url,
     message,
     audio_record_url,

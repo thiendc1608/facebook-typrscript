@@ -198,8 +198,45 @@ io.on("connection", (socket) => {
     const receiveUser = getUser(to_user);
     const senderUser = getUser(from_user);
 
+    let infoReplyMessage = {};
+    let imageList = [];
+    if (message.reply_text_id) {
+      infoReplyMessage = await db.Message.findOne({
+        where: { id: message.reply_text_id },
+        attributes: ["sender_id", "message"],
+        include: [
+          {
+            model: db.User,
+            attributes: ["firstName", "lastName", "avatar"],
+            as: "senderInfo",
+          },
+        ],
+        raw: true,
+        nest: true,
+      });
+      const findImage = await db.Message.findOne({
+        where: {
+          image_id: message.image_id,
+        },
+        include: [
+          {
+            model: db.Image,
+            attributes: ["message_image"],
+            as: "imageInfo",
+          },
+        ],
+        raw: true,
+        nest: true,
+      });
+      imageList = findImage.imageInfo.message_image;
+    }
+
     const newMessage = {
       ...message,
+      info_reply: infoReplyMessage,
+      imageInfo: {
+        message_image: imageList,
+      },
       senderInfo: {
         firstName: from_user.firstName,
         lastName: from_user.lastName,
@@ -292,6 +329,45 @@ io.on("connection", (socket) => {
       io.to(senderUser.socketId).emit("new_react_message", {
         data: { message_id, emoji_dropper_id, emoji_icon },
         filteredReactionData,
+      });
+    }
+  });
+
+  socket.on("remove_message", async (data) => {
+    let removeMessage = null;
+    if (data.el.message !== "Bạn đã thu hồi một tin nhắn") {
+      removeMessage = await db.Message.update(
+        {
+          message: "Bạn đã thu hồi một tin nhắn",
+        },
+        { where: { id: data.el.id } }
+      );
+    } else {
+      removeMessage = await db.Message.destroy({
+        where: { id: data.el.id },
+      });
+      if (removeMessage === 1) removeMessage = data.el.id;
+    }
+    console.log(removeMessage);
+
+    const to_user = await db.User.findOne({
+      where: { id: data.receiver_id },
+      raw: true,
+    });
+    const from_user = await db.User.findOne({
+      where: { id: data.el.sender_id },
+      raw: true,
+    });
+    const receiveUser = getUser(to_user);
+    const senderUser = getUser(from_user);
+    if (receiveUser?.socketId) {
+      io.to(receiveUser.socketId).emit("update_remove_message", {
+        message: removeMessage,
+      });
+    }
+    if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
+      io.to(senderUser.socketId).emit("update_remove_message", {
+        message: removeMessage,
       });
     }
   });

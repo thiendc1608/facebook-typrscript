@@ -7,6 +7,7 @@ import {
 import { conversationType, CustomResponse } from "@/types";
 import axiosClient from "./axiosClient";
 
+type messageCreatedType = Omit<allMessageType, "createdAt" | "updatedAt">;
 export const conversationAPI = {
   getAllConversation: (
     current_id: string
@@ -32,7 +33,9 @@ export const conversationAPI = {
     return axiosClient.get(url);
   },
 
-  createMessage: (data: messageType): Promise<CustomResponse> => {
+  createMessage: (
+    data: messageType
+  ): Promise<CustomResponse & { messageCreated: messageCreatedType }> => {
     const url = "conversation/create-message";
     return axiosClient.post(url, data);
   },

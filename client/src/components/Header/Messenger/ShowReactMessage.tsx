@@ -55,6 +55,7 @@ const ShowReactMessage = ({ message_id }: { message_id: string }) => {
     if (icon === "Tất cả") {
       setEmotionActive({
         ...emotionActive,
+        icon,
         userReactList: currentReactMessage?.messageReact ?? [],
       });
     } else {

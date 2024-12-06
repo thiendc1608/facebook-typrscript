@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "message_id", // Giả sử message_id là khóa ngoại trong bảng MessageReact
         as: "messageReact",
       });
+      Message.belongsTo(Message, {
+        foreignKey: "reply_text_id",
+        as: "info_reply",
+      });
     }
   }
   Message.init(
@@ -37,6 +41,8 @@ module.exports = (sequelize, DataTypes) => {
       type_msg: DataTypes.STRING,
       sub_type: DataTypes.ENUM("doc, link, image, reply, record, text"),
       sender_id: DataTypes.STRING,
+      reply_text_id: DataTypes.STRING,
+      reply_image_id: DataTypes.STRING,
       message: DataTypes.TEXT("long"),
       image_id: DataTypes.STRING,
       file_url: DataTypes.STRING,

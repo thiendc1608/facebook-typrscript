@@ -217,7 +217,20 @@ export interface messageType {
   type_msg: string;
   sub_type: string;
   sender_id?: string;
+  reply_text_id?: string;
+  info_reply?: {
+    sender_id: string;
+    message: string;
+    image_id: string | null;
+    senderInfo: {
+      firstName: string;
+      lastName: string;
+      avatar: string;
+    };
+  };
+  reply_image_id?: string;
   message?: string;
+  image_id?: string;
   imageInfo?: {
     message_image: string[];
   };
@@ -273,4 +286,16 @@ export interface emotionType {
   id: number;
   emotion_name: string;
   emotion_icon: string;
+}
+
+export interface GroupedData {
+  [key: string]: {
+    message_id: string;
+    emoji_icon: string;
+    list: {
+      firstName: string;
+      lastName: string;
+      avatar: string;
+    }[];
+  };
 }
