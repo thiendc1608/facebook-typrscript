@@ -10,7 +10,11 @@ import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
 import { useDispatch, useSelector } from "react-redux";
 import { UserState } from "@/redux/userSlice";
-import { chattingUserType, setReplyMsg } from "@/redux/conversationSlice";
+import {
+  chattingUserType,
+  setReplyMsg,
+  setUpdateMessage,
+} from "@/redux/conversationSlice";
 import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
 import { v4 as uuidv4 } from "uuid";
@@ -28,7 +32,7 @@ const Form = () => {
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const { private_chat, reply_message } = useSelector(
+  const { private_chat, reply_message, updateMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const { socket } = useContext(SocketContext);
@@ -56,6 +60,24 @@ const Form = () => {
     }
     setInputValue((e.target as HTMLElement).innerText ?? "");
   };
+
+  useEffect(() => {
+    if (divRef.current && !updateMessage.isUpdateMsg) {
+      divRef.current!.innerHTML = "";
+      setInputValue("");
+      divRef.current!.focus();
+    }
+    if (updateMessage.messageValue && divRef.current) {
+      divRef.current!.textContent = updateMessage.messageValue?.message ?? "";
+      // Di chuyển con trỏ tới cuối nội dung
+      const range = document.createRange();
+      const selection = window.getSelection();
+      range.selectNodeContents(divRef.current!);
+      range.collapse(false); // false để di chuyển con trỏ đến cuối
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    }
+  }, [updateMessage]);
 
   useEffect(() => {
     if (divRef.current) {
@@ -125,74 +147,86 @@ const Form = () => {
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newMessage = [];
-    if (inputValue.trim() || selectImageList) {
-      if (selectImageList.length > 0) {
-        newMessage.push(
-          ["imageInfo", { message_image: selectImageList }],
-          reply_message ? ["sub_type", "reply"] : ["sub_type", "image"]
-        );
-        if (inputValue.trim()) {
-          newMessage.push(["message", inputValue]);
-        }
-      } else {
-        if (inputValue.trim()) {
-          newMessage.push(["message", inputValue]);
-          if (reply_message) {
-            newMessage.push(["sub_type", "reply"]);
+    if (updateMessage.messageValue) {
+      socket?.emit("update_message", {
+        receiver_id: private_chat.current_conversation?.members?.user?.id,
+        sender_id: updateMessage.messageValue?.sender_id,
+        message_id: updateMessage.messageValue?.id,
+        messageUpdate: inputValue,
+      });
+      dispatch(setUpdateMessage({ isUpdateMsg: false, messageValue: null }));
+    } else {
+      const newMessage = [];
+      if (inputValue.trim() || selectImageList) {
+        if (selectImageList.length > 0) {
+          newMessage.push(
+            ["imageInfo", { message_image: selectImageList }],
+            reply_message ? ["sub_type", "reply"] : ["sub_type", "image"]
+          );
+          if (inputValue.trim()) {
+            newMessage.push(["message", inputValue]);
+          }
+        } else {
+          if (inputValue.trim()) {
+            newMessage.push(["message", inputValue]);
+            if (reply_message) {
+              newMessage.push(["sub_type", "reply"]);
+            }
           }
         }
       }
-    }
 
-    // Hàm delay trả về một Promise để có thể sử dụng async/await
-    const delay = (ms: number) =>
-      new Promise((resolve) => setTimeout(resolve, ms));
+      // Hàm delay trả về một Promise để có thể sử dụng async/await
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
 
-    let timeMessage: messageType | null = null;
-    if (private_chat.current_messages?.length > 0) {
-      const last_message =
-        private_chat.current_messages[private_chat.current_messages.length - 1];
+      let timeMessage: messageType | null = null;
+      if (private_chat.current_messages?.length > 0) {
+        const last_message =
+          private_chat.current_messages[
+            private_chat.current_messages.length - 1
+          ];
 
-      if (
-        (new Date().getTime() - new Date(last_message.send_at).getTime()) /
-          1000 >
-        10 * 60
-      ) {
-        timeMessage = {
-          id: uuidv4(),
-          conversation_id: defaultMessage.conversation_id,
-          type_msg: "divider",
-          sub_type: "text",
-          send_at: defaultMessage.send_at,
-        };
-        await conversationAPI.createMessage(timeMessage);
-        delay(1000);
+        if (
+          (new Date().getTime() - new Date(last_message.send_at).getTime()) /
+            1000 >
+          10 * 60
+        ) {
+          timeMessage = {
+            id: uuidv4(),
+            conversation_id: defaultMessage.conversation_id,
+            type_msg: "divider",
+            sub_type: "text",
+            send_at: defaultMessage.send_at,
+          };
+          await conversationAPI.createMessage(timeMessage);
+          delay(1000);
+        }
       }
-    }
-    const message = {
-      ...defaultMessage,
-      ...Object.fromEntries(newMessage),
-    } as messageType;
+      const message = {
+        ...defaultMessage,
+        ...Object.fromEntries(newMessage),
+      } as messageType;
 
-    const response = await conversationAPI.createMessage(message);
-    if (response.success) {
-      if (divRef.current) {
-        divRef.current.innerHTML = "";
-        setInputValue("");
-        divRef.current.focus();
+      const response = await conversationAPI.createMessage(message);
+      if (response.success) {
+        if (divRef.current) {
+          divRef.current!.innerHTML = "";
+          setInputValue("");
+          divRef.current!.focus();
+        }
+        setOptimisticImages([]);
+        setSelectedImageList([]);
+        setFileNameCloundinaryList([]);
+        dispatch(setReplyMsg(null));
       }
-      setOptimisticImages([]);
-      setSelectedImageList([]);
-      setFileNameCloundinaryList([]);
-      dispatch(setReplyMsg(null));
-    }
 
-    socket?.emit("send_message", {
-      receiver_id: private_chat.current_conversation?.members?.user?.id,
-      message: response.messageCreated,
-      timeMessage,
-    });
+      socket?.emit("send_message", {
+        receiver_id: private_chat.current_conversation?.members?.user?.id,
+        message: response.messageCreated,
+        timeMessage,
+      });
+    }
   };
 
   const handleClickLike = async () => {
@@ -236,20 +270,22 @@ const Form = () => {
       onSubmit={(e) => handleSendMessage(e)}
     >
       <>
-        <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
-          <label htmlFor="choose_image" className="cursor-pointer">
-            <CiImageOn size={30} title="Đính kèm file" color="#0866ff" />
-          </label>
-          <input
-            type="file"
-            id="choose_image"
-            name="imageInfo"
-            accept="image/*"
-            hidden
-            multiple
-            onChange={(e) => handleSelectImage([...e.target.files!])}
-          />
-        </div>
+        {!updateMessage.messageValue && (
+          <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
+            <label htmlFor="choose_image" className="cursor-pointer">
+              <CiImageOn size={30} title="Đính kèm file" color="#0866ff" />
+            </label>
+            <input
+              type="file"
+              id="choose_image"
+              name="imageInfo"
+              accept="image/*"
+              hidden
+              multiple
+              onChange={(e) => handleSelectImage([...e.target.files!])}
+            />
+          </div>
+        )}
         <div className="w-full bg-[#F0F2F5] rounded-2xl overflow-hidden">
           <div className="flex flex-col min-h-[36px]">
             {optimisticImages.length > 0 && (
@@ -312,12 +348,30 @@ const Form = () => {
           setEmoji={setEmoji}
         />
       )}
-      {inputValue || optimisticImages.length > 0 ? (
+      {inputValue ||
+      optimisticImages.length > 0 ||
+      updateMessage.messageValue !== null ? (
         <button
           className="w-[36px] h-[36px] cursor-pointer flex items-center"
           type="submit"
+          disabled={
+            divRef.current &&
+            updateMessage.messageValue?.message === divRef.current?.textContent
+              ? true
+              : false
+          }
         >
-          <BiSend size={26} title="Gửi" color="#0866ff" />
+          <BiSend
+            size={26}
+            title="Gửi"
+            color={cn(
+              divRef.current &&
+                updateMessage.messageValue?.message ===
+                  divRef.current?.textContent
+                ? "#b0b3b8"
+                : "#0866ff"
+            )}
+          />
         </button>
       ) : (
         <div

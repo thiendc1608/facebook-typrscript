@@ -5,6 +5,8 @@ import {
   addToMessage,
   chattingUserType,
   fetchAllMessage,
+  removeMessage,
+  removeTempMessage,
 } from "@/redux/conversationSlice";
 import { useAppDispatch } from "@/redux/store";
 import { SocketContext } from "@/context/SocketContext";
@@ -17,12 +19,16 @@ import { GoArrowDown } from "react-icons/go";
 import { UserState } from "@/redux/userSlice";
 import ReplyForm from "./ContentMessage/ReplyForm";
 import ReplyMsg from "./ContentMessage/ReplyMsg";
+import { cn } from "@/lib/utils";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
   const { socket } = useContext(SocketContext);
 
   const { room_id, private_chat, reply_message } = useSelector(
+    (state: { conversation: chattingUserType }) => state.conversation
+  );
+  const { updateMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const contentRef = useRef<null | HTMLDivElement>(null);
@@ -62,13 +68,23 @@ const ContentConversation = () => {
 
     socket?.on(
       "update_remove_message",
-      async (data: { message: allMessageType | null | string }) => {
+      async (data: { message: allMessageType[] | string[] }) => {
         const message = data.message;
-        dispatch(
-          addToMessage({
-            messages: message,
-          })
-        );
+        if (
+          message.every((item) => typeof item === "object" && item !== null)
+        ) {
+          dispatch(
+            removeTempMessage({
+              messages: message,
+            })
+          );
+        } else {
+          dispatch(
+            removeMessage({
+              messages: message,
+            })
+          );
+        }
       }
     );
     return () => {
@@ -129,61 +145,72 @@ const ContentConversation = () => {
 
   return (
     <div className="sticky top-0 w-[66.67%] flex flex-col justify-start h-full z-0">
-      <div className="w-full h-[64px] shadow-headerContent">
-        <div className="px4 py-3">
-          <div className="px-[6px]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <img
-                  src={
-                    private_chat.current_conversation?.group_image ||
-                    private_chat.current_conversation?.members?.user?.avatar
-                  }
-                  alt="anh"
-                  className="w-[40px] h-[40px] object-cover rounded-full"
-                />
-                <span className="text-[#080809] text-[16px] font-bold">
-                  {`${
-                    private_chat.current_conversation?.conversation_name ||
-                    private_chat.current_conversation?.members?.user?.lastName +
-                      " " +
+      <div className="relative z-0">
+        <div className="w-full h-[64px] shadow-headerContent">
+          <div className="px4 py-3">
+            <div className="px-[6px]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={
+                      private_chat.current_conversation?.group_image ||
+                      private_chat.current_conversation?.members?.user?.avatar
+                    }
+                    alt="anh"
+                    className="w-[40px] h-[40px] object-cover rounded-full"
+                  />
+                  <span className="text-[#080809] text-[16px] font-bold">
+                    {`${
+                      private_chat.current_conversation?.conversation_name ||
                       private_chat.current_conversation?.members?.user
-                        ?.firstName
-                  }`.trim()}
-                </span>
-              </div>
-              <div className="w-[36px] h-[36px] rounded-full bg-[#f2f2f2] flex items-center justify-center cursor-pointer">
-                <MdInfo size={24} color="#0866ff" />
+                        ?.lastName +
+                        " " +
+                        private_chat.current_conversation?.members?.user
+                          ?.firstName
+                    }`.trim()}
+                  </span>
+                </div>
+                <div className="w-[36px] h-[36px] rounded-full bg-[#f2f2f2] flex items-center justify-center cursor-pointer">
+                  <MdInfo size={24} color="#0866ff" />
+                </div>
               </div>
             </div>
           </div>
         </div>
+        {updateMessage.messageValue !== null && (
+          <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
+        )}
       </div>
       <div
         className="w-full h-[calc(100vh-64px-60px-56px)] overflow-y-auto"
         ref={contentRef}
       >
-        <div className="pt-5 px-3 pb-3">
-          <div className="flex flex-col items-center justify-center gap-3">
-            <img
-              src={
-                private_chat.current_conversation?.group_image ||
-                private_chat.current_conversation?.members?.user?.avatar
-              }
-              alt="anh"
-              className="w-[60px] h-[60px] rounded-full object-cover"
-            />
-            <span className="text-[17px] text-[#080809] font-semibold">
-              {`${
-                private_chat.current_conversation?.conversation_name ||
-                private_chat.current_conversation?.members?.user?.lastName +
-                  " " +
-                  private_chat.current_conversation?.members?.user?.firstName
-              }`.trim()}
-            </span>
+        <div className="relative z-0">
+          <div className={cn("pt-5 px-3 pb-3")}>
+            <div className="flex flex-col items-center justify-center gap-3">
+              <img
+                src={
+                  private_chat.current_conversation?.group_image ||
+                  private_chat.current_conversation?.members?.user?.avatar
+                }
+                alt="anh"
+                className="w-[60px] h-[60px] rounded-full object-cover"
+              />
+              <span className="text-[17px] text-[#080809] font-semibold">
+                {`${
+                  private_chat.current_conversation?.conversation_name ||
+                  private_chat.current_conversation?.members?.user?.lastName +
+                    " " +
+                    private_chat.current_conversation?.members?.user?.firstName
+                }`.trim()}
+              </span>
+            </div>
           </div>
+          {updateMessage.messageValue !== null && (
+            <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
+          )}
         </div>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col">
           {private_chat.current_messages?.map((el, index: number) => {
             const nextMessage = private_chat.current_messages[index + 1];
             const showAvatar =
@@ -259,7 +286,10 @@ const ContentConversation = () => {
       <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
         {reply_message?.conversation_id ===
           private_chat.current_conversation?.id && (
-          <ReplyForm currentUser={currentUser} />
+          <ReplyForm currentUser={currentUser} isReply={true} />
+        )}
+        {updateMessage?.isUpdateMsg && (
+          <ReplyForm currentUser={currentUser} isReply={false} />
         )}
         <Form />
       </div>

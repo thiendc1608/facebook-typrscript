@@ -334,21 +334,62 @@ io.on("connection", (socket) => {
   });
 
   socket.on("remove_message", async (data) => {
-    let removeMessage = null;
+    let removeMessageList = [];
     if (data.el.message !== "Bạn đã thu hồi một tin nhắn") {
-      removeMessage = await db.Message.update(
+      const [affectedCount] = await db.Message.update(
         {
           message: "Bạn đã thu hồi một tin nhắn",
         },
         { where: { id: data.el.id } }
       );
+      if (affectedCount > 0) {
+        const removeMessage = await db.Message.findOne({
+          where: { id: data.el.id },
+          raw: true,
+        });
+
+        const listMessageReply = await db.Message.findAll({
+          where: { reply_text_id: data.el.id },
+          include: [
+            {
+              model: db.User,
+              attributes: ["firstName", "lastName", "avatar"],
+              as: "senderInfo",
+            },
+          ],
+          raw: true,
+          nest: true,
+        });
+
+        listMessageReply.forEach((el) => {
+          el.info_reply = {
+            sender_id: el.sender_id,
+            message: "Bạn đã thu hồi một tin nhắn",
+            senderInfo: {
+              firstName: el.senderInfo?.firstName,
+              lastName: el.senderInfo?.lastName,
+              avatar: el.senderInfo?.avatar,
+            },
+          };
+        });
+        removeMessageList = [removeMessage, ...listMessageReply];
+      }
     } else {
-      removeMessage = await db.Message.destroy({
+      let removeMessage = await db.Message.destroy({
         where: { id: data.el.id },
       });
-      if (removeMessage === 1) removeMessage = data.el.id;
+      if (removeMessage === 1) removeMessage = { id: data.el.id };
+      const listMessageReply = await db.Message.findAll({
+        where: { reply_text_id: data.el.id },
+        attributes: ["id"],
+        raw: true,
+      });
+      const listObjectId = [removeMessage, ...listMessageReply];
+      removeMessageList = listObjectId.map((item) => item.id);
+      await db.Message.destroy({
+        where: { reply_text_id: data.el.id },
+      });
     }
-    console.log(removeMessage);
 
     const to_user = await db.User.findOne({
       where: { id: data.receiver_id },
@@ -362,12 +403,56 @@ io.on("connection", (socket) => {
     const senderUser = getUser(from_user);
     if (receiveUser?.socketId) {
       io.to(receiveUser.socketId).emit("update_remove_message", {
-        message: removeMessage,
+        message: removeMessageList,
       });
     }
     if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
       io.to(senderUser.socketId).emit("update_remove_message", {
-        message: removeMessage,
+        message: removeMessageList,
+      });
+    }
+  });
+
+  socket.on("update_message", async (data) => {
+    const { receiver_id, message_id, sender_id, messageUpdate } = data;
+    let updateMessage = [];
+    const [affectedCount] = await db.Message.update(
+      {
+        message: messageUpdate,
+      },
+      { where: { id: message_id } }
+    );
+    if (affectedCount > 0) {
+      const updateMsg = await db.Message.findOne({
+        where: { id: message_id },
+        raw: true,
+      });
+      updateMessage.push(updateMsg);
+    }
+
+    const to_user = await db.User.findOne({
+      where: { id: receiver_id },
+      raw: true,
+    });
+    const from_user = await db.User.findOne({
+      where: { id: sender_id },
+      raw: true,
+    });
+
+    // Lấy socketId của người nhận và người gửi
+    const receiveUser = getUser(to_user);
+    const senderUser = getUser(from_user);
+
+    // Phát sự kiện tới người nhận
+    if (receiveUser?.socketId) {
+      io.to(receiveUser.socketId).emit("update_remove_message", {
+        message: updateMessage,
+      });
+    }
+
+    if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
+      io.to(senderUser.socketId).emit("update_remove_message", {
+        message: updateMessage,
       });
     }
   });

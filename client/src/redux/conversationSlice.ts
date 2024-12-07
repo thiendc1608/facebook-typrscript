@@ -21,6 +21,10 @@ export interface chattingUserType {
   room_id: string;
   emojiList: emotionType[];
   reply_message: allMessageType | null;
+  updateMessage: {
+    isUpdateMsg: boolean;
+    messageValue: allMessageType | null;
+  };
   // group_chat: any;
 }
 
@@ -35,18 +39,25 @@ const conversationSlice = createSlice({
     room_id: "",
     emojiList: [],
     reply_message: null,
+    updateMessage: {
+      isUpdateMsg: false,
+      messageValue: null,
+    },
     // group_chat: {},
   } as chattingUserType,
   reducers: {
     setReplyMsg: (state, action) => {
       state.reply_message = action.payload;
     },
+
     setEmojiList: (state, action) => {
       state.emojiList = action.payload;
     },
+
     setCurrentConversation: (state, action) => {
       state.private_chat.current_conversation = action.payload;
     },
+
     addToReactMessage: (state, action) => {
       state.private_chat.current_messages =
         state.private_chat.current_messages.map((el) => {
@@ -63,6 +74,7 @@ const conversationSlice = createSlice({
           return el;
         });
     },
+
     addToConventions: (state, action) => {
       state.private_chat.conversations =
         state.private_chat.conversations.filter(
@@ -70,26 +82,52 @@ const conversationSlice = createSlice({
         );
       state.private_chat.conversations.push(action.payload.conversation);
     },
+
     addToMessage: (state, action) => {
       if (action.payload.timeMessage) {
         state.private_chat.current_messages.push(action.payload.timeMessage);
       }
       state.private_chat.current_messages.push(action.payload.messages);
     },
+
+    setUpdateMessage: (state, action) => {
+      state.updateMessage = action.payload;
+    },
+
+    removeTempMessage: (state, action) => {
+      state.private_chat.current_messages =
+        state.private_chat.current_messages.map((el) => {
+          const updatedItem = action.payload.messages.find(
+            (updatedEl: allMessageType) => updatedEl.id === el.id
+          );
+          return updatedItem ? { ...el, ...updatedItem } : el;
+        });
+    },
+
+    removeMessage: (state, action) => {
+      state.private_chat.current_messages =
+        state.private_chat.current_messages.filter(
+          (el) => !action.payload.messages.includes(el.id)
+        );
+    },
+
     deleteConversation: (state, action) => {
       state.private_chat.conversations =
         state.private_chat.conversations.filter(
           (el) => el?.id !== action.payload.conversation_id
         );
     },
+
     selectRoom: (state, action) => {
       state.room_id = action.payload.room_id;
     },
   },
+
   extraReducers: (builder) => {
     builder.addCase(fetchDirectConversations.fulfilled, (state, action) => {
       state.private_chat.conversations = action.payload.conversations;
     });
+
     builder.addCase(fetchAllMessage.fulfilled, (state, action) => {
       if (action.payload.countReactMes) {
         const result: GroupedItem = action.payload.countReactMes.reduce(
@@ -124,6 +162,7 @@ const conversationSlice = createSlice({
         state.private_chat.current_messages = action.payload.messages;
       }
     });
+
     builder.addCase(getAllUserReactMessage.fulfilled, (state, action) => {
       const list_current = state.private_chat.current_messages.map(
         (message: allMessageType) => {
@@ -150,6 +189,9 @@ export const {
   setEmojiList,
   addToReactMessage,
   setReplyMsg,
+  removeMessage,
+  removeTempMessage,
+  setUpdateMessage,
 } = conversationSlice.actions;
 const conversationReducer = conversationSlice.reducer;
 export default conversationReducer;

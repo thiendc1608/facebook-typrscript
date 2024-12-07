@@ -66,7 +66,7 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
         {positionMes === "left" && showAvatar && (
           <AvatarMsg el={el} currentUser={currentUser} />
         )}
-        <div className="py-2 px-3 rounded-2xl bg-white cursor-pointer w-auto">
+        <div className="rounded-2xl bg-white cursor-pointer w-auto">
           {el.image_id ? (
             <div className="flex flex-col">
               <div
@@ -77,13 +77,13 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
               >
                 <span
                   className={cn(
-                    "text-[#65686c] text-[13px] inline-block py-1 px-3 rounded-lg bg-[#f7f7f7]",
-                    el.info_reply?.message.includes(
+                    "text-[#252525] text-[13px] inline-block py-1 px-3 rounded-lg bg-gray-300",
+                    el.info_reply?.message?.includes(
                       "đã thu hồi một tin nhắn"
                     ) && "italic"
                   )}
                 >
-                  {el.info_reply?.message.includes("đã thu hồi một tin nhắn")
+                  {el.info_reply?.message?.includes("đã thu hồi một tin nhắn")
                     ? "Đã gỡ tin nhắn"
                     : el.info_reply?.message}
                 </span>
@@ -105,21 +105,44 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
                     currentUser={currentUser ?? null}
                   />
                 )}
-                <div
-                  className={cn(
-                    "relative py-1 px-3 rounded-2xl ",
-                    positionMes === "right"
-                      ? "bg-[#0866ff] text-white"
-                      : "bg-[#d1d5db] text-black"
-                  )}
-                >
-                  <div className="my-1 text-[15px]">{el.message}</div>
-                  {positionMes === "right" && (
-                    <ShowEmoji el={el} positionMes="right" />
-                  )}
-                  {positionMes === "left" && (
-                    <ShowEmoji el={el} positionMes="left" />
-                  )}
+                <div className="flex flex-col items-end">
+                  <div
+                    className={cn(
+                      "w-auto",
+                      positionMes === "left" ? "text-left" : "text-right"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "text-[#252525] text-[13px] inline-block py-1 px-3 rounded-lg bg-gray-300",
+                        el.info_reply?.message?.includes(
+                          "đã thu hồi một tin nhắn"
+                        ) && "italic"
+                      )}
+                    >
+                      {el.info_reply?.message?.includes(
+                        "đã thu hồi một tin nhắn"
+                      )
+                        ? "Đã gỡ tin nhắn"
+                        : el.info_reply?.message}
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "py-[2px] px-3 rounded-xl w-fit",
+                      positionMes === "right"
+                        ? "bg-[#0866ff] text-white"
+                        : "bg-[#d1d5db] text-black"
+                    )}
+                  >
+                    <span className="my-1 text-[15px]">{el.message}</span>
+                    {positionMes === "right" && (
+                      <ShowEmoji el={el} positionMes="right" />
+                    )}
+                    {positionMes === "left" && (
+                      <ShowEmoji el={el} positionMes="left" />
+                    )}
+                  </div>
                 </div>
                 {positionMes === "left" && (
                   <OptionMessage

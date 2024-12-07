@@ -1,5 +1,9 @@
 import { SocketContext } from "@/context/SocketContext";
-import { chattingUserType, setReplyMsg } from "@/redux/conversationSlice";
+import {
+  chattingUserType,
+  setReplyMsg,
+  setUpdateMessage,
+} from "@/redux/conversationSlice";
 import { allMessageType, emotionType, UserType } from "@/types";
 import { useContext, useEffect, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -66,7 +70,7 @@ const OptionMessage = ({
     dispatch(setReplyMsg(el));
   };
 
-  const handleUpdateMes = (el: allMessageType) => {
+  const handleRemoveMes = (el: allMessageType) => {
     Swal.fire({
       title: "Are you sure",
       icon: "warning",
@@ -82,6 +86,15 @@ const OptionMessage = ({
         });
       }
     });
+  };
+
+  const handleUpdateMes = (el: allMessageType) => {
+    dispatch(
+      setUpdateMessage({
+        isUpdateMsg: true,
+        messageValue: el,
+      })
+    );
   };
 
   return (
@@ -104,11 +117,19 @@ const OptionMessage = ({
             >
               <BsThreeDotsVertical size={18} />
               {seeMoreElement.isSeeMore && (
-                <div className="absolute bottom-[calc(100%+5px)] right-0 bg-white shadow-default rounded-md">
+                <div className="absolute bottom-[30%] right-[30px] bg-white shadow-default rounded-md">
                   <ul className="py-2 w-[131.5px]">
                     <li
                       className="mx-2 py-3 px-2 hover:bg-[#f2f2f2] rounded-lg"
                       onClick={() => handleUpdateMes(el)}
+                    >
+                      <span className="text-[#080809] text-[15px] font-semibold">
+                        Chỉnh sửa
+                      </span>
+                    </li>
+                    <li
+                      className="mx-2 py-3 px-2 hover:bg-[#f2f2f2] rounded-lg"
+                      onClick={() => handleRemoveMes(el)}
                     >
                       <span className="text-[#080809] text-[15px] font-semibold">
                         Thu hồi

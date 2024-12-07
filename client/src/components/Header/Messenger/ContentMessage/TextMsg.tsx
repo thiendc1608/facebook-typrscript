@@ -31,6 +31,9 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
     isSeeMore: false,
     el: null as allMessageType | null,
   });
+  const { updateMessage } = useSelector(
+    (state: { conversation: chattingUserType }) => state.conversation
+  );
   const [showOptionMes, setShowOptionMes] = useState<boolean>(false);
   let positionMes = "";
   if (currentUser?.id !== el.sender_id) {
@@ -93,157 +96,165 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
   }, []);
 
   return (
-    <div
-      className={cn(
-        "flex items-end",
-        currentUser?.id === el.sender_id
-          ? `justify-end ${showAvatar ? "pr-[14px]" : "pr-[50px]"}`
-          : `justify-start ${showAvatar ? "pl-[14px]" : "pl-[50px]"}`
-      )}
-      // onMouseEnter={() => {
-      //   setShowOptionMes(true);
-      // }}
-      // onMouseLeave={() => {
-      //   setShowOptionMes(false);
-      // }}
-    >
-      {positionMes === "right" && (
-        <div className="flex-1 min-w-[33%] max-w-full"></div>
-      )}
-      {positionMes === "left" && showAvatar && (
-        <AvatarMsg el={el} currentUser={currentUser} />
-      )}
-      <div className="flex items-center gap-2">
-        {positionMes === "right" &&
-          (el.message?.includes("đã thu hồi một tin nhắn") ? (
-            <div
-              id="see-more"
-              className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSeeMoreElement({
-                  ...seeMoreElement,
-                  isSeeMore: !seeMoreElement.isSeeMore,
-                  el,
-                });
-              }}
-            >
-              <BsThreeDotsVertical size={18} />
-              {seeMoreElement.isSeeMore && (
-                <div className="absolute bottom-[calc(100%+5px)] right-0 bg-white shadow-default rounded-md">
-                  <ul className="w-[80px]">
-                    <li
-                      className="py-3 px-2 hover:bg-[#f2f2f2] rounded-lg text-center"
-                      onClick={() => handleRemoveMes(el)}
-                    >
-                      <span className="text-[#080809] text-[15px] font-semibold">
-                        Gỡ
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-          ) : (
-            <OptionMessage
-              positionMes="right"
-              el={el}
-              currentUser={currentUser ?? null}
-            />
-          ))}
-        <div
-          className={cn(
-            "relative max-w-[480px] rounded-2xl h-auto flex items-end flex-col",
-            el.message !== "👍" && "bg-[#0866FF] px-3 py-1",
-            positionMes === "left" && "bg-gray-300"
-          )}
-        >
-          {positionMes === "right" && <ShowEmoji el={el} positionMes="right" />}
+    <div className="relative z-0">
+      <div
+        className={cn(
+          "flex items-end pb-2 pt-4",
+          currentUser?.id === el.sender_id
+            ? `justify-end ${showAvatar ? "pr-[14px]" : "pr-[50px]"}`
+            : `justify-start ${showAvatar ? "pl-[14px]" : "pl-[50px]"}`
+        )}
+        // onMouseEnter={() => {
+        //   setShowOptionMes(true);
+        // }}
+        // onMouseLeave={() => {
+        //   setShowOptionMes(false);
+        // }}
+      >
+        {positionMes === "right" && (
+          <div className="flex-1 min-w-[33%] max-w-full"></div>
+        )}
+        {positionMes === "left" && showAvatar && (
+          <AvatarMsg el={el} currentUser={currentUser} />
+        )}
+        <div className="flex items-center gap-2">
+          {positionMes === "right" &&
+            (el.message?.includes("đã thu hồi một tin nhắn") ? (
+              <div
+                id="see-more"
+                className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSeeMoreElement({
+                    ...seeMoreElement,
+                    isSeeMore: !seeMoreElement.isSeeMore,
+                    el,
+                  });
+                }}
+              >
+                <BsThreeDotsVertical size={18} />
+                {seeMoreElement.isSeeMore && (
+                  <div className="absolute bottom-[calc(100%+5px)] right-0 bg-white shadow-default rounded-md">
+                    <ul className="w-[80px]">
+                      <li
+                        className="py-3 px-2 hover:bg-[#f2f2f2] rounded-lg text-center"
+                        onClick={() => handleRemoveMes(el)}
+                      >
+                        <span className="text-[#080809] text-[15px] font-semibold">
+                          Gỡ
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <OptionMessage
+                positionMes="right"
+                el={el}
+                currentUser={currentUser ?? null}
+              />
+            ))}
           <div
             className={cn(
-              "text-[15px] text-white py-1 inline-block break-all",
-              el.message === "👍" && "text-[20px]",
-              positionMes === "left" && "text-black",
-              el.message === "Bạn đã thu hồi một tin nhắn" &&
-                "opacity-70 italic"
-            )}
-          >
-            {el.message?.includes("đã thu hồi một tin nhắn")
-              ? `${
-                  currentUser?.id === el.sender_id
-                    ? "Bạn đã thu hồi một tin nhắn"
-                    : `${private_chat.current_conversation?.members.user.lastName} ${private_chat.current_conversation?.members.user.firstName} đã thu hồi một tin nhắn`
-                }`
-              : el.message}
-          </div>
-
-          <div
-            className={cn(
-              "absolute top-[-15px] right-0 w-auto whitespace-nowrap flex gap-2",
-              positionMes === "left" && "left-0"
+              "relative max-w-[480px] rounded-xl h-auto flex items-end flex-col",
+              el.message !== "👍" && "bg-[#0866FF] px-3 py-1",
+              positionMes === "left" && "bg-gray-300"
             )}
           >
             {positionMes === "right" && (
-              <div className="text-[11px] text-gray-600">
-                {format(new Date(el.send_at), "HH:mm a")}
-              </div>
+              <ShowEmoji el={el} positionMes="right" />
             )}
-            {positionMes === "left" && (
-              <div className="text-[11px] text-gray-600">
-                {format(new Date(el.send_at), "HH:mm a")}
-              </div>
-            )}
-          </div>
-          {positionMes === "left" && <ShowEmoji el={el} positionMes="left" />}
-        </div>
-        {positionMes === "left" &&
-        el.message?.includes("đã thu hồi một tin nhắn") ? (
-          <>
             <div
-              id="see-more"
-              className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366]"
-              onClick={(e) => {
-                e.stopPropagation();
-                setSeeMoreElement({
-                  ...seeMoreElement,
-                  isSeeMore: !seeMoreElement.isSeeMore,
-                  el,
-                });
-              }}
+              className={cn(
+                "text-[15px] text-white py-1 inline-block break-all",
+                el.message === "👍" && "text-[20px]",
+                positionMes === "left" && "text-black",
+                el.message === "Bạn đã thu hồi một tin nhắn" &&
+                  "opacity-70 italic"
+              )}
             >
-              <BsThreeDotsVertical size={18} />
-              {seeMoreElement.isSeeMore && (
-                <div className="absolute bottom-[calc(100%+5px)] left-0 bg-white shadow-default rounded-md">
-                  <ul className="w-[80px]">
-                    <li
-                      className="py-3 px-2 hover:bg-[#f2f2f2] rounded-lg text-center"
-                      onClick={() => handleRemoveMes(el)}
-                    >
-                      <span className="text-[#080809] text-[15px] font-semibold">
-                        Gỡ
-                      </span>
-                    </li>
-                  </ul>
+              {el.message?.includes("đã thu hồi một tin nhắn")
+                ? `${
+                    currentUser?.id === el.sender_id
+                      ? "Bạn đã thu hồi một tin nhắn"
+                      : `${private_chat.current_conversation?.members.user.lastName} ${private_chat.current_conversation?.members.user.firstName} đã thu hồi một tin nhắn`
+                  }`
+                : el.message}
+            </div>
+
+            <div
+              className={cn(
+                "absolute top-[-15px] right-0 w-auto whitespace-nowrap flex gap-2",
+                positionMes === "left" && "left-0"
+              )}
+            >
+              {positionMes === "right" && (
+                <div className="text-[11px] text-gray-600">
+                  {format(new Date(el.send_at), "HH:mm a")}
+                </div>
+              )}
+              {positionMes === "left" && (
+                <div className="text-[11px] text-gray-600">
+                  {format(new Date(el.send_at), "HH:mm a")}
                 </div>
               )}
             </div>
-          </>
-        ) : (
-          positionMes === "left" && (
-            <OptionMessage
-              positionMes="left"
-              el={el}
-              currentUser={currentUser ?? null}
-            />
-          )
+            {positionMes === "left" && <ShowEmoji el={el} positionMes="left" />}
+          </div>
+          {positionMes === "left" &&
+          el.message?.includes("đã thu hồi một tin nhắn") ? (
+            <>
+              <div
+                id="see-more"
+                className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSeeMoreElement({
+                    ...seeMoreElement,
+                    isSeeMore: !seeMoreElement.isSeeMore,
+                    el,
+                  });
+                }}
+              >
+                <BsThreeDotsVertical size={18} />
+                {seeMoreElement.isSeeMore && (
+                  <div className="absolute bottom-[calc(100%+5px)] left-0 bg-white shadow-default rounded-md">
+                    <ul className="w-[80px]">
+                      <li
+                        className="py-3 px-2 hover:bg-[#f2f2f2] rounded-lg text-center"
+                        onClick={() => handleRemoveMes(el)}
+                      >
+                        <span className="text-[#080809] text-[15px] font-semibold">
+                          Gỡ
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            positionMes === "left" && (
+              <OptionMessage
+                positionMes="left"
+                el={el}
+                currentUser={currentUser ?? null}
+              />
+            )
+          )}
+        </div>
+        {positionMes === "left" && (
+          <div className="flex-1 min-w-[33%] max-w-full"></div>
+        )}
+        {positionMes === "right" && showAvatar && (
+          <AvatarMsg el={el} currentUser={currentUser} />
         )}
       </div>
-      {positionMes === "left" && (
-        <div className="flex-1 min-w-[33%] max-w-full"></div>
-      )}
-      {positionMes === "right" && showAvatar && (
-        <AvatarMsg el={el} currentUser={currentUser} />
-      )}
+      {updateMessage.messageValue !== null &&
+        el.id !== updateMessage.messageValue?.id && (
+          <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
+        )}
     </div>
   );
 };

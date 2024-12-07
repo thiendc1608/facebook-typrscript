@@ -92,7 +92,7 @@ const getAllMessage = asyncHandler(async (req, res) => {
         model: db.Message, // Kết hợp với chính bảng Message để lấy thông tin tin nhắn trả lời
         as: "info_reply", // Alias cho tin nhắn trả lời
         required: false, // Không bắt buộc phải có tin nhắn trả lời
-        where: { id: Sequelize.col("message.reply_text_id") }, // Điều kiện join: reply_text_id của message phải trùng với id của message
+        where: { id: Sequelize.col("Message.reply_text_id") }, // Điều kiện join: reply_text_id của message phải trùng với id của message
         attributes: ["sender_id", "message"],
         include: [
           {
