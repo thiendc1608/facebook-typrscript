@@ -146,11 +146,25 @@ io.on("connection", (socket) => {
         group_image,
       });
 
-      const members = userIds.map((userId) => ({
-        conversation_id: conversationId,
-        user_id: userId,
-        joined_at: new Date(),
-      }));
+      const members = await Promise.all(
+        userIds.map(async (userId) => {
+          const user = await db.User.findOne({
+            where: {
+              id: userId,
+            },
+            attributes: ["firstName", "lastName"],
+            raw: true,
+          });
+
+          return {
+            conversation_id: conversationId,
+            user_id: userId,
+            nickname: user.lastName + " " + user.firstName,
+            joined_at: new Date(),
+          };
+        })
+      );
+
       await db.Member.bulkCreate(members);
     }
 
@@ -163,11 +177,11 @@ io.on("connection", (socket) => {
         {
           model: db.Member,
           as: "members",
-          attributes: ["user_id", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
+          attributes: ["user_id", "nickname", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
           include: [
             {
               model: db.User,
-              attributes: ["firstName", "lastName", "avatar"],
+              attributes: ["avatar"],
               as: "user",
             },
           ],
@@ -214,22 +228,22 @@ io.on("connection", (socket) => {
         raw: true,
         nest: true,
       });
-      const findImage = await db.Message.findOne({
-        where: {
-          image_id: message.image_id,
-        },
-        include: [
-          {
-            model: db.Image,
-            attributes: ["message_image"],
-            as: "imageInfo",
-          },
-        ],
-        raw: true,
-        nest: true,
-      });
-      imageList = findImage.imageInfo.message_image;
     }
+    const findImage = await db.Message.findOne({
+      where: {
+        image_id: message.image_id,
+      },
+      include: [
+        {
+          model: db.Image,
+          attributes: ["message_image"],
+          as: "imageInfo",
+        },
+      ],
+      raw: true,
+      nest: true,
+    });
+    imageList = findImage.imageInfo.message_image;
 
     const newMessage = {
       ...message,
@@ -453,6 +467,49 @@ io.on("connection", (socket) => {
     if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
       io.to(senderUser.socketId).emit("update_remove_message", {
         message: updateMessage,
+      });
+    }
+  });
+
+  socket.on("change_name", async (data) => {
+    const { receiver_id, conversation_id, id, sender_id, name } = data;
+
+    await db.Member.update(
+      {
+        nickname: name,
+      },
+      { where: { conversation_id, user_id: id } }
+    );
+
+    const changeName = await db.Member.findOne({
+      where: { conversation_id, user_id: id },
+      attributes: ["conversation_id", "user_id", "nickname"],
+      raw: true,
+    });
+
+    const to_user = await db.User.findOne({
+      where: { id: receiver_id },
+      raw: true,
+    });
+    const from_user = await db.User.findOne({
+      where: { id: sender_id },
+      raw: true,
+    });
+
+    // Lấy socketId của người nhận và người gửi
+    const receiveUser = getUser(to_user);
+    const senderUser = getUser(from_user);
+
+    // Phát sự kiện tới người nhận
+    if (receiveUser?.socketId) {
+      io.to(receiveUser.socketId).emit("update_nickname", {
+        new_nickName: changeName,
+      });
+    }
+
+    if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
+      io.to(senderUser.socketId).emit("update_nickname", {
+        new_nickName: changeName,
       });
     }
   });

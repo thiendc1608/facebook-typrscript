@@ -1,3 +1,4 @@
+import { changNickNameType } from "@/components/Header/Messenger/InformationConservation";
 import {
   allMessageType,
   imageCloudinaryType,
@@ -8,6 +9,17 @@ import { conversationType, CustomResponse } from "@/types";
 import axiosClient from "./axiosClient";
 
 type messageCreatedType = Omit<allMessageType, "createdAt" | "updatedAt">;
+export type messageSearchType = {
+  id: string;
+  message: string;
+  send_at: Date;
+  senderInfo: {
+    firstName: string;
+    lastName: string;
+    avatar: string;
+  };
+};
+
 export const conversationAPI = {
   getAllConversation: (
     current_id: string
@@ -30,6 +42,17 @@ export const conversationAPI = {
     }
   > => {
     const url = `conversation/get-all-message/${conversation_id}`;
+    return axiosClient.get(url);
+  },
+
+  getAllMessageSearch: (
+    conversation_id: string
+  ): Promise<
+    CustomResponse & {
+      messages: messageSearchType[];
+    }
+  > => {
+    const url = `conversation/get-all-message-search/${conversation_id}`;
     return axiosClient.get(url);
   },
 
@@ -58,5 +81,31 @@ export const conversationAPI = {
   deleteImages: (data: string): Promise<CustomResponse> => {
     const url = `conversation/delete-image/${data}`;
     return axiosClient.delete(url);
+  },
+
+  getAllNickName: (
+    conversation_id: string
+  ): Promise<
+    CustomResponse & {
+      allNickName: changNickNameType[];
+    }
+  > => {
+    const url = `conversation/get-all-nickname/${conversation_id}`;
+    return axiosClient.get(url);
+  },
+
+  getAllImageConversation: (
+    conversation_id: string
+  ): Promise<
+    CustomResponse & {
+      allImage: {
+        imageInfo: {
+          message_image: string;
+        };
+      }[];
+    }
+  > => {
+    const url = `conversation/get-all-image/${conversation_id}`;
+    return axiosClient.get(url);
   },
 };

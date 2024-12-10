@@ -14,7 +14,10 @@ export const range = (start: number, stop: number, step: number) =>
     (_, i) => start + i * step
   );
 
-export function formatTimeAgo(utcDate: string | number | Date) {
+export function formatTimeAgo(
+  utcDate: string | number | Date,
+  timeMsg?: boolean
+) {
   const now = new Date();
   const date = new Date(utcDate);
 
@@ -22,11 +25,19 @@ export function formatTimeAgo(utcDate: string | number | Date) {
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
 
   if (diffInMinutes < 60) {
-    return `${diffInMinutes === 0 ? 1 : diffInMinutes} phút trước`; // Nếu dưới 1 giờ
+    return `${diffInMinutes === 0 ? 1 : diffInMinutes} phút ${
+      timeMsg ? "" : "trước"
+    }`; // Nếu dưới 1 giờ
   } else if (diffInHours < 24) {
-    return `${diffInHours} giờ trước`; // Nếu dưới 24 giờ
+    return `${diffInHours} giờ ${timeMsg ? "" : "trước"}`; // Nếu dưới 24 giờ
+  }
+  if (timeMsg) {
+    if (diffInDays < 7) return `${diffInDays} ngày`; // Nếu dưới 7 ngày
+    else return `${diffInWeeks} tuần`;
   }
 }
 

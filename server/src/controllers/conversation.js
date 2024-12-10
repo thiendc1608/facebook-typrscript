@@ -11,11 +11,11 @@ const getAllConversation = asyncHandler(async (req, res) => {
       {
         model: db.Member,
         as: "members",
-        attributes: ["user_id", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
+        attributes: ["user_id", "nickname", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
         include: [
           {
             model: db.User,
-            attributes: ["firstName", "lastName", "avatar"],
+            attributes: ["avatar"],
             as: "user",
           },
         ],
@@ -117,7 +117,7 @@ const getAllMessage = asyncHandler(async (req, res) => {
     raw: true,
   });
 
-  if (!messages || messages.length === 0) {
+  if (!messages) {
     return res.status(404).json({
       success: false,
       message: "Messages not found",
@@ -130,6 +130,98 @@ const getAllMessage = asyncHandler(async (req, res) => {
     message: "Get all messages successfully",
     messages,
     countReactMes,
+  });
+});
+
+const getAllMessageSearch = asyncHandler(async (req, res) => {
+  const { conversation_id } = req.params;
+
+  const messages = await db.Message.findAll({
+    where: { conversation_id },
+    order: [["createdAt", "ASC"]],
+    attributes: ["id", "message", "send_at"],
+    include: [
+      {
+        model: db.User,
+        attributes: ["firstName", "lastName", "avatar"],
+        as: "senderInfo",
+      },
+    ],
+    raw: true,
+    nest: true,
+  });
+
+  if (!messages) {
+    return res.status(404).json({
+      success: false,
+      message: "Messages not found",
+      messages,
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Get all messages successfully",
+    messages,
+  });
+});
+
+const getAllNickName = asyncHandler(async (req, res) => {
+  const { conversation_id } = req.params;
+  const allNickName = await db.Member.findAll({
+    where: { conversation_id },
+    attributes: ["id", "conversation_id", "user_id", "nickname"],
+    include: [
+      {
+        model: db.User,
+        attributes: ["avatar"],
+        as: "user",
+      },
+    ],
+    raw: true,
+    nest: true,
+  });
+
+  if (!allNickName) {
+    return res.status(404).json({
+      success: false,
+      message: "Nicknames not found",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Get all nicknames successfully",
+    allNickName,
+  });
+});
+
+const getAllImage = asyncHandler(async (req, res) => {
+  const { conversation_id } = req.params;
+  const allImage = await db.Message.findAll({
+    where: {
+      conversation_id,
+      image_id: {
+        [Op.ne]: null,
+      },
+    },
+    include: [
+      {
+        model: db.Image,
+        attributes: ["message_image"],
+        order: ["createdAt", "ASC"],
+        as: "imageInfo",
+      },
+    ],
+    attributes: [],
+    raw: true,
+    nest: true,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Get all images successfully",
+    allImage,
   });
 });
 
@@ -209,4 +301,7 @@ export {
   createMessage,
   uploadImage,
   deleteImage,
+  getAllMessageSearch,
+  getAllNickName,
+  getAllImage,
 };

@@ -7,6 +7,7 @@ import {
   fetchAllMessage,
   removeMessage,
   removeTempMessage,
+  setShowContact,
 } from "@/redux/conversationSlice";
 import { useAppDispatch } from "@/redux/store";
 import { SocketContext } from "@/context/SocketContext";
@@ -20,12 +21,13 @@ import { UserState } from "@/redux/userSlice";
 import ReplyForm from "./ContentMessage/ReplyForm";
 import ReplyMsg from "./ContentMessage/ReplyMsg";
 import { cn } from "@/lib/utils";
+import { messageSliceType } from "@/redux/messageSlice";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
   const { socket } = useContext(SocketContext);
 
-  const { room_id, private_chat, reply_message } = useSelector(
+  const { room_id, private_chat, reply_message, isShowContact } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const { updateMessage } = useSelector(
@@ -36,6 +38,9 @@ const ContentConversation = () => {
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
+  );
+  const { themeMessage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
   );
 
   useEffect(() => {
@@ -144,7 +149,12 @@ const ContentConversation = () => {
   };
 
   return (
-    <div className="sticky top-0 w-[66.67%] flex flex-col justify-start h-full z-0">
+    <div
+      className={cn(
+        "sticky top-0 w-[66.67%] flex flex-col justify-start h-full z-0",
+        !isShowContact && "w-full"
+      )}
+    >
       <div className="relative z-0">
         <div className="w-full h-[64px] shadow-headerContent">
           <div className="px4 py-3">
@@ -162,16 +172,15 @@ const ContentConversation = () => {
                   <span className="text-[#080809] text-[16px] font-bold">
                     {`${
                       private_chat.current_conversation?.conversation_name ||
-                      private_chat.current_conversation?.members?.user
-                        ?.lastName +
-                        " " +
-                        private_chat.current_conversation?.members?.user
-                          ?.firstName
+                      private_chat.current_conversation?.members?.nickname
                     }`.trim()}
                   </span>
                 </div>
-                <div className="w-[36px] h-[36px] rounded-full bg-[#f2f2f2] flex items-center justify-center cursor-pointer">
-                  <MdInfo size={24} color="#0866ff" />
+                <div
+                  className="w-[36px] h-[36px] rounded-full bg-[#f2f2f2] flex items-center justify-center cursor-pointer"
+                  onClick={() => dispatch(setShowContact(!isShowContact))}
+                >
+                  <MdInfo size={24} color={`${themeMessage}`} />
                 </div>
               </div>
             </div>
@@ -199,9 +208,7 @@ const ContentConversation = () => {
               <span className="text-[17px] text-[#080809] font-semibold">
                 {`${
                   private_chat.current_conversation?.conversation_name ||
-                  private_chat.current_conversation?.members?.user?.lastName +
-                    " " +
-                    private_chat.current_conversation?.members?.user?.firstName
+                  private_chat.current_conversation?.members?.nickname
                 }`.trim()}
               </span>
             </div>

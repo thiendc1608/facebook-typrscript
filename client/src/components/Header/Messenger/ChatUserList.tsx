@@ -217,9 +217,7 @@ const ChatUserList = () => {
                       <span className="text-[#080809] text-[15px] font-bold">
                         {`${
                           conversation?.conversation_name ||
-                          conversation?.members?.user?.lastName +
-                            " " +
-                            conversation?.members?.user?.firstName
+                          conversation?.members?.nickname
                         }`.trim()}
                       </span>
                       <div className="flex items-baseline text-[#65686c] text-[13px] gap-1">

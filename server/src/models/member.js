@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       conversation_id: DataTypes.STRING,
       user_id: DataTypes.STRING,
+      nickname: DataTypes.STRING,
       joined_at: DataTypes.DATE,
     },
     {

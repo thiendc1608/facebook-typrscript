@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import { allMessageType, UserType } from "@/types";
 import AvatarMsg from "./AvatarMsg";
-import { memo, useContext, useEffect, useState } from "react";
+import { memo, useContext, useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import {
   chattingUserType,
@@ -14,6 +14,8 @@ import OptionMessage from "./OptionMessage";
 import ShowEmoji from "./ShowEmoji";
 import { useSelector } from "react-redux";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import "../Messenger.css";
+import { messageSliceType } from "@/redux/messageSlice";
 
 interface TextMsgType {
   el: allMessageType;
@@ -31,8 +33,11 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
     isSeeMore: false,
     el: null as allMessageType | null,
   });
-  const { updateMessage } = useSelector(
+  const { updateMessage, searchMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
+  );
+  const { themeMessage, changeEmojiMessage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
   );
   const [showOptionMes, setShowOptionMes] = useState<boolean>(false);
   let positionMes = "";
@@ -41,6 +46,7 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
   } else {
     positionMes = "right";
   }
+  const messageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -94,6 +100,19 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
     document.addEventListener("click", handleCloseSeeMore);
     return () => document.removeEventListener("click", handleCloseSeeMore);
   }, []);
+
+  useEffect(() => {
+    if (el.id === searchMessage?.id) {
+      messageRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      messageRef.current?.scrollTo(0, 0); // Scroll lên 50px
+      setTimeout(() => {
+        messageRef.current?.classList.add("zoomInOut"); // Thêm animation
+      }, 100);
+    }
+  }, [searchMessage, el]);
 
   return (
     <div className="relative z-0">
@@ -156,51 +175,88 @@ const TextMsg = ({ el, currentUser, showAvatar }: TextMsgType) => {
               />
             ))}
           <div
-            className={cn(
-              "relative max-w-[480px] rounded-xl h-auto flex items-end flex-col",
-              el.message !== "👍" && "bg-[#0866FF] px-3 py-1",
-              positionMes === "left" && "bg-gray-300"
-            )}
+            ref={messageRef}
+            className={`${
+              el.id === searchMessage?.id &&
+              "border-[2px] border-black rounded-2xl p-[3px]"
+            }`}
           >
-            {positionMes === "right" && (
-              <ShowEmoji el={el} positionMes="right" />
-            )}
             <div
+              style={{
+                backgroundColor:
+                  el.message !==
+                    (!isNaN(
+                      parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+                    ) &&
+                      String?.fromCodePoint(
+                        parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+                      )) && el.message !== String.fromCodePoint(0x1f44d)
+                    ? positionMes === "left"
+                      ? "gray"
+                      : themeMessage
+                    : "transparent",
+              }}
               className={cn(
-                "text-[15px] text-white py-1 inline-block break-all",
-                el.message === "👍" && "text-[20px]",
-                positionMes === "left" && "text-black",
-                el.message === "Bạn đã thu hồi một tin nhắn" &&
-                  "opacity-70 italic"
-              )}
-            >
-              {el.message?.includes("đã thu hồi một tin nhắn")
-                ? `${
-                    currentUser?.id === el.sender_id
-                      ? "Bạn đã thu hồi một tin nhắn"
-                      : `${private_chat.current_conversation?.members.user.lastName} ${private_chat.current_conversation?.members.user.firstName} đã thu hồi một tin nhắn`
-                  }`
-                : el.message}
-            </div>
-
-            <div
-              className={cn(
-                "absolute top-[-15px] right-0 w-auto whitespace-nowrap flex gap-2",
-                positionMes === "left" && "left-0"
+                "relative max-w-[480px] rounded-xl h-auto flex items-end flex-col",
+                el.message !==
+                  (!isNaN(parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)) &&
+                    String?.fromCodePoint(
+                      parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+                    )) &&
+                  el.message !== "👍" &&
+                  "px-3 py-1"
               )}
             >
               {positionMes === "right" && (
-                <div className="text-[11px] text-gray-600">
-                  {format(new Date(el.send_at), "HH:mm a")}
-                </div>
+                <ShowEmoji el={el} positionMes="right" />
               )}
+              <div
+                className={cn(
+                  "text-[15px] text-white py-1 inline-block break-all",
+                  el.message ===
+                    (!isNaN(
+                      parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+                    ) &&
+                      String?.fromCodePoint(
+                        parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+                      )) &&
+                    el.message === "👍" &&
+                    "text-[20px]",
+                  positionMes === "left" && "text-black",
+                  el.message === "Bạn đã thu hồi một tin nhắn" &&
+                    "opacity-70 italic"
+                )}
+              >
+                {el.message?.includes("đã thu hồi một tin nhắn")
+                  ? `${
+                      currentUser?.id === el.sender_id
+                        ? "Bạn đã thu hồi một tin nhắn"
+                        : `${private_chat.current_conversation?.members.nickname} đã thu hồi một tin nhắn`
+                    }`
+                  : el.message}
+              </div>
+
+              <div
+                className={cn(
+                  "absolute top-[-15px] right-0 w-auto whitespace-nowrap flex gap-2",
+                  positionMes === "left" && "left-0"
+                )}
+              >
+                {positionMes === "right" && (
+                  <div className="text-[11px] text-gray-600">
+                    {format(new Date(el.send_at), "HH:mm a")}
+                  </div>
+                )}
+                {positionMes === "left" && (
+                  <div className="text-[11px] text-gray-600">
+                    {format(new Date(el.send_at), "HH:mm a")}
+                  </div>
+                )}
+              </div>
               {positionMes === "left" && (
-                <div className="text-[11px] text-gray-600">
-                  {format(new Date(el.send_at), "HH:mm a")}
-                </div>
+                <ShowEmoji el={el} positionMes="left" />
               )}
             </div>
-            {positionMes === "left" && <ShowEmoji el={el} positionMes="left" />}
           </div>
           {positionMes === "left" &&
           el.message?.includes("đã thu hồi một tin nhắn") ? (

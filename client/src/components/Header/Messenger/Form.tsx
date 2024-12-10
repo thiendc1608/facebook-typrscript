@@ -19,6 +19,7 @@ import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
 import { v4 as uuidv4 } from "uuid";
 import "./Messenger.css";
+import { messageSliceType } from "@/redux/messageSlice";
 
 const Form = () => {
   const [emoji, setEmoji] = useState<string>("");
@@ -35,6 +36,10 @@ const Form = () => {
   const { private_chat, reply_message, updateMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
+  const { themeMessage, changeEmojiMessage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
+  );
+
   const { socket } = useContext(SocketContext);
   const divRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
@@ -252,7 +257,11 @@ const Form = () => {
     }
     const message = {
       ...defaultMessage,
-      message: "👍",
+      message: changeEmojiMessage.emojiValue
+        ? String.fromCodePoint(
+            parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+          )
+        : "👍",
     } as messageType;
     await conversationAPI.createMessage(message);
     socket?.emit("send_message", {
@@ -273,7 +282,11 @@ const Form = () => {
         {!updateMessage.messageValue && (
           <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
             <label htmlFor="choose_image" className="cursor-pointer">
-              <CiImageOn size={30} title="Đính kèm file" color="#0866ff" />
+              <CiImageOn
+                size={30}
+                title="Đính kèm file"
+                color={`${themeMessage}`}
+              />
             </label>
             <input
               type="file"
@@ -332,7 +345,7 @@ const Form = () => {
               <div className="absolute bottom-[8px] right-[10px] cursor-pointer shadow-headerContent rounded-full z-[99]">
                 <TfiFaceSmile
                   size={20}
-                  color="#0866ff"
+                  color={`${themeMessage}`}
                   title="Chọn biểu tượng cảm xúc"
                   onClick={() => setPickerOpen((prev) => !prev)}
                 />
@@ -369,7 +382,7 @@ const Form = () => {
                 updateMessage.messageValue?.message ===
                   divRef.current?.textContent
                 ? "#b0b3b8"
-                : "#0866ff"
+                : `${themeMessage}`
             )}
           />
         </button>
@@ -378,7 +391,13 @@ const Form = () => {
           className="w-[36px] h-[36px] cursor-pointer flex items-center text-[20px]"
           onClick={handleClickLike}
         >
-          👍
+          {changeEmojiMessage.emojiValue ? (
+            String.fromCodePoint(
+              parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
+            )
+          ) : (
+            <span>👍</span>
+          )}
         </div>
       )}
     </form>

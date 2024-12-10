@@ -1,4 +1,4 @@
-import { conversationAPI } from "@/apis/conversationApi";
+import { conversationAPI, messageSearchType } from "@/apis/conversationApi";
 import emojiAPI from "@/apis/emojiApi";
 import {
   conversationType,
@@ -25,6 +25,8 @@ export interface chattingUserType {
     isUpdateMsg: boolean;
     messageValue: allMessageType | null;
   };
+  isShowContact: boolean;
+  searchMessage: messageSearchType | null;
   // group_chat: any;
 }
 
@@ -43,9 +45,19 @@ const conversationSlice = createSlice({
       isUpdateMsg: false,
       messageValue: null,
     },
+    isShowContact: true,
+    searchMessage: null,
     // group_chat: {},
   } as chattingUserType,
   reducers: {
+    setShowContact: (state, action) => {
+      state.isShowContact = action.payload;
+    },
+
+    setSearchMessage: (state, action) => {
+      state.searchMessage = action.payload;
+    },
+
     setReplyMsg: (state, action) => {
       state.reply_message = action.payload;
     },
@@ -121,6 +133,39 @@ const conversationSlice = createSlice({
     selectRoom: (state, action) => {
       state.room_id = action.payload.room_id;
     },
+
+    updateToConversations: (state, action) => {
+      state.private_chat.conversations = state.private_chat.conversations.map(
+        (conversation) =>
+          conversation.id === action.payload.conversation_id &&
+          conversation.members.user_id === action.payload.user_id
+            ? {
+                ...conversation,
+                members: {
+                  ...conversation.members,
+                  nickname: action.payload.nickname,
+                },
+              }
+            : conversation
+      );
+    },
+
+    updateCurrentConversation: (state, action) => {
+      if (state.private_chat.current_conversation) {
+        if (
+          state.private_chat.current_conversation.members.user_id ===
+          action.payload.user_id
+        ) {
+          state.private_chat.current_conversation = {
+            ...state.private_chat.current_conversation,
+            members: {
+              ...state.private_chat.current_conversation.members,
+              nickname: action.payload.nickname,
+            },
+          };
+        }
+      }
+    },
   },
 
   extraReducers: (builder) => {
@@ -192,6 +237,10 @@ export const {
   removeMessage,
   removeTempMessage,
   setUpdateMessage,
+  setShowContact,
+  setSearchMessage,
+  updateToConversations,
+  updateCurrentConversation,
 } = conversationSlice.actions;
 const conversationReducer = conversationSlice.reducer;
 export default conversationReducer;

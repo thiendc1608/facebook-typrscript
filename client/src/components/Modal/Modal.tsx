@@ -13,6 +13,7 @@ import { addTagName, setCheckIn } from "@/redux/postSlice";
 import DisplayProvince from "../ContentPost/CreatePost/DisplayProvince";
 import { useEffect, useState } from "react";
 import useDebounce from "@/hooks/useDebounce";
+import { messageSliceType, setChangeEmojiMessage } from "@/redux/messageSlice";
 
 interface ModalProps {
   children: React.ReactNode;
@@ -31,6 +32,9 @@ const Modal = ({ children }: ModalProps) => {
   );
   const { isTagName, isCheckIn } = useSelector(
     (state: { post: postType }) => state.post
+  );
+  const { changeEmojiMessage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
   );
   const [location, setLocation] = useState<string>("");
   const searchLocationQuery = useDebounce(location, 500);
@@ -54,8 +58,11 @@ const Modal = ({ children }: ModalProps) => {
         if (isShowEmoji) {
           dispatch(showEmoji({ isShowEmoji: !isShowEmoji }));
         }
+        if (changeEmojiMessage.isChangeEmoji) {
+          dispatch(setChangeEmojiMessage({ isChangeEmoji: false }));
+        }
       }}
-      className="fixed top-0 left-0 right-0 bottom-0 w-full h-full bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]"
+      className="fixed inset-0 w-full h-full bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]"
     >
       {children}
       {isShowEmoji && <ShowEmoji />}

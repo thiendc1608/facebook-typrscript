@@ -18,6 +18,21 @@ router.get(
   conversationController.getAllMessage
 );
 
+router.get(
+  "/get-all-message-search/:conversation_id",
+  conversationController.getAllMessageSearch
+);
+
+router.get(
+  "/get-all-nickname/:conversation_id",
+  conversationController.getAllNickName
+);
+
+router.get(
+  "/get-all-image/:conversation_id",
+  conversationController.getAllImage
+);
+
 router.post(
   "/images/upload",
   fileUploader.array("imageInfo", 10),

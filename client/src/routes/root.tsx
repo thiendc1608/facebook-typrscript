@@ -1,5 +1,7 @@
 import Header from "@/components/Header/Header";
+import ShowImage from "@/components/Header/Messenger/MediaFile/ShowImage";
 import Modal from "@/components/Modal/Modal";
+import { messageSliceType } from "@/redux/messageSlice";
 import { ModalState } from "@/redux/modalSlice";
 import { setLocationList } from "@/redux/postSlice";
 import { ProvinceType } from "@/types";
@@ -10,6 +12,9 @@ import { Outlet } from "react-router-dom";
 export default function Root() {
   const { isShowModal, childrenModal } = useSelector(
     (state: { modal: ModalState }) => state.modal
+  );
+  const { showImage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
   );
   const dispatch = useDispatch();
   useEffect(() => {
@@ -25,6 +30,11 @@ export default function Root() {
 
   return (
     <>
+      {showImage.isShowImage && (
+        <div className="fixed inset-0 bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]">
+          <ShowImage />
+        </div>
+      )}
       {isShowModal && <Modal>{childrenModal}</Modal>}
       <Header />
       <div className="bg-[#F0F2F5] top-[56px] relative z-0 min-h-[calc(100vh-56px)]">

@@ -1,5 +1,9 @@
+import { cn } from "@/lib/utils";
+import { messageSliceType, setChangeEmojiMessage } from "@/redux/messageSlice";
+import { showModal } from "@/redux/modalSlice";
 import EmojiPicker, { EmojiStyle, SkinTones } from "emoji-picker-react";
 import { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 
 interface EmEmojiProps {
   activeSkinTone: SkinTones;
@@ -13,14 +17,18 @@ interface EmEmojiProps {
 }
 
 interface EmojiPickerProps {
-  setPickerOpen: (pickerOpen: boolean) => void;
-  setEmoji: (emoji: string) => void;
+  setPickerOpen?: (pickerOpen: boolean) => void;
+  setEmoji?: (emoji: string) => void;
 }
 const EmojiPickerComponent = ({
   setPickerOpen,
   setEmoji,
 }: EmojiPickerProps) => {
+  const dispatch = useDispatch();
   const pickerRef = useRef<HTMLDivElement>(null);
+  const { changeEmojiMessage } = useSelector(
+    (state: { message: messageSliceType }) => state.message
+  );
 
   useEffect(() => {
     const pickerEle = (e: MouseEvent) => {
@@ -28,7 +36,7 @@ const EmojiPickerComponent = ({
         pickerRef.current &&
         !pickerRef.current.contains(e.target as Node | null)
       )
-        setPickerOpen(false);
+        setPickerOpen?.(false);
     };
     document.addEventListener("mousedown", pickerEle);
     return () => {
@@ -38,13 +46,30 @@ const EmojiPickerComponent = ({
 
   return (
     <div
-      className="absolute bottom-[60px] right-0 z-[100] shadow-blurEmoji overflow-hidden rounded-lg"
+      className={cn(
+        "shadow-blurEmoji overflow-hidden rounded-lg",
+        !changeEmojiMessage.isChangeEmoji &&
+          "absolute bottom-[60px] right-0 z-[100]"
+      )}
       ref={pickerRef}
+      onClick={(e) => e.stopPropagation()}
     >
       <EmojiPicker
         height={400}
         width={350}
-        onEmojiClick={(emoji: EmEmojiProps) => setEmoji(emoji.emoji)}
+        onEmojiClick={(emoji: EmEmojiProps) => {
+          if (changeEmojiMessage === null || changeEmojiMessage === undefined) {
+            setEmoji?.(emoji.emoji);
+          } else {
+            dispatch(
+              setChangeEmojiMessage({
+                isChangeEmoji: false,
+                emojiValue: emoji.unified,
+              })
+            );
+            dispatch(showModal({ isShowModal: false, childrenModal: null }));
+          }
+        }}
       />
     </div>
   );

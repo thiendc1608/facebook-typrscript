@@ -200,8 +200,9 @@ export interface conversationType {
   time?: Date;
   members: {
     user_id: string;
+    nickname: string;
     joined_at: Date;
-    user: Pick<UserType, "id" | "firstName" | "lastName" | "avatar">;
+    user: Pick<UserType, "id" | "avatar">;
   };
 }
 
