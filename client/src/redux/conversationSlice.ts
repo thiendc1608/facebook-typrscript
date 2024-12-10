@@ -15,8 +15,10 @@ type GroupedItem = {
 export interface chattingUserType {
   private_chat: {
     conversations: conversationType[];
+    loadingGetAllConversation: boolean;
     current_conversation: conversationType | null;
     current_messages: allMessageType[];
+    loadingGetAllMsg: boolean;
   };
   room_id: string;
   emojiList: emotionType[];
@@ -35,8 +37,10 @@ const conversationSlice = createSlice({
   initialState: {
     private_chat: {
       conversations: [],
+      loadingGetAllConversation: false,
       current_conversation: null,
       current_messages: [],
+      loadingGetAllMsg: false,
     },
     room_id: "",
     emojiList: [],
@@ -45,7 +49,7 @@ const conversationSlice = createSlice({
       isUpdateMsg: false,
       messageValue: null,
     },
-    isShowContact: true,
+    isShowContact: false,
     searchMessage: null,
     // group_chat: {},
   } as chattingUserType,
@@ -169,8 +173,17 @@ const conversationSlice = createSlice({
   },
 
   extraReducers: (builder) => {
+    builder.addCase(fetchDirectConversations.pending, (state) => {
+      state.private_chat.loadingGetAllConversation = true;
+    });
+
     builder.addCase(fetchDirectConversations.fulfilled, (state, action) => {
+      state.private_chat.loadingGetAllConversation = false;
       state.private_chat.conversations = action.payload.conversations;
+    });
+
+    builder.addCase(fetchAllMessage.pending, (state) => {
+      state.private_chat.loadingGetAllMsg = true; // khi dang call api
     });
 
     builder.addCase(fetchAllMessage.fulfilled, (state, action) => {
@@ -206,6 +219,7 @@ const conversationSlice = createSlice({
       } else {
         state.private_chat.current_messages = action.payload.messages;
       }
+      state.private_chat.loadingGetAllMsg = false;
     });
 
     builder.addCase(getAllUserReactMessage.fulfilled, (state, action) => {

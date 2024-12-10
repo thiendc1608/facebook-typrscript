@@ -1,6 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
+import { Swiper, SwiperSlide, SwiperRef } from "swiper/react";
 import { Navigation } from "swiper/modules";
 // Import Swiper styles
 import "swiper/css";
@@ -20,7 +19,7 @@ const ShowImage = () => {
   );
 
   const dispatch = useDispatch();
-  const swiperRef = useRef(null);
+  const swiperRef = useRef<SwiperRef>(null);
 
   useEffect(() => {
     if (swiperRef.current) {
@@ -30,7 +29,7 @@ const ShowImage = () => {
 
   const handleThumbnailClick = (index: number) => {
     if (swiperRef.current) {
-      swiperRef.current.swiper.slideTo(index); // Chuyển đến slide tương ứng
+      swiperRef.current.swiper.slideTo(index);
     }
     dispatch(setIdImage(index));
   };
@@ -60,7 +59,7 @@ const ShowImage = () => {
               alt="anh"
               className={cn(
                 "w-full h-full rounded-lg object-cover opacity-70 hover:opacity-100 cursor-pointer",
-                idx === idImage ? "opacity-100" : "opacity-70"
+                idx === idImage ? "opacity-100" : "opacity-50"
               )}
             />
           </div>

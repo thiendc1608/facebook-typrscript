@@ -22,17 +22,16 @@ import ReplyForm from "./ContentMessage/ReplyForm";
 import ReplyMsg from "./ContentMessage/ReplyMsg";
 import { cn } from "@/lib/utils";
 import { messageSliceType } from "@/redux/messageSlice";
+import { TiMessages } from "react-icons/ti";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
   const { socket } = useContext(SocketContext);
 
-  const { room_id, private_chat, reply_message, isShowContact } = useSelector(
-    (state: { conversation: chattingUserType }) => state.conversation
-  );
-  const { updateMessage } = useSelector(
-    (state: { conversation: chattingUserType }) => state.conversation
-  );
+  const { room_id, private_chat, reply_message, isShowContact, updateMessage } =
+    useSelector(
+      (state: { conversation: chattingUserType }) => state.conversation
+    );
   const contentRef = useRef<null | HTMLDivElement>(null);
   const scrollButton = useRef<null | HTMLDivElement>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
@@ -155,29 +154,31 @@ const ContentConversation = () => {
         !isShowContact && "w-full"
       )}
     >
-      <div className="relative z-0">
+      <div className="relative z-[999]">
         <div className="w-full h-[64px] shadow-headerContent">
           <div className="px4 py-3">
             <div className="px-[6px]">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <img
-                    src={
-                      private_chat.current_conversation?.group_image ||
-                      private_chat.current_conversation?.members?.user?.avatar
-                    }
-                    alt="anh"
-                    className="w-[40px] h-[40px] object-cover rounded-full"
-                  />
-                  <span className="text-[#080809] text-[16px] font-bold">
-                    {`${
-                      private_chat.current_conversation?.conversation_name ||
-                      private_chat.current_conversation?.members?.nickname
-                    }`.trim()}
-                  </span>
-                </div>
+                {private_chat.conversations && (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={
+                        private_chat.conversations[0]?.group_image ||
+                        private_chat.conversations[0]?.members?.user?.avatar
+                      }
+                      alt="anh"
+                      className="w-[40px] h-[40px] object-cover rounded-full"
+                    />
+                    <span className="text-[#080809] text-[16px] font-bold">
+                      {`${
+                        private_chat.conversations[0]?.conversation_name ||
+                        private_chat.conversations[0]?.members?.nickname
+                      }`.trim()}
+                    </span>
+                  </div>
+                )}
                 <div
-                  className="w-[36px] h-[36px] rounded-full bg-[#f2f2f2] flex items-center justify-center cursor-pointer"
+                  className="w-[36px] h-[36px] rounded-full hover:bg-[#f2f2f2] flex items-center justify-center cursor-pointer"
                   onClick={() => dispatch(setShowContact(!isShowContact))}
                 >
                   <MdInfo size={24} color={`${themeMessage}`} />
@@ -194,30 +195,44 @@ const ContentConversation = () => {
         className="w-full h-[calc(100vh-64px-60px-56px)] overflow-y-auto"
         ref={contentRef}
       >
-        <div className="relative z-0">
-          <div className={cn("pt-5 px-3 pb-3")}>
-            <div className="flex flex-col items-center justify-center gap-3">
-              <img
-                src={
-                  private_chat.current_conversation?.group_image ||
-                  private_chat.current_conversation?.members?.user?.avatar
-                }
-                alt="anh"
-                className="w-[60px] h-[60px] rounded-full object-cover"
-              />
-              <span className="text-[17px] text-[#080809] font-semibold">
-                {`${
-                  private_chat.current_conversation?.conversation_name ||
-                  private_chat.current_conversation?.members?.nickname
-                }`.trim()}
-              </span>
+        {private_chat.conversations ? (
+          <div className="relative z-0">
+            <div className="pt-5 px-3 pb-3">
+              <div className="flex flex-col items-center justify-center gap-3">
+                <img
+                  src={
+                    private_chat.conversations[0]?.group_image ||
+                    private_chat.conversations[0]?.members?.user?.avatar
+                  }
+                  alt="anh"
+                  className="w-[60px] h-[60px] rounded-full object-cover"
+                />
+                <span className="text-[17px] text-[#080809] font-semibold">
+                  {`${
+                    private_chat.conversations[0]?.conversation_name ||
+                    private_chat.conversations[0]?.members?.nickname
+                  }`.trim()}
+                </span>
+              </div>
             </div>
+            {updateMessage.messageValue !== null && (
+              <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
+            )}
           </div>
-          {updateMessage.messageValue !== null && (
-            <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
-          )}
-        </div>
-        <div className="flex flex-col">
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full gap-4">
+            <span className="text-[20px] text-[#080809] font-semibold">{`Xin chào 👋 ${
+              currentUser?.lastName + " " + currentUser?.firstName
+            } 🎉`}</span>
+            <span className="text-[17px] text-[#080809]">
+              Hãy lựa chọn 1 cuộc hội thoại để bắt đầu nhắn tin
+            </span>
+            <span>
+              <TiMessages size={40} color={`${themeMessage}`} />
+            </span>
+          </div>
+        )}
+        <div className="flex flex-col gap-4">
           {private_chat.current_messages?.map((el, index: number) => {
             const nextMessage = private_chat.current_messages[index + 1];
             const showAvatar =
@@ -269,6 +284,7 @@ const ContentConversation = () => {
                         el={el}
                         currentUser={currentUser}
                         showAvatar={showAvatar}
+                        loadingGetAllMsg={private_chat.loadingGetAllMsg}
                       />
                     );
                 }
@@ -290,16 +306,18 @@ const ContentConversation = () => {
           <GoArrowDown size={20} color="#0866ff" />
         </button>
       </div>
-      <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
-        {reply_message?.conversation_id ===
-          private_chat.current_conversation?.id && (
-          <ReplyForm currentUser={currentUser} isReply={true} />
-        )}
-        {updateMessage?.isUpdateMsg && (
-          <ReplyForm currentUser={currentUser} isReply={false} />
-        )}
-        <Form />
-      </div>
+      {private_chat.conversations && (
+        <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
+          {reply_message?.conversation_id ===
+            private_chat.current_conversation?.id && (
+            <ReplyForm currentUser={currentUser} isReply={true} />
+          )}
+          {updateMessage?.isUpdateMsg && (
+            <ReplyForm currentUser={currentUser} isReply={false} />
+          )}
+          <Form />
+        </div>
+      )}
     </div>
   );
 };

@@ -42,6 +42,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CreateStories from "./components/Reels/Stories/CreateStories";
 import CreateStoriesView from "./pages/CreateStoriesView";
 import { SocketProvider } from "./context/SocketContext";
+import { SkeletonTheme } from "react-loading-skeleton";
 
 const router = createBrowserRouter([
   {
@@ -179,11 +180,13 @@ createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </PersistGate>
     </Provider> */}
-    <SocketProvider>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
-    </SocketProvider>
+    <SkeletonTheme baseColor="#202020" highlightColor="#444">
+      <SocketProvider>
+        <Provider store={store}>
+          <RouterProvider router={router} />
+        </Provider>
+      </SocketProvider>
+    </SkeletonTheme>
     <ToastContainer
       position="top-right"
       autoClose={300}

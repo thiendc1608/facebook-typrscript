@@ -14,7 +14,7 @@ interface MediaFileProps {
 }
 
 const MediaFile = ({ setIsShowMedia }: MediaFileProps) => {
-  const [isExpandMedia, setIsExpandMedia] = useState(false);
+  const [isExpandMedia, setIsExpandMedia] = useState(true);
 
   return (
     <div className="p-2 cursor-pointer">

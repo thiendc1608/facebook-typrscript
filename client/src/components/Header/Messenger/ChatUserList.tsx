@@ -13,9 +13,11 @@ import {
   addToConventions,
   chattingUserType,
   deleteConversation,
+  fetchAllMessage,
   fetchDirectConversations,
   selectRoom,
   setCurrentConversation,
+  setShowContact,
   // setCurrentConversation,
 } from "@/redux/conversationSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,27 +27,45 @@ import { cn } from "@/lib/utils";
 import { conversationAPI } from "@/apis/conversationApi";
 import { toast } from "react-toastify";
 import { UserState } from "@/redux/userSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import { formatTimeAgo } from "@/utils/helpers";
+import ConversationSkeleton from "@/components/Skeleton/ConversationSkeleton";
 
 const ChatUserList = () => {
   const { socket } = useContext(SocketContext)!;
   const [searchList, setSearchList] = useState<UserType[]>([]);
   const [query, setQuery] = useState<string>("");
   const userQuery = useDebounce(query, 0);
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [, startTransaction] = useTransition();
   const [optionConversation, setOptionConversation] = useState<boolean>(false);
   const [isFocusSearch, setIsFocusSearch] = useState<boolean>(false);
+  const params = useParams();
+
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const { conversations } = useSelector(
+  const {
+    conversations,
+    current_messages,
+    current_conversation,
+    loadingGetAllConversation,
+  } = useSelector(
     (state: { conversation: chattingUserType }) =>
       state.conversation.private_chat
   );
-  const { room_id } = useSelector(
+  const { room_id, isShowContact } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const dispatchConversation = useAppDispatch();
+
+  useEffect(() => {
+    dispatchConversation(
+      fetchAllMessage({ conversation_id: conversations[0].id })
+    );
+    if (!isShowContact) dispatch(setShowContact(true));
+  }, [dispatchConversation]);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -110,8 +130,12 @@ const ChatUserList = () => {
     e: React.MouseEvent<HTMLDivElement>,
     conversation: conversationType
   ) => {
-    e.preventDefault();
-    dispatch(selectRoom({ room_id: conversation.id }));
+    if (conversation.id !== conversations[0].id) {
+      e.preventDefault();
+      dispatch(selectRoom({ room_id: conversation.id }));
+      dispatch(setShowContact(!isShowContact));
+      navigate(`/messenger/t/${current_conversation?.members.user_id}`);
+    }
 
     socket?.emit("start_conversation", {
       sender_id: currentUser?.id,
@@ -191,13 +215,19 @@ const ChatUserList = () => {
               </span>
             </div>
             <div className="px-2 h-full">
-              {conversations?.length > 0 ? (
+              {loadingGetAllConversation && (
+                <div className="flex flex-col gap-4">
+                  <ConversationSkeleton count_message={4} />
+                </div>
+              )}
+              {!loadingGetAllConversation && conversations?.length > 0 ? (
                 conversations.map((conversation) => (
                   <div
                     key={conversation.id}
                     className={cn(
                       "relative w-full h-[68px] rounded-lg flex items-center gap-3 cursor-pointer z-0",
-                      conversation.id === room_id
+                      conversation.id === room_id ||
+                        conversation.members.user_id === params.id
                         ? "bg-[#EBF5FF]"
                         : "hover:bg-[#F2F2F2]"
                     )}
@@ -221,9 +251,14 @@ const ChatUserList = () => {
                         }`.trim()}
                       </span>
                       <div className="flex items-baseline text-[#65686c] text-[13px] gap-1">
-                        <span>Bạn đã gửi một file đính kèm</span>
+                        <span>{current_messages.at(-1)?.message}</span>
                         <span>.</span>
-                        <span>6 giờ</span>
+                        <span>
+                          {current_messages.at(-1)?.send_at &&
+                            formatTimeAgo(
+                              current_messages.at(-1)?.send_at ?? ""
+                            )}
+                        </span>
                       </div>
                     </div>
                     <div

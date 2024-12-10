@@ -205,7 +205,7 @@ const Form = () => {
             send_at: defaultMessage.send_at,
           };
           await conversationAPI.createMessage(timeMessage);
-          delay(1000);
+          delay(2000);
         }
       }
       const message = {

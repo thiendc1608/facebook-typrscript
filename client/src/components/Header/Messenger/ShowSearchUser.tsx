@@ -4,6 +4,7 @@ import { UserType } from "@/types";
 import { memo, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { UserState } from "@/redux/userSlice";
+import { chattingUserType, setShowContact } from "@/redux/conversationSlice";
 // import { conversationAPI } from "@/apis/conversationApi";
 
 interface ShowSearchUserProps {
@@ -24,6 +25,9 @@ const ShowSearchUser = ({
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
+  const { isShowContact } = useSelector(
+    (state: { conversation: chattingUserType }) => state.conversation
+  );
 
   const handleOnClickUser = (
     e: React.MouseEvent<HTMLDivElement>,
@@ -34,6 +38,7 @@ const ShowSearchUser = ({
     dispatch(setIsOpenChatting(true));
     setIsFocusSearch(false);
     setQuery("");
+    dispatch(setShowContact(!isShowContact));
 
     socket?.emit("start_conversation", {
       sender_id: currentUser?.id,

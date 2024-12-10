@@ -12,7 +12,7 @@ import CustomName from "./CustomName";
 
 const CustomChat = () => {
   const dispatch = useDispatch();
-  const [isCustomMessage, setIsCustomMessage] = useState(false);
+  const [isCustomMessage, setIsCustomMessage] = useState(true);
   const { themeMessage, changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
