@@ -17,7 +17,6 @@ const MessageSkeleton = ({ count_message }: { count_message: number }) => {
             <Skeleton height={16} width={200} />
             <Skeleton height={16} width={200} />
           </div>
-          <Skeleton circle height={40} width={40} />
         </div>
       </div>
     ));

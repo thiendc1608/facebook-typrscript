@@ -15,9 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       user_id: DataTypes.STRING,
       post_content: DataTypes.TEXT("long"),
-      media_location: DataTypes.JSON(DataTypes.TEXT("long")),
-      feeling: DataTypes.STRING,
-      activity: DataTypes.STRING,
+      image_id: DataTypes.STRING,
     },
     {
       sequelize,

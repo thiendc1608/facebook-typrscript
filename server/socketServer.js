@@ -229,27 +229,28 @@ io.on("connection", (socket) => {
         nest: true,
       });
     }
-    const findImage = await db.Message.findOne({
-      where: {
-        image_id: message.image_id,
-      },
-      include: [
-        {
-          model: db.Image,
-          attributes: ["message_image"],
-          as: "imageInfo",
+    if (message.image_id) {
+      imageList = await db.Message.findOne({
+        where: {
+          image_id: message.image_id,
         },
-      ],
-      raw: true,
-      nest: true,
-    });
-    imageList = findImage.imageInfo.message_image;
+        include: [
+          {
+            model: db.Image,
+            attributes: ["message_image"],
+            as: "imageInfo",
+          },
+        ],
+        raw: true,
+        nest: true,
+      });
+    }
 
     const newMessage = {
       ...message,
       info_reply: infoReplyMessage,
       imageInfo: {
-        message_image: imageList,
+        message_image: imageList?.imageInfo?.message_image || null,
       },
       senderInfo: {
         firstName: from_user.firstName,
@@ -257,11 +258,19 @@ io.on("connection", (socket) => {
         avatar: from_user.avatar,
       },
     };
-    io.to(receiveUser?.socketId).emit("new_message", {
-      message: newMessage,
-      timeMessage,
-    });
-    io.to(senderUser?.socketId).emit("new_message", {
+    const roomId = `chat_${senderUser?.id}_${receiveUser?.id}`;
+
+    // io.to(receiveUser?.socketId).emit("new_message", {
+    //   message: newMessage,
+    //   timeMessage,
+    // });
+    // io.to(senderUser?.socketId).emit("new_message", {
+    //   message: newMessage,
+    //   timeMessage,
+    // });
+    io.to(senderUser?.socketId).socketsJoin(roomId);
+    io.to(receiveUser?.socketId).socketsJoin(roomId);
+    io.to(roomId).emit("new_message", {
       message: newMessage,
       timeMessage,
     });
@@ -416,12 +425,12 @@ io.on("connection", (socket) => {
     const receiveUser = getUser(to_user);
     const senderUser = getUser(from_user);
     if (receiveUser?.socketId) {
-      io.to(receiveUser.socketId).emit("update_remove_message", {
+      io.to(receiveUser.socketId).emit("removed_message", {
         message: removeMessageList,
       });
     }
     if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
-      io.to(senderUser.socketId).emit("update_remove_message", {
+      io.to(senderUser.socketId).emit("removed_message", {
         message: removeMessageList,
       });
     }
@@ -429,7 +438,7 @@ io.on("connection", (socket) => {
 
   socket.on("update_message", async (data) => {
     const { receiver_id, message_id, sender_id, messageUpdate } = data;
-    let updateMessage = [];
+    let updateMessage = null;
     const [affectedCount] = await db.Message.update(
       {
         message: messageUpdate,
@@ -437,11 +446,10 @@ io.on("connection", (socket) => {
       { where: { id: message_id } }
     );
     if (affectedCount > 0) {
-      const updateMsg = await db.Message.findOne({
+      updateMessage = await db.Message.findOne({
         where: { id: message_id },
         raw: true,
       });
-      updateMessage.push(updateMsg);
     }
 
     const to_user = await db.User.findOne({
@@ -459,13 +467,13 @@ io.on("connection", (socket) => {
 
     // Phát sự kiện tới người nhận
     if (receiveUser?.socketId) {
-      io.to(receiveUser.socketId).emit("update_remove_message", {
+      io.to(receiveUser.socketId).emit("updated_message", {
         message: updateMessage,
       });
     }
 
     if (senderUser?.socketId && senderUser.socketId !== receiveUser?.socketId) {
-      io.to(senderUser.socketId).emit("update_remove_message", {
+      io.to(senderUser.socketId).emit("updated_message", {
         message: updateMessage,
       });
     }

@@ -30,6 +30,11 @@ import { UserState } from "@/redux/userSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { formatTimeAgo } from "@/utils/helpers";
 import ConversationSkeleton from "@/components/Skeleton/ConversationSkeleton";
+import {
+  notificationState,
+  setIsOpenChatting,
+  setIsOpenMessage,
+} from "@/redux/notificationSlice";
 
 const ChatUserList = () => {
   const { socket } = useContext(SocketContext)!;
@@ -43,6 +48,9 @@ const ChatUserList = () => {
   const [isFocusSearch, setIsFocusSearch] = useState<boolean>(false);
   const params = useParams();
 
+  const { isOpenMessage } = useSelector(
+    (state: { notification: notificationState }) => state.notification
+  );
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
@@ -55,17 +63,25 @@ const ChatUserList = () => {
     (state: { conversation: chattingUserType }) =>
       state.conversation.private_chat
   );
-  const { room_id, isShowContact } = useSelector(
+  const { private_chat, room_id, isShowContact } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
   const dispatchConversation = useAppDispatch();
 
+  const addLastMsgToConversation = conversations?.map((conv) => {
+    const lastMsg = current_messages
+      ?.filter((msg) => msg.conversation_id === conv.id)
+      ?.at(-1);
+    return {
+      ...conv,
+      last_message: lastMsg,
+    };
+  });
+
   useEffect(() => {
-    dispatchConversation(
-      fetchAllMessage({ conversation_id: conversations[0].id })
-    );
     if (!isShowContact) dispatch(setShowContact(true));
-  }, [dispatchConversation]);
+    dispatchConversation(fetchAllMessage());
+  }, [dispatch]);
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -100,6 +116,7 @@ const ChatUserList = () => {
 
   useEffect(() => {
     if (socket) {
+      socket.off("start_chat");
       socket.on(
         "start_chat",
         (data: { new_conversation: conversationType }) => {
@@ -114,6 +131,21 @@ const ChatUserList = () => {
       socket?.off("start_chat");
     };
   }, [socket, dispatch]);
+
+  // useEffect(() => {
+  //   if (
+  //     private_chat.current_conversation !== null &&
+  //     !location.pathname.indexOf("/messenger/t")
+  //   ) {
+  //     dispatch(
+  //       setIsOpenChatting({
+  //         isTinyChat: false,
+  //         isOpenChatting: true,
+  //         conversation: private_chat.current_conversation,
+  //       })
+  //     );
+  //   }
+  // }, [private_chat.current_conversation, dispatch]);
 
   const handleDeleteConversation = async (conversation_id: string) => {
     setOptionConversation(false);
@@ -130,27 +162,46 @@ const ChatUserList = () => {
     e: React.MouseEvent<HTMLDivElement>,
     conversation: conversationType
   ) => {
-    if (conversation.id !== conversations[0].id) {
-      e.preventDefault();
+    e.stopPropagation();
+    const convertConversation = private_chat.conversations.find(
+      (conv) => conv.id === conversation.id
+    );
+    if (
+      conversation.id !== private_chat.current_conversation?.id &&
+      !isOpenMessage
+    ) {
       dispatch(selectRoom({ room_id: conversation.id }));
-      dispatch(setShowContact(!isShowContact));
-      navigate(`/messenger/t/${current_conversation?.members.user_id}`);
+      if (!isShowContact) {
+        dispatch(setShowContact(true));
+      }
+      navigate(`/messenger/t/${current_conversation?.id}`);
     }
+    if (isOpenMessage) {
+      dispatch(
+        setIsOpenChatting({
+          isTinyChat: false,
+          isOpenChatting: true,
+          conversation,
+        })
+      );
+      dispatch(setIsOpenMessage(!isOpenMessage));
+    }
+    dispatch(setCurrentConversation(convertConversation));
 
-    socket?.emit("start_conversation", {
-      sender_id: currentUser?.id,
-      receiver_id: conversation.members.user_id,
-      conversation_name:
-        conversation.conversation_name !== null
-          ? conversation.conversation_name
-          : null,
-      type_conversation:
-        conversation.conversation_name !== null ? "group" : "private",
-      group_image:
-        conversation.conversation_name !== null
-          ? conversation.group_image
-          : null,
-    });
+    // socket?.emit("start_conversation", {
+    //   sender_id: currentUser?.id,
+    //   receiver_id: conversation.members.user_id,
+    //   conversation_name:
+    //     conversation.conversation_name !== null
+    //       ? conversation.conversation_name
+    //       : null,
+    //   type_conversation:
+    //     conversation.conversation_name !== null ? "group" : "private",
+    //   group_image:
+    //     conversation.conversation_name !== null
+    //       ? conversation.group_image
+    //       : null,
+    // });
   };
 
   return (
@@ -220,8 +271,9 @@ const ChatUserList = () => {
                   <ConversationSkeleton count_message={4} />
                 </div>
               )}
-              {!loadingGetAllConversation && conversations?.length > 0 ? (
-                conversations.map((conversation) => (
+              {!loadingGetAllConversation &&
+              addLastMsgToConversation?.length > 0 ? (
+                addLastMsgToConversation.map((conversation) => (
                   <div
                     key={conversation.id}
                     className={cn(
@@ -251,13 +303,26 @@ const ChatUserList = () => {
                         }`.trim()}
                       </span>
                       <div className="flex items-baseline text-[#65686c] text-[13px] gap-1">
-                        <span>{current_messages.at(-1)?.message}</span>
+                        <span>
+                          {conversation?.last_message?.image_id
+                            ? `${
+                                conversation?.last_message?.sender_id ===
+                                currentUser?.id
+                                  ? "Bạn"
+                                  : conversation?.last_message?.senderInfo
+                                      .lastName +
+                                    " " +
+                                    conversation?.last_message?.senderInfo
+                                      .firstName
+                              } đã gửi một hình ảnh`
+                            : conversation?.last_message?.message}
+                        </span>
                         <span>.</span>
                         <span>
-                          {current_messages.at(-1)?.send_at &&
+                          {current_messages?.at(-1)?.send_at &&
                             formatTimeAgo(
-                              current_messages.at(-1)?.send_at ?? ""
-                            )}
+                              conversation?.last_message?.send_at ?? ""
+                            )?.replace(" trước", "")}
                         </span>
                       </div>
                     </div>

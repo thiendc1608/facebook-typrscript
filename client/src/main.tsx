@@ -180,7 +180,7 @@ createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </PersistGate>
     </Provider> */}
-    <SkeletonTheme baseColor="#202020" highlightColor="#444">
+    <SkeletonTheme baseColor="#E8E9EA" highlightColor="#999">
       <SocketProvider>
         <Provider store={store}>
           <RouterProvider router={router} />

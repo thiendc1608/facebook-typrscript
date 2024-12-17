@@ -26,6 +26,7 @@ export interface chattingUserType {
   updateMessage: {
     isUpdateMsg: boolean;
     messageValue: allMessageType | null;
+    conversation_id: string | "";
   };
   isShowContact: boolean;
   searchMessage: messageSearchType | null;
@@ -48,6 +49,7 @@ const conversationSlice = createSlice({
     updateMessage: {
       isUpdateMsg: false,
       messageValue: null,
+      conversation_id: "",
     },
     isShowContact: false,
     searchMessage: null,
@@ -72,6 +74,12 @@ const conversationSlice = createSlice({
 
     setCurrentConversation: (state, action) => {
       state.private_chat.current_conversation = action.payload;
+    },
+
+    removeCurrentConversation: (state, action) => {
+      if (state.private_chat.current_conversation?.id === action.payload.id) {
+        state.private_chat.current_conversation = null;
+      }
     },
 
     addToReactMessage: (state, action) => {
@@ -170,6 +178,19 @@ const conversationSlice = createSlice({
         }
       }
     },
+
+    updateContentMessage: (state, action) => {
+      state.private_chat.current_messages =
+        state.private_chat.current_messages.map((msgObj) => {
+          if (msgObj.id === action.payload.id) {
+            return {
+              ...msgObj,
+              message: action.payload.message,
+            };
+          }
+          return msgObj;
+        });
+    },
   },
 
   extraReducers: (builder) => {
@@ -255,6 +276,8 @@ export const {
   setSearchMessage,
   updateToConversations,
   updateCurrentConversation,
+  removeCurrentConversation,
+  updateContentMessage,
 } = conversationSlice.actions;
 const conversationReducer = conversationSlice.reducer;
 export default conversationReducer;
@@ -273,12 +296,9 @@ export const fetchDirectConversations = createAsyncThunk(
 
 export const fetchAllMessage = createAsyncThunk(
   "conversation/fetchAllMessage",
-  async (
-    { conversation_id }: { conversation_id: string },
-    { rejectWithValue }
-  ) => {
+  async (_, { rejectWithValue }) => {
     try {
-      const response = await conversationAPI.getAllMessage(conversation_id);
+      const response = await conversationAPI.getAllMessage();
       return response;
     } catch (err: unknown) {
       return rejectWithValue(err);

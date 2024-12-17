@@ -7,13 +7,11 @@ import BackgroundPost from "./BackgroundPost";
 import AddContent from "./AddContent";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
-import ViewerPost from "./ViewerPost";
 import { ImageVideoState, postType } from "@/types";
 import { showModal } from "@/redux/modalSlice";
 import { showEmoji, showEmojiType } from "@/redux/emojiSlice";
 import { cn } from "@/lib/utils";
 import { setCheckIn } from "@/redux/postSlice";
-import publicImage from "@/assets/images/public.png";
 
 const CreatePost = () => {
   const dispatch = useDispatch();
@@ -32,10 +30,6 @@ const CreatePost = () => {
   const { isTagName, isCheckIn } = useSelector(
     (state: { post: postType }) => state.post
   );
-  const [selectPostObject, setSelectPostObject] = useState({
-    icon: publicImage,
-    name: "Công khai",
-  });
 
   useEffect(() => {
     if (isSelectMode) {
@@ -121,14 +115,8 @@ const CreatePost = () => {
                 onClick={() => setIsSelectMode(true)}
               >
                 <span className="flex items-center justify-start cursor-pointer gap-1">
-                  <img
-                    src={selectPostObject.icon}
-                    alt="icon"
-                    className="w-3 h-3"
-                  />
-                  <span className="text-[#050505] text-[15px]">
-                    {selectPostObject.name}
-                  </span>
+                  <img src="" alt="icon" className="w-3 h-3" />
+                  <span className="text-[#050505] text-[15px]">hello</span>
                   <FaCaretDown />
                 </span>
               </div>
@@ -141,12 +129,6 @@ const CreatePost = () => {
           <Button className="w-full bg-blue-500 hover:bg-blue-400">Đăng</Button>
         </div>
       </div>
-      <ViewerPost
-        ref={PostObjectRef}
-        selectMode={selectPostObject}
-        setIsSelectMode={setIsSelectMode}
-        setSelectPostObject={setSelectPostObject}
-      />
     </div>
   );
 };

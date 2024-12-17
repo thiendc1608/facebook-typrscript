@@ -199,10 +199,11 @@ export interface conversationType {
   unread?: number;
   time?: Date;
   members: {
+    conversation_id: string;
     user_id: string;
     nickname: string;
     joined_at: Date;
-    user: Pick<UserType, "id" | "avatar">;
+    user: Pick<UserType, "avatar">;
   };
 }
 

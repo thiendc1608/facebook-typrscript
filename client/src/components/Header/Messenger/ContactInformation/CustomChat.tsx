@@ -13,7 +13,7 @@ import CustomName from "./CustomName";
 const CustomChat = () => {
   const dispatch = useDispatch();
   const [isCustomMessage, setIsCustomMessage] = useState(true);
-  const { themeMessage, changeEmojiMessage } = useSelector(
+  const { themeDefault, changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
 
@@ -66,7 +66,7 @@ const CustomChat = () => {
             onClick={() => handleCustomMessage("Đổi chủ đề")}
           >
             <div className="p-[6px] w-[32px] h-[32px]">
-              <FaDotCircle size={20} color={`${themeMessage}`} />
+              <FaDotCircle size={20} color={`${themeDefault}`} />
             </div>
             <span className="p-[6px] text-[#080809] text-[15px]">
               Đổi chủ đề

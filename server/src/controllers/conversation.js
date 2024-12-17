@@ -3,49 +3,89 @@ import db from "../models";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
 import { Op, Sequelize } from "sequelize";
+import { raw } from "body-parser";
 
 const getAllConversation = asyncHandler(async (req, res) => {
   const { current_id } = req.params;
-  const conversations = await db.Conversation.findAll({
+  const memberList = await db.Member.findAll({
+    where: {
+      user_id: current_id,
+    },
+    attributes: ["conversation_id"],
+    raw: true,
+  });
+
+  const conversationIds = memberList.map((item) => item.conversation_id);
+  const newConversation = await db.Member.findAll({
+    where: {
+      conversation_id: {
+        [Op.in]: conversationIds,
+      },
+      user_id: {
+        [Op.ne]: current_id, // Loại bỏ user_id của bạn
+      },
+    },
+    attributes: ["conversation_id", "user_id", "nickname", "joined_at"],
     include: [
       {
-        model: db.Member,
-        as: "members",
-        attributes: ["user_id", "nickname", "joined_at"], // Chọn các cột bạn muốn lấy từ bảng members
-        include: [
-          {
-            model: db.User,
-            attributes: ["avatar"],
-            as: "user",
-          },
-        ],
+        model: db.User,
+        attributes: ["avatar"],
+        as: "user",
       },
     ],
     raw: true,
     nest: true,
   });
 
-  if (!conversations) {
+  const conversations = await db.Conversation.findAll({
+    where: {
+      id: {
+        [Op.in]: conversationIds, // Tìm các cuộc hội thoại có conversation_id trong danh sách
+      },
+    },
+    raw: true,
+  });
+
+  // Gộp thông tin từ Conversation với dữ liệu ban đầu
+  const result = newConversation.map((item) => {
+    // Tìm cuộc hội thoại tương ứng với conversation_id của từng item trong mảng
+    const conversation = conversations.find(
+      (conv) => conv.id === item.conversation_id
+    );
+
+    // Trả về một object mới kết hợp cả thông tin cuộc hội thoại và thông tin người dùng
+    return {
+      ...conversation,
+      members: { ...item },
+    };
+  });
+
+  if (!result) {
     return res.status(404).json({
       success: false,
       message: "Conversations not found",
     });
   }
-  const newConversation = conversations.filter(
-    (conversation) => conversation.members.user_id !== current_id
-  );
   return res.status(200).json({
     success: true,
     message: "Get all conversation successfully",
-    conversations: newConversation,
+    conversations: result,
   });
 });
 
 const deleteConversation = asyncHandler(async (req, res) => {
   const { conversation_id } = req.params;
-  const conversation = await db.Conversation.destroy({
-    where: { id: conversation_id },
-  });
+  const conversation = await Promise.all([
+    (db.Conversation.destroy({
+      where: { id: conversation_id },
+    }),
+    db.Member.destroy({
+      where: { conversation_id },
+    }),
+    db.Message.destroy({
+      where: { conversation_id },
+    })),
+  ]);
   if (!conversation) {
     return res.status(404).json({
       success: false,
@@ -59,11 +99,8 @@ const deleteConversation = asyncHandler(async (req, res) => {
 });
 
 const getAllMessage = asyncHandler(async (req, res) => {
-  const { conversation_id } = req.params;
-
-  // Lấy tất cả các tin nhắn
+  //Lấy tất cả các tin nhắn
   const messages = await db.Message.findAll({
-    where: { conversation_id },
     order: [["createdAt", "ASC"]],
     include: [
       {
@@ -80,6 +117,7 @@ const getAllMessage = asyncHandler(async (req, res) => {
         model: db.MessageReact,
         attributes: ["message_id", "emoji_dropper_id", "emoji_icon"],
         as: "messageReact",
+        required: false,
         include: [
           {
             model: db.User,
@@ -89,21 +127,26 @@ const getAllMessage = asyncHandler(async (req, res) => {
         ],
       },
       {
-        model: db.Message, // Kết hợp với chính bảng Message để lấy thông tin tin nhắn trả lời
-        as: "info_reply", // Alias cho tin nhắn trả lời
-        required: false, // Không bắt buộc phải có tin nhắn trả lời
-        where: { id: Sequelize.col("Message.reply_text_id") }, // Điều kiện join: reply_text_id của message phải trùng với id của message
+        model: db.Message,
+        as: "info_reply", // Alias của bảng Message trong include
         attributes: ["sender_id", "message"],
         include: [
           {
-            model: db.User, // Lấy thông tin người trả lời từ bảng User
-            as: "senderInfo", // Alias cho người trả lời
-            attributes: ["firstName", "lastName"], // Lấy id và name của người trả lời
+            model: db.User,
+            as: "senderInfo", // Alias của bảng User
+            attributes: ["firstName", "lastName"],
           },
         ],
       },
     ],
     nest: true,
+  });
+
+  // Kiểm tra messageReact của từng tin nhắn, nếu không có thì ghi đè thành mảng rỗng
+  messages.forEach((message) => {
+    if (!message.messageReact) {
+      message.messageReact = []; // Ghi đè null thành mảng rỗng nếu không có dữ liệu messageReact
+    }
   });
 
   // Lấy tất cả các phản ứng (reactions) của tin nhắn
@@ -249,6 +292,7 @@ const createMessage = asyncHandler(async (req, res) => {
     imageInfo,
     message,
   } = req.body;
+
   let imagesId = uuidv4();
   const messageCreated = await db.Message.create({
     id,
@@ -264,17 +308,20 @@ const createMessage = asyncHandler(async (req, res) => {
     sub_type,
     image_id: imageInfo?.message_image ? imagesId : null,
   });
+
   imageInfo &&
     (await db.Image.create({
       id: imagesId,
       message_image: imageInfo?.message_image || [],
     }));
+
   if (!messageCreated) {
     return res.status(404).json({
       success: false,
       message: "Message not created",
     });
   }
+
   return res.status(200).json({
     success: true,
     message: "Create message successfully",

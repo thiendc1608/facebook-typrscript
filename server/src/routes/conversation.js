@@ -13,10 +13,7 @@ router.delete(
   "/delete-conversation/:conversation_id",
   conversationController.deleteConversation
 );
-router.get(
-  "/get-all-message/:conversation_id",
-  conversationController.getAllMessage
-);
+router.get("/get-all-message", conversationController.getAllMessage);
 
 router.get(
   "/get-all-message-search/:conversation_id",

@@ -1,11 +1,16 @@
-import { NotificationType } from "@/types";
+import { conversationType, NotificationType } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 
+export interface tinyChattingType {
+  isOpenChatting: boolean;
+  isTinyChat: boolean;
+  conversation: conversationType | null;
+}
 export interface notificationState {
-    isOpenNotifications: boolean
-    isOpenMessage: boolean
-    isOpenChatting: boolean
-    notifications: NotificationType[]
+  isOpenNotifications: boolean;
+  isOpenMessage: boolean;
+  tinyChatting: tinyChattingType[];
+  notifications: NotificationType[];
 }
 
 const notificationSlice = createSlice({
@@ -13,24 +18,46 @@ const notificationSlice = createSlice({
   initialState: {
     isOpenNotifications: false,
     isOpenMessage: false,
-    isOpenChatting: false,
-    notifications: []
+    tinyChatting: [] as tinyChattingType[],
+    notifications: [],
   } as notificationState,
   reducers: {
     setIsOpenNotifications: (state, action) => {
-      state.isOpenNotifications = action.payload
+      state.isOpenNotifications = action.payload;
     },
+
     setIsOpenMessage: (state, action) => {
-      state.isOpenMessage = action.payload
+      state.isOpenMessage = action.payload;
     },
+
     setIsOpenChatting: (state, action) => {
-      state.isOpenChatting = action.payload
+      const findChatting = state.tinyChatting.some(
+        (chat) => chat.conversation?.id === action.payload.conversation?.id
+      );
+      if (!findChatting) state.tinyChatting.push(action.payload);
+      else {
+        const updatedChatting = state.tinyChatting.map((el) => {
+          if (el.conversation?.id === action.payload.conversation?.id) {
+            return { ...el, ...action.payload };
+          }
+          return el;
+        });
+        state.tinyChatting = updatedChatting;
+      }
     },
+
+    removeChatting: (state, action) => {
+      state.tinyChatting = state.tinyChatting.filter(
+        (chatting) =>
+          chatting.conversation?.id !== action.payload.conversation?.id
+      );
+    },
+
     setNotifications: (state, action) => {
       const updatedItem = action.payload;
       // Dùng map để tìm và thay thế object có id giống nhau
-      const index = state.notifications.findIndex(item =>
-        item.user.id === updatedItem.user.id
+      const index = state.notifications.findIndex(
+        (item) => item.user.id === updatedItem.user.id
       );
       if (index !== -1) {
         // Nếu tìm thấy item có id trùng, cập nhật nó
@@ -39,10 +66,17 @@ const notificationSlice = createSlice({
         // Nếu không tìm thấy, thêm item mới vào mảng
         state.notifications.push(updatedItem);
       }
-    }
+    },
   },
 });
 
-export const { setIsOpenNotifications, setNotifications, setIsOpenMessage, setIsOpenChatting } = notificationSlice.actions;
+export const {
+  setIsOpenNotifications,
+  setNotifications,
+  setIsOpenMessage,
+  setIsOpenChatting,
+  removeChatting,
+} = notificationSlice.actions;
+
 const notificationReducer = notificationSlice.reducer;
 export default notificationReducer;

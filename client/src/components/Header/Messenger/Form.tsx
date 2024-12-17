@@ -5,7 +5,14 @@ import { IoCloseOutline } from "react-icons/io5";
 import { RiImageAddFill } from "react-icons/ri";
 import EmojiPickerComponent from "./EmojiPicker";
 import { BiSend } from "react-icons/bi";
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,15 +26,33 @@ import { imageCloudinaryType, messageType } from "@/types";
 import { SocketContext } from "@/context/SocketContext";
 import { v4 as uuidv4 } from "uuid";
 import "./Messenger.css";
-import { messageSliceType } from "@/redux/messageSlice";
+import {
+  messageSliceType,
+  removeSelectedImage,
+  setSelectedImageList,
+} from "@/redux/messageSlice";
+import { tinyChattingType } from "@/redux/notificationSlice";
 
-const Form = () => {
+interface FormProps {
+  index?: number;
+  changeColor?: string;
+  showConversation?: tinyChattingType;
+}
+const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
+  const dispatch = useDispatch();
+  const divRef = useRef<HTMLDivElement>(null);
+  const { socket } = useContext(SocketContext);
+
   const [emoji, setEmoji] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>("");
-  const [optimisticImages, setOptimisticImages] = useState<File[]>([]);
-  const [selectImageList, setSelectedImageList] = useState<string[]>([]);
-  const [fileNameCloundinaryList, setFileNameCloundinaryList] = useState<
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const { selectImageList } = useSelector(
+    (state: { message: messageSliceType }) => state.message
+  );
+  const [fileNameCloudinaryList, setFileNameCloudinaryList] = useState<
     imageCloudinaryType[]
   >([]);
   const { currentUser } = useSelector(
@@ -36,14 +61,9 @@ const Form = () => {
   const { private_chat, reply_message, updateMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-  const { themeMessage, changeEmojiMessage } = useSelector(
+  const { themeDefault, changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
-
-  const { socket } = useContext(SocketContext);
-  const divRef = useRef<HTMLDivElement>(null);
-  const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
 
   const defaultMessage = {
     id: uuidv4(),
@@ -66,13 +86,41 @@ const Form = () => {
     setInputValue((e.target as HTMLElement).innerText ?? "");
   };
 
+  function setCursorToEnd(element: HTMLElement) {
+    const range = document.createRange();
+    const selection = window.getSelection();
+
+    range.selectNodeContents(element); // Chọn toàn bộ nội dung
+    range.collapse(false); // Đặt con trỏ ở cuối
+
+    selection?.removeAllRanges(); // Xóa tất cả các vùng chọn hiện tại
+    selection?.addRange(range); // Thêm vùng chọn mới vào cuối
+  }
+
+  useImperativeHandle(
+    ref,
+    () =>
+      ({
+        focus: () => {
+          divRef.current?.focus();
+        },
+        blur: () => {
+          divRef.current?.blur();
+        },
+        // Add other methods and properties as needed
+      } as HTMLDivElement)
+  );
+
   useEffect(() => {
     if (divRef.current && !updateMessage.isUpdateMsg) {
       divRef.current!.innerHTML = "";
       setInputValue("");
       divRef.current!.focus();
     }
-    if (updateMessage.messageValue && divRef.current) {
+    if (
+      updateMessage.messageValue?.conversation_id ===
+      props.showConversation?.conversation?.id
+    ) {
       divRef.current!.textContent = updateMessage.messageValue?.message ?? "";
       // Di chuyển con trỏ tới cuối nội dung
       const range = document.createRange();
@@ -82,12 +130,13 @@ const Form = () => {
       selection?.removeAllRanges();
       selection?.addRange(range);
     }
-  }, [updateMessage]);
+  }, [props.showConversation, updateMessage]);
 
   useEffect(() => {
     if (divRef.current) {
       const editableDiv = divRef.current;
       editableDiv.focus();
+      setCursorToEnd(divRef.current!);
 
       const selection = window.getSelection();
       const range = selection?.getRangeAt(0);
@@ -101,6 +150,9 @@ const Form = () => {
 
       selection?.removeAllRanges();
       selection?.addRange(range!);
+
+      // Cập nhật giá trị đầu vào
+      setInputValue(editableDiv.innerText);
     }
   }, [emoji]);
 
@@ -112,7 +164,7 @@ const Form = () => {
   }, [reply_message]);
 
   const handleSelectImage = async (files: File[]) => {
-    // const imageList: File[] = [];
+    if (!files?.length) return;
     setLoading(true);
     const data = new FormData();
     for (const file of files) {
@@ -120,17 +172,14 @@ const Form = () => {
         toast.warning("File not support");
         return;
       }
-      setOptimisticImages((prev) => [...prev, file]);
+      setSelectedImages((prev) => [...prev, file]);
       data.append("imageInfo", file);
     }
     try {
       const response = await conversationAPI.uploadImages(data);
       if (response.success) {
-        setSelectedImageList((prev) => [
-          ...prev,
-          ...response.images.map((image) => image.path),
-        ]);
-        setFileNameCloundinaryList((prev) => [...prev, ...response.images]);
+        dispatch(setSelectedImageList(response.images));
+        setFileNameCloudinaryList((prev) => [...prev, ...response.images]);
       } else {
         toast.error(response.message);
       }
@@ -142,19 +191,34 @@ const Form = () => {
   };
 
   const handleDeleteImage = async (idx: number, imageList: File) => {
-    setOptimisticImages((prev) => prev.filter((_, index) => index !== idx));
-    const originalImage = fileNameCloundinaryList?.filter(
+    setSelectedImages((prev) => prev.filter((_, index) => index !== idx));
+    const originalImage = fileNameCloudinaryList?.filter(
       (item) => item.originalname === imageList.name
     );
-    const deleteImageList = originalImage?.map((item) => item.filename);
-    await conversationAPI.deleteImages(deleteImageList[0]);
+    const deleteImageList = originalImage?.map((item) => item);
+    setLoading(true);
+    try {
+      const responseDelete = await conversationAPI.deleteImages(
+        deleteImageList[0].filename
+      );
+      if (responseDelete.success) {
+        dispatch(removeSelectedImage(deleteImageList[0].path));
+        setLoading(false);
+      } else {
+        toast.error(responseDelete.message);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false); // Hide loading spinner after API call
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (updateMessage.messageValue) {
       socket?.emit("update_message", {
-        receiver_id: private_chat.current_conversation?.members?.user?.id,
+        receiver_id: private_chat.current_conversation?.members?.user_id,
         sender_id: updateMessage.messageValue?.sender_id,
         message_id: updateMessage.messageValue?.id,
         messageUpdate: inputValue,
@@ -220,14 +284,14 @@ const Form = () => {
           setInputValue("");
           divRef.current!.focus();
         }
-        setOptimisticImages([]);
-        setSelectedImageList([]);
-        setFileNameCloundinaryList([]);
+        setSelectedImages([]);
+        dispatch(setSelectedImageList([]));
+        setFileNameCloudinaryList([]);
         dispatch(setReplyMsg(null));
       }
 
       socket?.emit("send_message", {
-        receiver_id: private_chat.current_conversation?.members?.user?.id,
+        receiver_id: private_chat.current_conversation?.members?.user_id,
         message: response.messageCreated,
         timeMessage,
       });
@@ -255,6 +319,7 @@ const Form = () => {
         await conversationAPI.createMessage(timeMessage);
       }
     }
+
     const message = {
       ...defaultMessage,
       message: changeEmojiMessage.emojiValue
@@ -263,34 +328,42 @@ const Form = () => {
           )
         : "👍",
     } as messageType;
+
     await conversationAPI.createMessage(message);
     socket?.emit("send_message", {
-      receiver_id: private_chat.current_conversation?.members?.user?.id,
+      receiver_id: private_chat.current_conversation?.members?.user_id,
       message,
       timeMessage,
     });
   };
+
   return (
     <form
       className={cn(
-        "py-3 px-1 flex items-end gap-2 w-full",
+        "absolute bottom-0 py-3 px-1 flex items-end gap-2 w-full",
         selectImageList.length > 0 && "items-end"
       )}
       onSubmit={(e) => handleSendMessage(e)}
     >
       <>
-        {!updateMessage.messageValue && (
+        {updateMessage.messageValue?.conversation_id !==
+          props.showConversation?.conversation?.id && (
           <div className="w-[36px] h-[36px] cursor-pointer flex items-center">
-            <label htmlFor="choose_image" className="cursor-pointer">
+            <label
+              htmlFor={`choose_image_${props.index}`}
+              className="cursor-pointer"
+            >
               <CiImageOn
                 size={30}
                 title="Đính kèm file"
-                color={`${themeMessage}`}
+                color={
+                  loading ? "#D9D9D9" : `${props.changeColor || themeDefault}`
+                }
               />
             </label>
             <input
               type="file"
-              id="choose_image"
+              id={`choose_image_${props.index}`}
               name="imageInfo"
               accept="image/*"
               hidden
@@ -299,15 +372,16 @@ const Form = () => {
             />
           </div>
         )}
+
         <div className="w-full bg-[#F0F2F5] rounded-2xl overflow-hidden">
           <div className="flex flex-col min-h-[36px]">
-            {optimisticImages.length > 0 && (
-              <div className="p-3 rounded-tl-xl rounded-tr-xl bg-[#F0F2F5] w-full overflow-x-auto">
+            {selectedImages.length > 0 && (
+              <div className="absolute bottom-10 p-3 rounded-tl-xl rounded-tr-xl bg-[#F0F2F5] w-[75%] overflow-x-auto z-[1000]">
                 <ul className="flex gap-3">
                   <li className="min-w-[48px] h-[48px] rounded-lg bg-[#e2e5e9] flex items-center justify-center">
                     <RiImageAddFill size={26} />
                   </li>
-                  {optimisticImages.map((imageList, idx) => (
+                  {selectedImages?.map((imageList, idx) => (
                     <li
                       key={idx}
                       className="relative min-w-[48px] h-[48px] rounded-lg bg-[#e2e5e9]"
@@ -335,9 +409,10 @@ const Form = () => {
             )}
             <div className="relative flex items-end">
               <div
+                tabIndex={-1}
                 ref={divRef}
                 contentEditable={true}
-                className="relative p-1 bg-[#F0F2F5] min-h-[36px] w-[calc(100%-40px)] outline-none pl-3 break-all text-[15px] flex items-center editable-div leading-5"
+                className=" p-1 bg-[#F0F2F5] min-h-[36px] w-[calc(100%-40px)] outline-none pl-3 break-all text-[15px] flex items-center editable-div leading-5"
                 onKeyUp={(e: React.KeyboardEvent<HTMLDivElement>) =>
                   handleChangeMessage(e)
                 }
@@ -345,9 +420,12 @@ const Form = () => {
               <div className="absolute bottom-[8px] right-[10px] cursor-pointer shadow-headerContent rounded-full z-[99]">
                 <TfiFaceSmile
                   size={20}
-                  color={`${themeMessage}`}
+                  color={`${props.changeColor || themeDefault}`}
                   title="Chọn biểu tượng cảm xúc"
-                  onClick={() => setPickerOpen((prev) => !prev)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPickerOpen((prev) => !prev);
+                  }}
                 />
               </div>
             </div>
@@ -362,14 +440,17 @@ const Form = () => {
         />
       )}
       {inputValue ||
-      optimisticImages.length > 0 ||
-      updateMessage.messageValue !== null ? (
+      selectedImages.length > 0 ||
+      updateMessage.messageValue?.conversation_id ===
+        props.showConversation?.conversation?.id ? (
         <button
           className="w-[36px] h-[36px] cursor-pointer flex items-center"
           type="submit"
           disabled={
-            divRef.current &&
-            updateMessage.messageValue?.message === divRef.current?.textContent
+            loading ||
+            (divRef.current?.textContent !== "" &&
+              updateMessage.messageValue?.message ===
+                divRef.current?.textContent)
               ? true
               : false
           }
@@ -378,11 +459,12 @@ const Form = () => {
             size={26}
             title="Gửi"
             color={cn(
-              divRef.current &&
-                updateMessage.messageValue?.message ===
-                  divRef.current?.textContent
+              loading ||
+                (divRef.current?.textContent !== "" &&
+                  updateMessage.messageValue?.message ===
+                    divRef.current?.textContent)
                 ? "#b0b3b8"
-                : `${themeMessage}`
+                : `${themeDefault}`
             )}
           />
         </button>
@@ -402,6 +484,6 @@ const Form = () => {
       )}
     </form>
   );
-};
+});
 
 export default Form;

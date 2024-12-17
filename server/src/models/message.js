@@ -29,9 +29,10 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "message_id", // Giả sử message_id là khóa ngoại trong bảng MessageReact
         as: "messageReact",
       });
-      Message.belongsTo(Message, {
-        foreignKey: "reply_text_id",
-        as: "info_reply",
+      Message.hasOne(models.Message, {
+        as: "info_reply", // Alias cho liên kết
+        foreignKey: "id", // Trường được dùng để liên kết (ở bảng được tham chiếu)
+        sourceKey: "reply_text_id", // Trường trong bảng hiện tại dùng để tham chiếu
       });
     }
   }

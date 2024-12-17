@@ -14,7 +14,7 @@ interface MediaMsgType {
   isReply?: boolean;
 }
 
-const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
+const MediaMsg = ({ el, currentUser, isReply }: MediaMsgType) => {
   let parsedMessage: string[] | null | undefined = null;
   if (typeof el.imageInfo?.message_image === "string") {
     parsedMessage = JSON.parse(el.imageInfo.message_image);
@@ -39,14 +39,15 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
         className={cn(
           "flex items-end",
           currentUser?.id === el.sender_id
-            ? `justify-end ${showAvatar ? "pr-[14px]" : "pr-[50px]"}`
-            : `justify-start ${showAvatar ? "pl-[14px]" : "pl-[50px]"}`,
+            ? "justify-end pr-[14px]"
+            : "justify-start pl-[14px]",
           isReply && "px-0"
         )}
       >
+        {/* Hiển thị 1 ảnh */}
         {parsedMessage?.length === 1 && (
           <>
-            {positionMes === "left" && showAvatar && (
+            {positionMes === "left" && (
               <AvatarMsg el={el} currentUser={currentUser} />
             )}
             <div className="flex items-center justify-center gap-2">
@@ -113,15 +114,13 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
                 />
               )}
             </div>
-            {positionMes === "right" && showAvatar && (
-              <AvatarMsg el={el} currentUser={currentUser} />
-            )}
           </>
         )}
 
+        {/* Hiển thị 2 ảnh */}
         {parsedMessage?.length === 2 && (
           <>
-            {positionMes === "left" && showAvatar && (
+            {positionMes === "left" && (
               <AvatarMsg el={el} currentUser={currentUser} />
             )}
             <div className="flex items-center gap-2">
@@ -147,7 +146,7 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
                       alt="anh"
                       key={index}
                       src={item}
-                      className="flex-1 w-full h-full object-cover rounded-2xl cursor-pointer hover:opacity-90 duration-300"
+                      className="flex-1 w-full h-full object-contain rounded-2xl cursor-pointer hover:opacity-90 duration-300"
                     />
                   ))}
                 </div>
@@ -193,14 +192,13 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
                 />
               )}
             </div>
-            {positionMes === "right" && showAvatar && (
-              <AvatarMsg el={el} currentUser={currentUser} />
-            )}
           </>
         )}
+
+        {/* Hiển thị nhiều ảnh */}
         {parsedMessage && parsedMessage?.length > 2 && (
           <>
-            {positionMes === "left" && showAvatar && (
+            {positionMes === "left" && (
               <AvatarMsg el={el} currentUser={currentUser} />
             )}
             <div className="flex items-center gap-2">
@@ -228,7 +226,7 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
                       alt="anh"
                       key={index}
                       src={item}
-                      className="flex-1 w-full h-full object-cover rounded-2xl cursor-pointer hover:opacity-90 duration-300"
+                      className="flex-1 w-full h-full object-contain rounded-2xl cursor-pointer hover:opacity-90 duration-300"
                     />
                   ))}
                 </div>
@@ -269,13 +267,10 @@ const MediaMsg = ({ el, currentUser, showAvatar, isReply }: MediaMsgType) => {
                 />
               )}
             </div>
-            {positionMes === "right" && showAvatar && (
-              <AvatarMsg el={el} currentUser={currentUser} />
-            )}
           </>
         )}
       </div>
-      {updateMessage.messageValue && (
+      {updateMessage.messageValue?.conversation_id === el.conversation_id && (
         <>
           <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
         </>

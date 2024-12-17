@@ -13,7 +13,7 @@ interface ReplyMsgType {
   currentUser?: UserType | null;
   showAvatar?: boolean;
 }
-const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
+const ReplyMsg = ({ el, currentUser }: ReplyMsgType) => {
   let positionMes = "";
   if (currentUser?.id !== el.sender_id) {
     positionMes = "left";
@@ -31,14 +31,14 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
         className={cn(
           "flex flex-col",
           currentUser?.id === el.sender_id
-            ? `justify-end ${showAvatar ? "pr-[14px]" : "pr-[50px]"}`
-            : `justify-start ${showAvatar ? "pl-[14px]" : "pl-[50px]"}`
+            ? "justify-end pr-[14px]"
+            : "justify-start pl-[14px]"
         )}
       >
         {positionMes === "right" && (
           <div className="flex items-center">
             <div className="flex-1 min-w-[33%] max-w-full"></div>
-            <div className="flex items-center gap-1 pr-[50px] whitespace-nowrap">
+            <div className="flex items-center gap-1 whitespace-nowrap">
               <TiArrowBack size={20} />
               <div className="text-[#65686c] text-[12px]">
                 {`Bạn đã trả lời ${
@@ -52,7 +52,7 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
         )}
         {positionMes === "left" && (
           <div className="flex items-center">
-            <div className="flex items-center gap-1 pl-[50px] whitespace-nowrap">
+            <div className="flex items-center gap-1 whitespace-nowrap">
               <div className="text-[#65686c] text-[12px]">
                 {` ${
                   currentUser?.id !== el?.info_reply?.sender_id
@@ -70,7 +70,7 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
           {positionMes === "right" && (
             <div className="flex-1 min-w-[33%] max-w-full"></div>
           )}
-          {positionMes === "left" && showAvatar && (
+          {positionMes === "left" && (
             <AvatarMsg el={el} currentUser={currentUser} />
           )}
           <div className="rounded-2xl bg-white cursor-pointer w-auto">
@@ -112,7 +112,12 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
                       currentUser={currentUser ?? null}
                     />
                   )}
-                  <div className="flex flex-col items-end">
+                  <div
+                    className={cn(
+                      "flex flex-col",
+                      positionMes === "left" ? "items-start" : "items-end"
+                    )}
+                  >
                     <div
                       className={cn(
                         "w-auto",
@@ -136,7 +141,7 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
                     </div>
                     <div
                       className={cn(
-                        "py-[2px] px-3 rounded-xl w-fit",
+                        "py-1 px-3 rounded-xl w-fit",
                         positionMes === "right"
                           ? "bg-[#0866ff] text-white"
                           : "bg-[#d1d5db] text-black"
@@ -162,9 +167,6 @@ const ReplyMsg = ({ el, currentUser, showAvatar }: ReplyMsgType) => {
               </div>
             )}
           </div>
-          {positionMes === "right" && showAvatar && (
-            <AvatarMsg el={el} currentUser={currentUser} />
-          )}
           {positionMes === "left" && (
             <div className="flex-1 min-w-[33%] max-w-full"></div>
           )}

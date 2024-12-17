@@ -49,7 +49,7 @@ const EmojiPickerComponent = ({
       className={cn(
         "shadow-blurEmoji overflow-hidden rounded-lg",
         !changeEmojiMessage.isChangeEmoji &&
-          "absolute bottom-[60px] right-0 z-[100]"
+          "absolute bottom-[55px] right-0 z-[999]"
       )}
       ref={pickerRef}
       onClick={(e) => e.stopPropagation()}
@@ -58,7 +58,7 @@ const EmojiPickerComponent = ({
         height={400}
         width={350}
         onEmojiClick={(emoji: EmEmojiProps) => {
-          if (changeEmojiMessage === null || changeEmojiMessage === undefined) {
+          if (!changeEmojiMessage.isChangeEmoji) {
             setEmoji?.(emoji.emoji);
           } else {
             dispatch(

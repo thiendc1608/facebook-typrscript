@@ -33,15 +33,13 @@ export const conversationAPI = {
     return axiosClient.delete(url);
   },
 
-  getAllMessage: (
-    conversation_id: string
-  ): Promise<
+  getAllMessage: (): Promise<
     CustomResponse & {
       messages: allMessageType[];
       countReactMes: (reactMesType & { message_id: string })[] | [];
     }
   > => {
-    const url = `conversation/get-all-message/${conversation_id}`;
+    const url = "conversation/get-all-message";
     return axiosClient.get(url);
   },
 

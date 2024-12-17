@@ -1,9 +1,11 @@
 import { SocketContext } from "@/context/SocketContext";
+import { cn } from "@/lib/utils";
 import {
   chattingUserType,
   setReplyMsg,
   setUpdateMessage,
 } from "@/redux/conversationSlice";
+import { notificationState } from "@/redux/notificationSlice";
 import { allMessageType, emotionType, UserType } from "@/types";
 import { useContext, useEffect, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -28,6 +30,9 @@ const OptionMessage = ({
   const { emojiList, private_chat } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
+  const { tinyChatting } = useSelector(
+    (state: { notification: notificationState }) => state.notification
+  );
   const [listOption, setListOption] = useState({
     isEmoji: false,
     isArrowBack: false,
@@ -46,7 +51,7 @@ const OptionMessage = ({
     e.stopPropagation();
     setListOption({ ...listOption, isEmoji: false });
     socket?.emit("send_react_message", {
-      receiver_id: private_chat.current_conversation?.members?.user?.id,
+      receiver_id: private_chat.current_conversation?.members?.user_id,
       message_id: el.id,
       emoji_dropper_id: currentUser?.id as string,
       emoji_icon: item.emotion_icon,
@@ -81,7 +86,7 @@ const OptionMessage = ({
     }).then((result) => {
       if (result.isConfirmed) {
         socket?.emit("remove_message", {
-          receiver_id: private_chat.current_conversation?.members?.user?.id,
+          receiver_id: private_chat.current_conversation?.members?.user_id,
           el,
         });
       }
@@ -96,6 +101,17 @@ const OptionMessage = ({
       })
     );
   };
+
+  useEffect(() => {
+    const handleCloseEmoji = (e: Event) => {
+      const closeEmojiElement = document.getElementById("emoji");
+      if (e.target instanceof Node && !closeEmojiElement?.contains(e.target)) {
+        setListOption({ ...listOption, isEmoji: false });
+      }
+    };
+    document.addEventListener("click", handleCloseEmoji);
+    return () => document.removeEventListener("click", handleCloseEmoji);
+  }, []);
 
   return (
     <>
@@ -152,7 +168,7 @@ const OptionMessage = ({
               <TiArrowBack size={24} />
             </div>
             <div
-              className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366]"
+              className="relative w-7 h-7 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#f2f2f2] text-[#606366] z-[10]"
               title="Bày tỏ cảm xúc"
               onClick={(e) => {
                 e.stopPropagation();
@@ -164,7 +180,13 @@ const OptionMessage = ({
             >
               <FaRegFaceSmileBeam size={18} />
               {listOption.isEmoji && (
-                <div className="absolute top-[-50px] right-[-80px] py-2 px-3 flex items-center gap-1 shadow-blurEmoji rounded-[24px] z-[999] bg-white">
+                <div
+                  id="emoji"
+                  className={cn(
+                    "absolute top-[-50px] right-[-80px] py-2 px-3 flex items-center gap-1 shadow-blurEmoji rounded-[24px] z-[999] bg-white",
+                    tinyChatting ? "right-[-40px]" : "right-[-80px]"
+                  )}
+                >
                   {emojiList &&
                     emojiList.map((item: emotionType) => (
                       <div
@@ -204,7 +226,12 @@ const OptionMessage = ({
             >
               <FaRegFaceSmileBeam size={18} />
               {listOption.isEmoji && (
-                <div className="absolute top-[-50px] right-[-80px] py-2 px-3 flex items-center gap-1 shadow-blurEmoji rounded-[24px] z-[999] bg-white">
+                <div
+                  className={cn(
+                    "absolute top-[-50px] py-2 px-3 flex items-center gap-1 shadow-blurEmoji rounded-[24px] z-[999] bg-white",
+                    tinyChatting ? "left-[-40px]" : "left-[-80px]"
+                  )}
+                >
                   {emojiList &&
                     emojiList.map((item: emotionType) => (
                       <div

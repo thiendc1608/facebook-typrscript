@@ -10,6 +10,7 @@ import {
   setIsOpenNotifications,
 } from "@/redux/notificationSlice";
 import { useEffect, useState } from "react";
+import { chattingUserType, selectRoom } from "@/redux/conversationSlice";
 
 const RightHeader = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,9 @@ const RightHeader = () => {
     (state: { notification: notificationState }) => state.notification
   );
   const [isShowNotifications, setIsShowNotifications] = useState(false);
+  const { room_id } = useSelector(
+    (state: { conversation: chattingUserType }) => state.conversation
+  );
 
   useEffect(() => {
     if (notifications.length > 0) {
@@ -41,6 +45,9 @@ const RightHeader = () => {
           onClick={(e) => {
             e.stopPropagation();
             dispatch(setIsOpenMessage(!isOpenMessage));
+            if (room_id != null) {
+              dispatch(selectRoom({ room_id: null }));
+            }
           }}
         >
           <FaFacebookMessenger size={20} />

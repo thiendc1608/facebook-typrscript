@@ -10,13 +10,7 @@ module.exports = {
       },
       user_id: { type: Sequelize.STRING },
       post_content: { type: Sequelize.TEXT("long") },
-      media_location: {
-        type: Sequelize.JSON(Sequelize.TEXT("long")),
-        defaultValue: [],
-      },
-      hashtags: { type: Sequelize.JSON, defaultValue: [] },
-      feeling: { type: Sequelize.STRING },
-      activity: { type: Sequelize.STRING },
+      image_id: { type: Sequelize.STRING },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

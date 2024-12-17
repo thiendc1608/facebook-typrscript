@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { chattingUserType } from "@/redux/conversationSlice";
 import { setThemeMessage } from "@/redux/messageSlice";
 import { showModal } from "@/redux/modalSlice";
 import { themeColorChat } from "@/utils/path";
 import { useState } from "react";
 import { IoMdClose } from "react-icons/io";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const CustomTheme = () => {
   const dispatch = useDispatch();
@@ -13,6 +14,9 @@ const CustomTheme = () => {
     id: 1,
     color: "#0866ff",
   });
+  const { private_chat } = useSelector(
+    (state: { conversation: chattingUserType }) => state.conversation
+  );
 
   return (
     <div
@@ -73,7 +77,12 @@ const CustomTheme = () => {
         <Button
           className="bg-[#0866ff] hover:bg-blue-800"
           onClick={() => {
-            dispatch(setThemeMessage(themeMsg.color));
+            dispatch(
+              setThemeMessage({
+                themeMessage: themeMsg.color,
+                conversation_id: private_chat.current_conversation?.id,
+              })
+            );
             dispatch(showModal({ isShowModal: false, childrenModal: null }));
           }}
         >

@@ -17,6 +17,8 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import "../Messenger.css";
 import { messageSliceType } from "@/redux/messageSlice";
 import MessageSkeleton from "@/components/Skeleton/MessageSkeleton";
+import { notificationState } from "@/redux/notificationSlice";
+import { useLocation } from "react-router-dom";
 
 interface TextMsgType {
   el: allMessageType;
@@ -25,14 +27,10 @@ interface TextMsgType {
   loadingGetAllMsg: boolean;
 }
 
-const TextMsg = ({
-  el,
-  currentUser,
-  showAvatar,
-  loadingGetAllMsg,
-}: TextMsgType) => {
+const TextMsg = ({ el, currentUser, loadingGetAllMsg }: TextMsgType) => {
   const { socket } = useContext(SocketContext)!;
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const { private_chat } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
@@ -43,10 +41,14 @@ const TextMsg = ({
   const { updateMessage, searchMessage } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-  const { themeMessage, changeEmojiMessage } = useSelector(
+  const { themeDefault, changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
-  const [showOptionMes, setShowOptionMes] = useState<boolean>(false);
+  const { tinyChatting } = useSelector(
+    (state: { notification: notificationState }) => state.notification
+  );
+
+  // const [showOptionMes, setShowOptionMes] = useState<boolean>(false);
   let positionMes = "";
   if (currentUser?.id !== el.sender_id) {
     positionMes = "left";
@@ -90,7 +92,7 @@ const TextMsg = ({
 
   const handleRemoveMes = (el: allMessageType) => {
     socket?.emit("remove_message", {
-      receiver_id: private_chat.current_conversation?.members?.user?.id,
+      receiver_id: private_chat.current_conversation?.members?.user_id,
       el,
     });
   };
@@ -127,10 +129,10 @@ const TextMsg = ({
       {!loadingGetAllMsg && (
         <div
           className={cn(
-            "flex items-end pb-2 pt-4",
+            "flex items-end pb-2 pt-2",
             currentUser?.id === el.sender_id
-              ? `justify-end ${showAvatar ? "pr-[14px]" : "pr-[50px]"}`
-              : `justify-start ${showAvatar ? "pl-[14px]" : "pl-[50px]"}`
+              ? "justify-end pr-[14px]"
+              : "justify-start pl-[14px]"
           )}
           // onMouseEnter={() => {
           //   setShowOptionMes(true);
@@ -140,9 +142,14 @@ const TextMsg = ({
           // }}
         >
           {positionMes === "right" && (
-            <div className="flex-1 min-w-[33%] max-w-full"></div>
+            <div
+              className={cn(
+                "flex-1 max-w-full",
+                !tinyChatting && "min-w-[33%]"
+              )}
+            ></div>
           )}
-          {positionMes === "left" && showAvatar && (
+          {positionMes === "left" && (
             <AvatarMsg el={el} currentUser={currentUser} />
           )}
           <div className="flex items-center gap-2">
@@ -201,21 +208,24 @@ const TextMsg = ({
                           parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
                         )) && el.message !== String.fromCodePoint(0x1f44d)
                       ? positionMes === "left"
-                        ? "gray"
-                        : themeMessage
+                        ? "#e5e4de"
+                        : themeDefault
                       : "transparent",
                 }}
                 className={cn(
-                  "relative max-w-[480px] rounded-xl h-auto flex items-end flex-col",
-                  el.message !==
+                  "relative rounded-xl h-auto flex flex-col",
+                  location.pathname.includes("/messenger/t")
+                    ? "max-w-[480px]"
+                    : "max-w-[200px]",
+                  (el.message !==
                     (!isNaN(
                       parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
                     ) &&
                       String?.fromCodePoint(
                         parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
-                      )) &&
-                    el.message !== "👍" &&
-                    "px-3 py-1"
+                      )) ||
+                    el.message !== "👍") &&
+                    "px-3"
                 )}
               >
                 {positionMes === "right" && (
@@ -223,15 +233,15 @@ const TextMsg = ({
                 )}
                 <div
                   className={cn(
-                    "text-[15px] text-white py-1 inline-block break-all",
-                    el.message ===
+                    "text-[13px] text-white py-[2px] break-words whitespace-normal",
+                    (el.message ===
                       (!isNaN(
                         parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
                       ) &&
                         String?.fromCodePoint(
                           parseInt(`0x${changeEmojiMessage.emojiValue}`, 16)
-                        )) &&
-                      el.message === "👍" &&
+                        )) ||
+                      el.message === "👍") &&
                       "text-[20px]",
                     positionMes === "left" && "text-black",
                     el.message === "Bạn đã thu hồi một tin nhắn" &&
@@ -312,15 +322,17 @@ const TextMsg = ({
             )}
           </div>
           {positionMes === "left" && (
-            <div className="flex-1 min-w-[33%] max-w-full"></div>
-          )}
-          {positionMes === "right" && showAvatar && (
-            <AvatarMsg el={el} currentUser={currentUser} />
+            <div
+              className={cn(
+                "flex-1 max-w-full",
+                !tinyChatting && "min-w-[33%]"
+              )}
+            ></div>
           )}
         </div>
       )}
 
-      {updateMessage.messageValue !== null &&
+      {el.conversation_id === updateMessage.messageValue?.conversation_id &&
         el.id !== updateMessage.messageValue?.id && (
           <div className="absolute inset-0 bg-[rgba(72,72,72,0.7)] z-10"></div>
         )}

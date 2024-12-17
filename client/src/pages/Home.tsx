@@ -10,6 +10,7 @@ import {
   notificationState,
   setIsOpenNotifications,
   setNotifications,
+  tinyChattingType,
 } from "@/redux/notificationSlice";
 import ShowNotification from "@/components/Header/Notification/ShowNotification";
 import ShowMessage from "@/components/Header/Messenger/ShowMessage";
@@ -21,6 +22,7 @@ import {
 import { useAppDispatch } from "@/redux/store";
 import { userAPI } from "@/apis/userApi";
 import emojiAPI from "@/apis/emojiApi";
+import ShowTinyChat from "@/components/Header/Messenger/ContentMessage/ShowTinyChat";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -29,7 +31,7 @@ const Home = () => {
     (state: { user: UserState }) => state.user
   );
   const { socket } = useContext(SocketContext);
-  const { isOpenNotifications, isOpenMessage, isOpenChatting } = useSelector(
+  const { isOpenNotifications, isOpenMessage, tinyChatting } = useSelector(
     (state: { notification: notificationState }) => state.notification
   );
 
@@ -66,7 +68,7 @@ const Home = () => {
     const handleCloseNotification = (e: Event) => {
       const closeNotificationEl = document.getElementById("notification");
       if (e.target instanceof Node && !closeNotificationEl?.contains(e.target))
-        dispatch(setIsOpenNotifications(false));
+        if (isOpenNotifications) dispatch(setIsOpenNotifications(false));
     };
     document.addEventListener("click", handleCloseNotification);
     return () => document.removeEventListener("click", handleCloseNotification);
@@ -111,8 +113,27 @@ const Home = () => {
       <div className="flex-1 fixed top-[56px] right-0 w-[360px]">
         <Rightbar />
         {isOpenNotifications && <ShowNotification socket={socket} />}
+
         {isOpenMessage && <ShowMessage />}
-        {isOpenChatting && <ShowChatting />}
+
+        {tinyChatting.length > 0 &&
+          tinyChatting
+            .filter((item: tinyChattingType) => item.isOpenChatting)
+            .map((tiny_chat: tinyChattingType, idx) => (
+              <ShowChatting
+                key={tiny_chat.conversation?.id}
+                showConversation={tiny_chat}
+                index={idx}
+              />
+            ))}
+        {tinyChatting.length > 0 &&
+          tinyChatting
+            .filter((item: tinyChattingType) => item.isTinyChat)
+            .map((tiny_chat: tinyChattingType, idx) => (
+              <div key={idx}>
+                <ShowTinyChat showConversation={tiny_chat} index={idx} />
+              </div>
+            ))}
       </div>
     </div>
   );

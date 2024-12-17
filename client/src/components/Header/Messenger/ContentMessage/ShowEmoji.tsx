@@ -5,11 +5,11 @@ import { useState } from "react";
 import ShowReactMessage from "../ShowReactMessage";
 import { useDispatch } from "react-redux";
 
-interface ShowEmojiType {
+interface ShowEmojiProps {
   el: allMessageType;
   positionMes: "right" | "left";
 }
-const ShowEmoji = ({ el, positionMes }: ShowEmojiType) => {
+const ShowEmoji = ({ el, positionMes }: ShowEmojiProps) => {
   const dispatch = useDispatch();
   const [isHoverShowUserReact, setIsHoverShowUserReact] = useState({
     isHover: false,
@@ -31,22 +31,27 @@ const ShowEmoji = ({ el, positionMes }: ShowEmojiType) => {
   };
   const groupedData: GroupedData = {};
 
-  el?.messageReact?.forEach((item) => {
-    const messageId = item.message_id;
-    const emojiIcon = item.emoji_icon;
+  if (el?.messageReact?.length > 0) {
+    el?.messageReact?.forEach((item) => {
+      if (item) {
+        // Add this type guard
+        const messageId = item.message_id;
+        const emojiIcon = item.emoji_icon;
 
-    // Nếu chưa có message_id này trong groupedData, tạo một nhóm mới
-    if (!groupedData[emojiIcon]) {
-      groupedData[emojiIcon] = {
-        message_id: messageId,
-        emoji_icon: emojiIcon,
-        list: [],
-      };
-    }
+        // Nếu chưa có message_id này trong groupedData, tạo một nhóm mới
+        if (!groupedData[emojiIcon]) {
+          groupedData[emojiIcon] = {
+            message_id: messageId,
+            emoji_icon: emojiIcon,
+            list: [],
+          };
+        }
+        // Thêm emoji_dropper_id vào mảng list của nhóm tương ứng
+        groupedData[emojiIcon].list.push(item.userReact);
+      }
+    });
+  }
 
-    // Thêm emoji_dropper_id vào mảng list của nhóm tương ứng
-    groupedData[emojiIcon].list.push(item.userReact);
-  });
   return (
     <>
       {el?.messageReact &&
@@ -54,15 +59,15 @@ const ShowEmoji = ({ el, positionMes }: ShowEmojiType) => {
           <div
             key={index}
             className={cn(
-              "absolute bottom-[-10px]",
+              "absolute bottom-[-12px]",
               positionMes === "left"
                 ? index === 0
-                  ? "left-[-4px]"
+                  ? "left-5"
                   : `left-${4 * index}`
                 : null,
               positionMes === "right"
                 ? index === 0
-                  ? "right-[-4px]"
+                  ? "right-5"
                   : `right-${4 * index}`
                 : null
             )}
@@ -98,7 +103,7 @@ const ShowEmoji = ({ el, positionMes }: ShowEmojiType) => {
               isHoverShowUserReact.icon === elm.emoji_icon && (
                 <div
                   className={cn(
-                    "absolute top-[-40px] right-[-30px] my-[2px] w-auto rounded-xl overflow-hidden",
+                    "absolute top-[-40px] right-[-30px] my-[2px] w-auto rounded-xl overflow-hidden z-[100]",
                     elm.list.length > 1 && "top-[-58px]"
                   )}
                 >

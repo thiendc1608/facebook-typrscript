@@ -13,40 +13,38 @@ import { useAppDispatch } from "@/redux/store";
 import { SocketContext } from "@/context/SocketContext";
 import { allMessageType, messageType } from "@/types";
 import Form from "./Form";
-import Timeline from "./ContentMessage/Timeline";
-import MediaMsg from "./ContentMessage/MediaMsg";
-import TextMsg from "./ContentMessage/TextMsg";
 import { GoArrowDown } from "react-icons/go";
 import { UserState } from "@/redux/userSlice";
 import ReplyForm from "./ContentMessage/ReplyForm";
-import ReplyMsg from "./ContentMessage/ReplyMsg";
 import { cn } from "@/lib/utils";
 import { messageSliceType } from "@/redux/messageSlice";
 import { TiMessages } from "react-icons/ti";
+import AllMessageType from "./ContentMessage/AllMessageType";
 
 const ContentConversation = () => {
   const dispatch = useAppDispatch();
   const { socket } = useContext(SocketContext);
 
-  const { room_id, private_chat, reply_message, isShowContact, updateMessage } =
+  const { private_chat, reply_message, isShowContact, updateMessage } =
     useSelector(
       (state: { conversation: chattingUserType }) => state.conversation
     );
   const contentRef = useRef<null | HTMLDivElement>(null);
   const scrollButton = useRef<null | HTMLDivElement>(null);
-  const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const { themeMessage } = useSelector(
+  const { settingTheme, themeDefault } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
 
+  const listMessageOfChat = private_chat.current_messages.filter(
+    (el) => el.conversation_id === private_chat.current_conversation?.id
+  );
+
   useEffect(() => {
-    if (room_id != "") {
-      dispatch(fetchAllMessage({ conversation_id: room_id }));
-    }
-  }, [room_id, dispatch]);
+    dispatch(fetchAllMessage());
+  }, [dispatch]);
 
   useEffect(() => {
     socket?.off("new_message");
@@ -71,7 +69,7 @@ const ContentConversation = () => {
     );
 
     socket?.on(
-      "update_remove_message",
+      "removed_message",
       async (data: { message: allMessageType[] | string[] }) => {
         const message = data.message;
         if (
@@ -93,22 +91,9 @@ const ContentConversation = () => {
     );
     return () => {
       socket?.off("new_message");
-      socket?.off("update_remove_message");
+      socket?.off("removed_message");
     };
   }, [socket, dispatch, private_chat]);
-
-  useEffect(() => {
-    // Scroll to the bottom of the message list when new messages are added
-    const timer = setTimeout(() => {
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({
-          behavior: "smooth",
-          block: "end",
-        });
-      }
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [private_chat.current_messages]);
 
   useEffect(() => {
     const contentElement = contentRef.current;
@@ -163,16 +148,16 @@ const ContentConversation = () => {
                   <div className="flex items-center gap-2">
                     <img
                       src={
-                        private_chat.conversations[0]?.group_image ||
-                        private_chat.conversations[0]?.members?.user?.avatar
+                        private_chat.current_conversation?.group_image ||
+                        private_chat.current_conversation?.members?.user?.avatar
                       }
                       alt="anh"
                       className="w-[40px] h-[40px] object-cover rounded-full"
                     />
                     <span className="text-[#080809] text-[16px] font-bold">
                       {`${
-                        private_chat.conversations[0]?.conversation_name ||
-                        private_chat.conversations[0]?.members?.nickname
+                        private_chat.current_conversation?.conversation_name ||
+                        private_chat.current_conversation?.members?.nickname
                       }`.trim()}
                     </span>
                   </div>
@@ -181,7 +166,7 @@ const ContentConversation = () => {
                   className="w-[36px] h-[36px] rounded-full hover:bg-[#f2f2f2] flex items-center justify-center cursor-pointer"
                   onClick={() => dispatch(setShowContact(!isShowContact))}
                 >
-                  <MdInfo size={24} color={`${themeMessage}`} />
+                  <MdInfo size={24} color={`${themeDefault}`} />
                 </div>
               </div>
             </div>
@@ -201,16 +186,16 @@ const ContentConversation = () => {
               <div className="flex flex-col items-center justify-center gap-3">
                 <img
                   src={
-                    private_chat.conversations[0]?.group_image ||
-                    private_chat.conversations[0]?.members?.user?.avatar
+                    private_chat.current_conversation?.group_image ||
+                    private_chat.current_conversation?.members?.user?.avatar
                   }
                   alt="anh"
                   className="w-[60px] h-[60px] rounded-full object-cover"
                 />
                 <span className="text-[17px] text-[#080809] font-semibold">
                   {`${
-                    private_chat.conversations[0]?.conversation_name ||
-                    private_chat.conversations[0]?.members?.nickname
+                    private_chat.current_conversation?.conversation_name ||
+                    private_chat.current_conversation?.members?.nickname
                   }`.trim()}
                 </span>
               </div>
@@ -228,74 +213,11 @@ const ContentConversation = () => {
               Hãy lựa chọn 1 cuộc hội thoại để bắt đầu nhắn tin
             </span>
             <span>
-              <TiMessages size={40} color={`${themeMessage}`} />
+              <TiMessages size={40} color={`${themeDefault}`} />
             </span>
           </div>
         )}
-        <div className="flex flex-col gap-4">
-          {private_chat.current_messages?.map((el, index: number) => {
-            const nextMessage = private_chat.current_messages[index + 1];
-            const showAvatar =
-              nextMessage?.sender_id !== el.sender_id || !nextMessage;
-            switch (el.type_msg) {
-              case "divider":
-                return (
-                  // Timeline
-                  <Timeline el={el.send_at} />
-                );
-
-              case "msg":
-                switch (el.sub_type) {
-                  case "image":
-                    return (
-                      // Media Message
-                      <MediaMsg
-                        el={el}
-                        currentUser={currentUser}
-                        showAvatar={showAvatar}
-                      />
-                    );
-
-                  // case "doc":
-                  //   return (
-                  //     // Doc Message
-                  //     <DocMsg el={el} menu={menu} />
-                  //   );
-                  // case "Link":
-                  //   return (
-                  //     //  Link Message
-                  //     <LinkMsg el={el} menu={menu} />
-                  //   );
-
-                  case "reply":
-                    return (
-                      //  ReplyMessage
-                      <ReplyMsg
-                        el={el}
-                        currentUser={currentUser}
-                        showAvatar={showAvatar}
-                      />
-                    );
-
-                  default:
-                    return (
-                      // Text Message
-                      <TextMsg
-                        el={el}
-                        currentUser={currentUser}
-                        showAvatar={showAvatar}
-                        loadingGetAllMsg={private_chat.loadingGetAllMsg}
-                      />
-                    );
-                }
-
-              default:
-                return <></>;
-            }
-          })}
-          <div ref={messagesEndRef} />{" "}
-          {/* Phần tử này giúp chúng ta cuộn đến cuối */}
-        </div>
+        <AllMessageType currentUser={currentUser} listMsg={listMessageOfChat} />
       </div>
       <div
         className="absolute left-[50%] translate-x-[-50%] bottom-[10px] w-[40px] h-[40px] bg-white rounded-full shadow-default z-[999]"
@@ -308,10 +230,11 @@ const ContentConversation = () => {
       </div>
       {private_chat.conversations && (
         <div className="sticky bottom-0 left-0 min-h-[60px] flex w-full">
-          {reply_message?.conversation_id ===
-            private_chat.current_conversation?.id && (
-            <ReplyForm currentUser={currentUser} isReply={true} />
-          )}
+          {reply_message &&
+            reply_message?.conversation_id ===
+              private_chat.current_conversation?.id && (
+              <ReplyForm currentUser={currentUser} isReply={true} />
+            )}
           {updateMessage?.isUpdateMsg && (
             <ReplyForm currentUser={currentUser} isReply={false} />
           )}

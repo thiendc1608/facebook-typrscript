@@ -1,11 +1,9 @@
 import { SocketContext } from "@/context/SocketContext";
-import { setIsOpenChatting, setIsOpenMessage } from "@/redux/notificationSlice";
 import { UserType } from "@/types";
 import { memo, useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { UserState } from "@/redux/userSlice";
 import { chattingUserType, setShowContact } from "@/redux/conversationSlice";
-// import { conversationAPI } from "@/apis/conversationApi";
 
 interface ShowSearchUserProps {
   searchList: UserType[];
@@ -34,8 +32,6 @@ const ShowSearchUser = ({
     user: UserType
   ) => {
     e.stopPropagation();
-    dispatch(setIsOpenMessage(false));
-    dispatch(setIsOpenChatting(true));
     setIsFocusSearch(false);
     setQuery("");
     dispatch(setShowContact(!isShowContact));
@@ -52,10 +48,11 @@ const ShowSearchUser = ({
   return (
     <>
       {searchList.length > 0 ? (
-        searchList.map((user) => (
+        searchList.map((user, idx) => (
           <div
             key={user.id}
-            className="absolute top-[90px] h-[calc(100vh-80px-110px)] right-[-6px] left-0 rounded-lg overflow-y-auto py-[6px] bg-white"
+            style={{ top: `${idx * 58 + 90}px` }}
+            className="absolute h-[calc(100vh-80px-110px)] right-[-6px] left-0 rounded-lg overflow-y-auto py-[6px] bg-white"
           >
             <div
               className="flex items-center gap-2 hover:bg-[#F2F2F2] rounded-lg cursor-pointer py-2 px-2"
