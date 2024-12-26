@@ -8,6 +8,7 @@ import { IoIosSearch } from "react-icons/io";
 
 const YourPrivacy = () => {
   const dispatch = useDispatch();
+
   const [selectNewsPrivacy, setSelectNewsPrivacy] = useState({
     icon: publicImage,
     name: "Công khai",
@@ -144,7 +145,7 @@ const YourPrivacy = () => {
                 type="text"
                 placeholder="Tìm kiếm"
                 id="choose_people"
-                className="w-full h-full bg-[#F0F2F5] outline-none rounded-[100px] pl-[6px] text-[17px]"
+                className="w-full h-full bg-[#F0F2F5] outline-none rounded-[100px] pl-[6px]"
               />
             </div>
           </div>

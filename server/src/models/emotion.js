@@ -9,6 +9,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Emotion.belongsToMany(models.Post, {
+        through: models.PostReaction, // Bảng trung gian
+        foreignKey: "emotion_id",
+        otherKey: "post_id",
+      });
     }
   }
   Emotion.init(
@@ -22,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
         "angry"
       ),
       emotion_icon: DataTypes.STRING,
+      emotion_post: DataTypes.TEXT("long"),
     },
     {
       sequelize,

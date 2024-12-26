@@ -29,8 +29,8 @@ const ShowEmoji = ({ el, positionMes }: ShowEmojiProps) => {
       icon: "",
     });
   };
-  const groupedData: GroupedData = {};
 
+  const groupedData: GroupedData = {};
   if (el?.messageReact?.length > 0) {
     el?.messageReact?.forEach((item) => {
       if (item) {

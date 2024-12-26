@@ -75,6 +75,13 @@ const messageSlice = createSlice({
       state.selectImageList = listImageSelect;
     },
 
+    setPostImageList: (state, action) => {
+      const listImageSelect: string[] = action.payload.map(
+        (item: imageCloudinaryType) => item.path
+      );
+      state.selectImageList = [...state.selectImageList, ...listImageSelect];
+    },
+
     removeSelectedImage: (state, action) => {
       state.selectImageList = state.selectImageList.filter(
         (item) => item !== action.payload
@@ -90,6 +97,7 @@ export const {
   setIdImage,
   setSelectedImageList,
   removeSelectedImage,
+  setPostImageList,
 } = messageSlice.actions;
 const messageReducer = messageSlice.reducer;
 export default messageReducer;

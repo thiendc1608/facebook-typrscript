@@ -3,7 +3,6 @@ import app from "./server.js";
 import http from "http";
 const server = http.createServer(app);
 import { v4 as uuidv4 } from "uuid";
-
 import { Server } from "socket.io";
 import db from "./src/models/index.js";
 import { Op, Sequelize } from "sequelize";
@@ -519,6 +518,117 @@ io.on("connection", (socket) => {
       io.to(senderUser.socketId).emit("update_nickname", {
         new_nickName: changeName,
       });
+    }
+  });
+
+  socket.on("react_emotion_post", async (data) => {
+    const { user_id, post_id, emotion_id } = data;
+    try {
+      const findReactEmotion = await db.PostReaction.findOne({
+        where: { user_id, post_id },
+        raw: true,
+      });
+
+      if (findReactEmotion) {
+        // Nếu đã có cảm xúc, xóa
+        const resultUpdate = await db.PostReaction.update(
+          {
+            emotion_id,
+          },
+          {
+            where: { user_id, post_id },
+          }
+        );
+
+        if (resultUpdate[0] === 1) {
+          const updateReactEmotion = await db.PostReaction.findOne({
+            where: { user_id, post_id },
+            attributes: ["id", "user_id", "post_id", "emotion_id"],
+            include: [
+              {
+                model: db.Emotion,
+                as: "emotion",
+                attributes: ["emotion_name", "emotion_post"],
+              },
+              {
+                model: db.User,
+                as: "userInfo",
+                attributes: ["lastName", "firstName", "avatar"],
+              },
+            ],
+            raw: true,
+            nest: true,
+          });
+
+          io.emit("update_react_post", {
+            data: updateReactEmotion,
+          });
+        }
+      } else {
+        // Tạo cảm xúc mới cho bài viết
+        const createReactEmotion = await db.PostReaction.create({
+          user_id,
+          post_id,
+          emotion_id,
+        });
+
+        if (createReactEmotion) {
+          // Lấy lại thông tin sau khi đã tạo
+          const getReactEmotion = await db.PostReaction.findOne({
+            where: {
+              post_id: createReactEmotion.toJSON().post_id,
+              user_id: createReactEmotion.toJSON().user_id,
+            },
+            attributes: ["id", "user_id", "post_id", "emotion_id"],
+            include: [
+              {
+                model: db.Emotion,
+                as: "emotion",
+                attributes: ["emotion_name", "emotion_post"],
+              },
+              {
+                model: db.User,
+                as: "userInfo",
+                attributes: ["lastName", "firstName", "avatar"],
+              },
+            ],
+            raw: true,
+            nest: true,
+          });
+
+          io.emit("create_react_post", {
+            data: getReactEmotion,
+          });
+        }
+      }
+    } catch (error) {
+      console.log("Error creating post:", error);
+      socket.emit("error", "Error reacting post");
+    }
+  });
+
+  socket.on("remove_emotion_post", async (data) => {
+    const { user_id, post_id } = data;
+    try {
+      const findReactEmotion = await db.PostReaction.findOne({
+        where: { user_id, post_id },
+        raw: true,
+      });
+
+      if (findReactEmotion) {
+        // Nếu đã có cảm xúc, xóa
+        await db.PostReaction.destroy({
+          where: { user_id, post_id },
+        });
+
+        io.emit("remove_react", {
+          user_id,
+          post_id,
+        });
+      }
+    } catch (error) {
+      console.log("Error creating post:", error);
+      socket.emit("error", "Error reacting post");
     }
   });
 });

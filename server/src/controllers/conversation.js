@@ -3,7 +3,6 @@ import db from "../models";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
 import { Op, Sequelize } from "sequelize";
-import { raw } from "body-parser";
 
 const getAllConversation = asyncHandler(async (req, res) => {
   const { current_id } = req.params;
@@ -270,6 +269,14 @@ const getAllImage = asyncHandler(async (req, res) => {
 
 const uploadImage = asyncHandler(async (req, res) => {
   const images = req.files?.map((el) => el);
+
+  if (!images) {
+    return res.status(400).json({
+      success: false,
+      message: "Upload image failed",
+    });
+  }
+
   res.status(200).json({
     success: true,
     message: "Upload image successfully",

@@ -9,13 +9,21 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      PostReaction.belongsTo(models.Emotion, {
+        foreignKey: "emotion_id",
+        as: "emotion",
+      });
+      PostReaction.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "userInfo",
+      });
     }
   }
   PostReaction.init(
     {
       post_id: DataTypes.STRING,
       user_id: DataTypes.STRING,
-      reaction_id: DataTypes.INTEGER,
+      emotion_id: DataTypes.INTEGER,
     },
     {
       sequelize,

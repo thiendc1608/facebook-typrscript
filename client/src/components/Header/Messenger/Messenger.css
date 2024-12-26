@@ -1,4 +1,4 @@
-div[contentEditable="true"]:empty::before {
+#form-wrapper > div[contentEditable="true"]:empty::before {
   content: "Aa"; /* Nội dung của placeholder */
   color: #aaa; /* Màu sắc placeholder */
   pointer-events: none; /* Ngăn không cho chuột tương tác với placeholder */

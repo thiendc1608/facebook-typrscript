@@ -1,4 +1,4 @@
-import { Sequelize } from "sequelize";
+import { Sequelize, where } from "sequelize";
 import db from "../models";
 const asyncHandler = require("express-async-handler");
 
@@ -122,7 +122,11 @@ const confirmFriendRequest = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
+  const { id } = req.params;
   const userList = await db.User.findAll({
+    where: {
+      id: { [Sequelize.Op.ne]: id },
+    },
     raw: true,
   });
   if (!userList) {

@@ -34,8 +34,10 @@ export const userAPI = {
     return axiosClient.post(url, data);
   },
 
-  getAllUsers: (): Promise<CustomResponse & { userList: UserType[] }> => {
-    const url: string = "user/all-users";
+  getAllUsers: (
+    id: string
+  ): Promise<CustomResponse & { userList: UserType[] }> => {
+    const url: string = `user/all-users/${id}`;
     return axiosClient.get(url);
   },
 

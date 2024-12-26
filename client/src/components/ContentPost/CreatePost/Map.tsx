@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import leaflet from "leaflet";
 import { useSelector } from "react-redux";
-import { postType } from "@/types";
+import { postType } from "@/redux/postSlice";
 
 const Map = () => {
   const mapRef = useRef<HTMLDivElement | null>(null);

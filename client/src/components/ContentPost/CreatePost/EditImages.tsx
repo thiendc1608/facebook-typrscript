@@ -1,18 +1,17 @@
 import { cn } from "@/lib/utils";
-import { removeImageFromList } from "@/redux/imageVideoSlice";
-import { ImageVideoState } from "@/types";
+import { messageSliceType, removeSelectedImage } from "@/redux/messageSlice";
 import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 
 const EditImages = () => {
-  const { listObjectImage } = useSelector(
-    (state: { imageVideo: ImageVideoState }) => state.imageVideo
+  const { selectImageList } = useSelector(
+    (state: { message: messageSliceType }) => state.message
   );
   const dispatch = useDispatch();
 
   return (
     <div>
-      {listObjectImage.length === 0 ? (
+      {selectImageList.length === 0 ? (
         <div className="w-full h-[200px] flex flex-col items-center justify-center bg-white">
           <svg viewBox="0 0 112 112" width="112" height="112">
             <defs>
@@ -59,31 +58,29 @@ const EditImages = () => {
         <div
           className={cn(
             "flex flex-col max-h-[410px] w-full overflow-y-scroll gap-1",
-            listObjectImage.length >= 3 && "w-[900px] flex-row flex-wrap",
-            listObjectImage.length >= 5 && "w-[1100px]"
+            selectImageList.length >= 3 && "w-[900px] flex-row flex-wrap",
+            selectImageList.length >= 5 && "w-[1100px]"
           )}
         >
-          {listObjectImage.map((item) => (
+          {selectImageList.map((item, idx) => (
             <div
-              key={item.id}
+              key={idx}
               className={cn(
-                "h-[200px] w-full relative",
-                listObjectImage.length >= 3 && "w-[438px] p-1 h-[300px]"
+                "h-[200px] w-full relative border border-black",
+                selectImageList.length >= 3 && "w-[438px] p-1 h-[300px]"
               )}
             >
               <img
-                src={URL.createObjectURL(item.name)}
-                alt={`image${item.id}`}
-                className="w-full h-full rounded-lg object-cover"
+                src={item}
+                alt={`image${idx}`}
+                className={cn("w-full h-full rounded-lg object-contain")}
               />
               <div className="absolute top-2 right-2">
                 <div className="rounded-full bg-white cursor-pointer hover:scale-y-110">
                   <IoMdClose
                     size={24}
                     className="hover:text-red-500"
-                    onClick={() =>
-                      dispatch(removeImageFromList({ id: item.id }))
-                    }
+                    onClick={() => dispatch(removeSelectedImage(item))}
                   />
                 </div>
               </div>

@@ -15,6 +15,9 @@ module.exports = {
       emotion_icon: {
         type: Sequelize.STRING,
       },
+      emotion_post: {
+        type: Sequelize.TEXT("long"),
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

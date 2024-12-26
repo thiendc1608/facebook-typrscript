@@ -3,6 +3,7 @@ import onlyFriend from "@/assets/images/only_friend_.png";
 import friendExcept from "@/assets/images/friends_except.png";
 import specificFriend from "@/assets/images/specific_friends.png";
 import onlyMe from "@/assets/images/only_me.png";
+import icons from "./icons";
 
 export const path = {
   ROOT: "/",
@@ -66,7 +67,7 @@ export const backGroundContent = [
   {
     id: 7,
     backGround:
-      "url(https://scontent.fhan14-5.fna.fbcdn.net/v/t39.16376-6/27971368_423110001455136_5789798837665136640_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=427b5c&_nc_eui2=AeEgl4CjTtFMwy8locvmsa5W0MjEoEQcna_QyMSgRBydr8vkrCiyAiodUlmkLr4tlyDF9PCZRaPSmTtOOzdSLWlJ&_nc_ohc=3TyV-KXvUJgQ7kNvgFrPlIj&_nc_zt=14&_nc_ht=scontent.fhan14-5.fna&_nc_gid=ADcEn-B-ZDl6VIWc6bA4rfH&oh=00_AYC0loMdJoDJ7ZsRxx2vcCcvL2YZtKFEKmkVTwGldgkjZQ&oe=67210369)",
+      "url(https://scontent.fhan2-5.fna.fbcdn.net/v/t39.16376-6/27971368_423110001455136_5789798837665136640_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=427b5c&_nc_ohc=9rJfk1YEnKYQ7kNvgEcJ9a4&_nc_oc=AdireMnjUw_Kw06COelJf6r3gVbZLkGfNlR1vOFuIHXzxKsy52l57s9oh3NlvaSvVIM&_nc_zt=14&_nc_ht=scontent.fhan2-5.fna&_nc_gid=AWPP_U9fQyU7t1ZDNszJBGg&oh=00_AYB1tlkZ65UX6bQrSqPlEX_yl0BR7_oirSq3jKN3IuA3Pg&oe=67683469)",
   },
   {
     id: 8,
@@ -75,7 +76,7 @@ export const backGroundContent = [
   {
     id: 9,
     backGround:
-      "url(https://scontent.fhan14-5.fna.fbcdn.net/v/t39.16376-6/29160588_435684666861727_3152817560781586432_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=427b5c&_nc_eui2=AeHLVB6VXuo6S47J1zLi_I6BbpAppzliuMpukCmnOWK4ymS3Afmi6cmU9lxx1UkzJ8hw9MkNuttKoWSNI_uA12pU&_nc_ohc=1MQjZz1Ji-IQ7kNvgFKF4cP&_nc_zt=14&_nc_ht=scontent.fhan14-5.fna&_nc_gid=ADcEn-B-ZDl6VIWc6bA4rfH&oh=00_AYBeFI-7hRyt-SP1cl0oGPbdTKbR719ISE7en7yIdT9Wsw&oe=67210447)",
+      "url(https://scontent.fhan2-5.fna.fbcdn.net/v/t39.16376-6/29160588_435684666861727_3152817560781586432_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=427b5c&_nc_ohc=3ABFwkivVJ4Q7kNvgFJwUrl&_nc_oc=AdhBaaBWw3oBV-MzOvTRmGh6Hpme40K-t3LbQIMUCFJtwPkIQHTg8tuU1lLGCescn5M&_nc_zt=14&_nc_ht=scontent.fhan2-5.fna&_nc_gid=AWPP_U9fQyU7t1ZDNszJBGg&oh=00_AYDJbQSN4hPj5SLbY_KsU6hWWEKJzDb86m_DINJPdHNmow&oe=67683547)",
   },
 ];
 
@@ -297,5 +298,24 @@ export const themeColorChat = [
   {
     id: 20,
     color: "#DA2944",
+  },
+];
+
+const { FaEarthAmericas, FaUserFriends, FaLock } = icons;
+export const objectPost = [
+  {
+    id: 1,
+    name: "Public",
+    icon: FaEarthAmericas,
+  },
+  {
+    id: 2,
+    name: "Friend",
+    icon: FaUserFriends,
+  },
+  {
+    id: 3,
+    name: "Only_me",
+    icon: FaLock,
   },
 ];

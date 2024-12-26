@@ -1,19 +1,26 @@
 import { IoImagesOutline } from "react-icons/io5";
-import { MdInsertEmoticon } from "react-icons/md";
 import { GiPositionMarker } from "react-icons/gi";
 import { HiOutlineGif } from "react-icons/hi2";
 import { FaUserTag } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { addImageVideo } from "@/redux/imageVideoSlice";
-import { ImageVideoState } from "@/types";
+import { addImageVideo, ImageVideoState } from "@/redux/imageVideoSlice";
 import { cn } from "@/lib/utils";
-import { addTagName, setCheckIn, setChooseGIF } from "@/redux/postSlice";
+import {
+  addTagName,
+  postType,
+  setCheckIn,
+  setChooseGIF,
+} from "@/redux/postSlice";
 
 const AddContent = () => {
   const dispatch = useDispatch();
   const { isAddImageVideo, showOrHiddenImageVideo } = useSelector(
     (state: { imageVideo: ImageVideoState }) => state.imageVideo
   );
+  const { tagUserList } = useSelector(
+    (state: { post: postType }) => state.post
+  );
+
   return (
     <div className="py-4">
       <div className="mx-4 p-2 flex items-center justify-between border border-solid rounded-lg">
@@ -43,16 +50,10 @@ const AddContent = () => {
             title="Gắn thẻ người khác"
             className="w-9 h-9 cursor-pointer rounded-full flex items-center justify-center hover:bg-[#F2F2F2]"
             onClick={() => {
-              dispatch(addTagName(true));
+              dispatch(addTagName({ ...tagUserList, isTagName: true }));
             }}
           >
             <FaUserTag size={24} color="#1771E6" />
-          </div>
-          <div
-            title="Cảm xúc/hoạt động"
-            className="w-9 h-9 cursor-pointer rounded-full flex items-center justify-center hover:bg-[#F2F2F2]"
-          >
-            <MdInsertEmoticon size={24} color="#EAB026" />
           </div>
           <div
             title="Checkin"

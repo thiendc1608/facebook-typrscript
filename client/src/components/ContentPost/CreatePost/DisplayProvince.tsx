@@ -1,5 +1,5 @@
-import { setCheckIn, setLocationTag } from "@/redux/postSlice";
-import { dataProvinceType, ImageVideoState, postType } from "@/types";
+import { postType, setCheckIn, setLocationTag } from "@/redux/postSlice";
+import { dataProvinceType, ImageVideoState } from "@/types";
 import { FaLocationDot } from "react-icons/fa6";
 import { useDispatch, useSelector } from "react-redux";
 import { IoMdClose } from "react-icons/io";

@@ -407,7 +407,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
                 </ul>
               </div>
             )}
-            <div className="relative flex items-end">
+            <div className="relative flex items-end" id="form-wrapper">
               <div
                 tabIndex={-1}
                 ref={divRef}

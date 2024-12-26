@@ -2,22 +2,27 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export interface showEmojiType {
   isShowEmoji: boolean;
+  emoji: string;
 }
 
 const emojiSlice = createSlice({
   name: "emoji",
   initialState: {
     isShowEmoji: false,
+    emoji: "",
   } as showEmojiType,
   reducers: {
     showEmoji: (state, action) => {
       state.isShowEmoji = action.payload.isShowEmoji;
     },
+
+    addEmojiToPost: (state, action) => {
+      state.emoji = action.payload;
+    },
   },
 });
 
-
-export const { showEmoji} = emojiSlice.actions;
+export const { showEmoji, addEmojiToPost } = emojiSlice.actions;
 const emojiReducer = emojiSlice.reducer;
 export default emojiReducer;
 

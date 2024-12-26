@@ -34,7 +34,7 @@ const ContentConversation = () => {
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const { settingTheme, themeDefault } = useSelector(
+  const { themeDefault } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
 

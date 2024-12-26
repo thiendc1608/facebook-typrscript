@@ -1,11 +1,13 @@
 import { cn } from "@/lib/utils";
+import { addEmojiToCommentPost, commentType } from "@/redux/commentSlice";
+import { addEmojiToPost, showEmojiType } from "@/redux/emojiSlice";
 import { messageSliceType, setChangeEmojiMessage } from "@/redux/messageSlice";
 import { showModal } from "@/redux/modalSlice";
 import EmojiPicker, { EmojiStyle, SkinTones } from "emoji-picker-react";
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-interface EmEmojiProps {
+interface EmojiProps {
   activeSkinTone: SkinTones;
   unified: string;
   unifiedWithoutSkinTone: string;
@@ -29,6 +31,12 @@ const EmojiPickerComponent = ({
   const { changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
+  const { isShowEmoji } = useSelector(
+    (state: { emoji: showEmojiType }) => state.emoji
+  );
+  const { valueEmoji } = useSelector(
+    (state: { comment: commentType }) => state.comment
+  );
 
   useEffect(() => {
     const pickerEle = (e: MouseEvent) => {
@@ -49,7 +57,8 @@ const EmojiPickerComponent = ({
       className={cn(
         "shadow-blurEmoji overflow-hidden rounded-lg",
         !changeEmojiMessage.isChangeEmoji &&
-          "absolute bottom-[55px] right-0 z-[999]"
+          "absolute bottom-[55px] right-0 z-[999]",
+        isShowEmoji && "absolute bottom-[200px] right-[80px]"
       )}
       ref={pickerRef}
       onClick={(e) => e.stopPropagation()}
@@ -57,9 +66,14 @@ const EmojiPickerComponent = ({
       <EmojiPicker
         height={400}
         width={350}
-        onEmojiClick={(emoji: EmEmojiProps) => {
+        onEmojiClick={(emoji: EmojiProps) => {
           if (!changeEmojiMessage.isChangeEmoji) {
-            setEmoji?.(emoji.emoji);
+            if (isShowEmoji) dispatch(addEmojiToPost(emoji.emoji));
+            else if (valueEmoji.isShowEmojiPost) {
+              dispatch(
+                addEmojiToCommentPost({ ...valueEmoji, emoji: emoji.emoji })
+              );
+            } else setEmoji?.(emoji.emoji);
           } else {
             dispatch(
               setChangeEmojiMessage({

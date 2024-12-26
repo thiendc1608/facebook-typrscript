@@ -95,7 +95,7 @@ const ChatUserList = () => {
         setQuery(userQuery);
         startTransaction(() => {
           userAPI
-            .getAllUsers()
+            .getAllUsers(currentUser!.id)
             .then((response) =>
               setSearchList(
                 response.userList.filter((user) =>

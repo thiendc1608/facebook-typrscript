@@ -6,10 +6,9 @@ import { useDispatch, useSelector } from "react-redux";
 // import ViewerPost from "./CreatePost/ViewerPost";
 import CreatePost from "./CreatePost/CreatePost";
 import { showModal } from "@/redux/modalSlice";
-import { addImageVideo } from "@/redux/imageVideoSlice";
+import { addImageVideo, ImageVideoState } from "@/redux/imageVideoSlice";
 import { GiPositionMarker } from "react-icons/gi";
 import { setCheckIn } from "@/redux/postSlice";
-import { ImageVideoState } from "@/types";
 
 const WriteStatus = () => {
   const dispatch = useDispatch();
@@ -38,9 +37,12 @@ const WriteStatus = () => {
                   childrenModal: <CreatePost />,
                 })
               );
+              if (isAddImageVideo) {
+                dispatch(addImageVideo(false));
+              }
             }}
           >
-            <span className="py-2 px-3 text-[17px] text-[#65676b]">
+            <span className="py-2 px-3 text-[17px] text-[#65676b] inline-block w-full">
               Bạn ơi, bạn đang nghĩ gì thế?
             </span>
           </div>

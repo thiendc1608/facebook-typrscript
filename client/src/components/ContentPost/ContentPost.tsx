@@ -1,6 +1,6 @@
 import WriteStatus from "./WriteStatus";
 import CreateReel from "../Reels/CreateReel";
-import ShowPost from "./ShowPost";
+import ShowPostHome from "./ShowPostHome/ShowPostHome";
 
 const ContentPost = () => {
   return (
@@ -14,7 +14,7 @@ const ContentPost = () => {
             <CreateReel />
           </div>
           <div className="w-full">
-            <ShowPost />
+            <ShowPostHome />
           </div>
         </div>
       </div>

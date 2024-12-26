@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import notificationReducer from "./notificationSlice";
 import conversationReducer from "./conversationSlice";
 import messageReducer from "./messageSlice";
+import commentReducer from "./commentSlice";
 
 // const userPersistConfig = {
 //     key: 'user',
@@ -30,6 +31,7 @@ const store = configureStore({
     notification: notificationReducer,
     conversation: conversationReducer,
     message: messageReducer,
+    comment: commentReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

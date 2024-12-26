@@ -10,22 +10,30 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       User.hasMany(models.Reel, { foreignKey: "user_id", as: "user" });
+
       User.hasOne(models.Friend, {
         foreignKey: "user_response_id",
         as: "friends",
       });
+
       User.hasOne(models.Member, {
         foreignKey: "user_id",
         as: "members",
       });
+
       User.belongsToMany(models.Conversation, {
         through: "Member",
         foreignKey: "user_id",
         as: "conversation_user",
       });
+
       User.hasMany(models.Message, {
         foreignKey: "sender_id",
         as: "senderInfo",
+      });
+
+      User.hasMany(models.Post, {
+        foreignKey: "user_id",
       });
     }
   }

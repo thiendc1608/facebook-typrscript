@@ -6,11 +6,12 @@ module.exports = {
       id: {
         allowNull: false,
         primaryKey: true,
-        type: Sequelize.STRING,
+        autoIncrement: true,
+        type: Sequelize.INTEGER,
       },
       post_id: { type: Sequelize.STRING },
       user_id: { type: Sequelize.STRING },
-      reaction_id: { type: Sequelize.INTEGER },
+      emotion_id: { type: Sequelize.INTEGER },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

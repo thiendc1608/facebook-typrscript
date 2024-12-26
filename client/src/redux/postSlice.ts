@@ -1,40 +1,131 @@
+import { postResponseType } from "@/apis/postApi";
+import { dataProvinceType, reactEmotionPostType, UserType } from "@/types";
+import icons from "@/utils/icons";
 import { createSlice } from "@reduxjs/toolkit";
+import { IconType } from "react-icons/lib";
+
+const { FaEarthAmericas } = icons;
+export interface postType {
+  textPost: string;
+  tagUserList: {
+    isTagName: boolean;
+    listTag: UserType[];
+  };
+  isCheckIn: number;
+  isChooseGIF: boolean;
+  locationTag: dataProvinceType | null;
+  locationList: dataProvinceType[];
+  selectObjectPost: {
+    id: number;
+    name: string;
+    icon: IconType;
+  };
+  listPost: postResponseType[];
+  listReactEmotionPost: reactEmotionPostType[];
+}
 
 const postSlice = createSlice({
   name: "post",
   initialState: {
     textPost: "",
-    isTagName: false,
+    tagUserList: {
+      isTagName: false,
+      listTag: [],
+    },
     isCheckIn: 0,
     isChooseGIF: false,
     locationTag: null,
     locationList: [],
-  },
+    selectObjectPost: {
+      id: 1,
+      name: "Public",
+      icon: FaEarthAmericas,
+    },
+    listPost: [],
+    listReactEmotionPost: [],
+  } as postType,
+
   reducers: {
-    setTextPost: (state, action) => {
+    setInputTextPost: (state, action) => {
       state.textPost = action.payload;
     },
-    addEmoji: (state, action) => {
-      state.textPost += action.payload;
+
+    resetTextPost: (state) => {
+      state.textPost = "";
     },
+
     addTagName: (state, action) => {
-      state.isTagName = action.payload;
+      state.tagUserList.isTagName = action.payload.isTagName;
+      state.tagUserList.listTag = action.payload.listTag;
     },
+
     setCheckIn: (state, action) => {
       state.isCheckIn = action.payload;
     },
+
     setLocationList: (state, action) => {
       state.locationList = action.payload;
     },
+
     setLocationTag: (state, action) => {
       state.locationTag = action.payload;
     },
+
     setChooseGIF: (state, action) => {
       state.isChooseGIF = action.payload;
+    },
+
+    setSelectObjectPost: (state, action) => {
+      state.selectObjectPost = action.payload;
+    },
+
+    setListPost: (state, action) => {
+      state.listPost.unshift(action.payload);
+    },
+
+    setListReactEmotionPost: (state, action) => {
+      const findExistEmotion = state.listReactEmotionPost.find(
+        (item) => item.id === action.payload.id
+      );
+
+      if (findExistEmotion) {
+        if (
+          action.payload.emotion.emotion_name !==
+          findExistEmotion.emotion.emotion_name
+        ) {
+          state.listReactEmotionPost = [
+            ...state.listReactEmotionPost.filter(
+              (item) => item.id !== action.payload.id
+            ),
+            action.payload,
+          ];
+        }
+        console.log(state.listReactEmotionPost);
+      } else state.listReactEmotionPost.push(action.payload);
+    },
+
+    removeReactEmotionPost: (state, action) => {
+      state.listReactEmotionPost = state.listReactEmotionPost.filter(
+        (item) =>
+          item.user_id !== action.payload.user_id &&
+          item.post_id !== action.payload.post_id
+      );
     },
   },
 });
 
-export const { setTextPost, addEmoji, addTagName, setCheckIn, setLocationList, setLocationTag, setChooseGIF} = postSlice.actions;
+export const {
+  resetTextPost,
+  setListPost,
+  setInputTextPost,
+  addTagName,
+  setCheckIn,
+  setLocationList,
+  setLocationTag,
+  setChooseGIF,
+  setSelectObjectPost,
+  setListReactEmotionPost,
+  removeReactEmotionPost,
+} = postSlice.actions;
 const postReducer = postSlice.reducer;
 export default postReducer;

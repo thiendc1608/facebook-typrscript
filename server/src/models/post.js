@@ -9,12 +9,30 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Post.belongsTo(models.User, {
+        foreignKey: "user_id",
+        targetKey: "id",
+        as: "userOwnPost",
+      });
+
+      Post.hasOne(models.Image, {
+        foreignKey: "image_id",
+        as: "imageInfo",
+      });
+
+      Post.belongsToMany(models.Emotion, {
+        through: models.PostReaction, // Bảng trung gian
+        foreignKey: "post_id",
+        otherKey: "emotion_id",
+      });
     }
   }
   Post.init(
     {
       user_id: DataTypes.STRING,
       post_content: DataTypes.TEXT("long"),
+      post_background: DataTypes.STRING,
+      post_object: DataTypes.STRING,
       image_id: DataTypes.STRING,
     },
     {

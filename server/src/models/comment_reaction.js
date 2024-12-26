@@ -1,7 +1,7 @@
 "use strict";
 import { Model } from "sequelize";
 module.exports = (sequelize, DataTypes) => {
-  class PostComment extends Model {
+  class CommentReaction extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -9,29 +9,29 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      PostComment.hasMany(models.CommentReaction, {
-        foreignKey: "comment_id",
-        as: "commentReaction",
-      });
-
-      PostComment.belongsTo(models.User, {
+      CommentReaction.belongsTo(models.User, {
         foreignKey: "user_id",
         targetKey: "id",
         as: "user",
       });
+
+      CommentReaction.belongsTo(models.Emotion, {
+        foreignKey: "emotion_id",
+        targetKey: "id",
+        as: "emotion",
+      });
     }
   }
-  PostComment.init(
+  CommentReaction.init(
     {
-      post_id: DataTypes.STRING,
+      comment_id: DataTypes.STRING,
       user_id: DataTypes.STRING,
-      comment_text: DataTypes.TEXT("long"),
-      parent_comment_id: DataTypes.STRING,
+      emotion_id: DataTypes.INTEGER,
     },
     {
       sequelize,
-      modelName: "PostComment",
+      modelName: "CommentReaction",
     }
   );
-  return PostComment;
+  return CommentReaction;
 };

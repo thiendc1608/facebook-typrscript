@@ -110,14 +110,6 @@ export interface listObjectImageType {
   name: File;
 }
 
-export interface ImageVideoState {
-  isAddImageVideo: boolean;
-  showOrHiddenImageVideo: boolean;
-  isEditImages: boolean;
-  listObjectImage: listObjectImageType[];
-  imageList: File[];
-}
-
 export interface emojiType {
   slug: string;
   character: string;
@@ -125,15 +117,6 @@ export interface emojiType {
   codePoint: string;
   group: string;
   subGroup: string;
-}
-
-export interface postType {
-  textPost: string;
-  isTagName: boolean;
-  isCheckIn: number;
-  isChooseGIF: boolean;
-  locationTag: dataProvinceType;
-  locationList: dataProvinceType[];
 }
 
 export interface dataProvinceType {
@@ -301,3 +284,60 @@ export interface GroupedData {
     }[];
   };
 }
+
+export interface postDataType {
+  id?: string;
+  user_id?: string;
+  post_content: string;
+  post_background: string;
+}
+
+export interface reactEmotionPostType {
+  id: string;
+  user_id: string;
+  post_id: string;
+  emotion_id: number;
+  emotion: {
+    emotion_name: string;
+    emotion_post: string;
+  };
+  userInfo: {
+    lastName: string;
+    firstName: string;
+    avatar: string;
+  };
+}
+
+export interface commentReactType {
+  id: string;
+  user_id: string;
+  comment_id: string;
+  emotion_id: number;
+  emotion: {
+    emotion_name: string;
+    emotion_comment: string;
+  };
+}
+
+export interface commentDataType {
+  id: number;
+  post_id: string;
+  user_id: string;
+  user: {
+    lastName: string;
+    firstName: string;
+    avatar: string;
+  };
+  comment_text: string;
+  parent_comment_id: number | null;
+  createdAt: Date;
+}
+
+export type infoComment = commentDataType & {
+  user_id?: string;
+  emotion_id?: number;
+  emotion?: {
+    emotion_name: string;
+    emotion_comment: string;
+  };
+};

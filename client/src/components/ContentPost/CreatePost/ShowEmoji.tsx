@@ -1,4 +1,4 @@
-import { addEmoji } from "@/redux/postSlice";
+import { addTextPost } from "@/redux/postSlice";
 import { emojiType } from "@/types";
 
 const ShowEmoji = () => {
@@ -14,7 +14,7 @@ const ShowEmoji = () => {
             className="w-[40px] h-[40px] hover:bg-[#F2F2F2] rounded-full flex items-center justify-center"
             onClick={() => {
               dispatch(
-                addEmoji(String.fromCodePoint(parseInt(item.codePoint, 16)))
+                addTextPost(String.fromCodePoint(parseInt(item.codePoint, 16)))
               );
             }}
           >
