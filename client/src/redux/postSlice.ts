@@ -1,7 +1,7 @@
-import { postResponseType } from "@/apis/postApi";
+import { postAPI, postResponseType } from "@/apis/postApi";
 import { dataProvinceType, reactEmotionPostType, UserType } from "@/types";
 import icons from "@/utils/icons";
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { IconType } from "react-icons/lib";
 
 const { FaEarthAmericas } = icons;
@@ -21,6 +21,8 @@ export interface postType {
     icon: IconType;
   };
   listPost: postResponseType[];
+  isLoadingPost: boolean;
+  endOfData: boolean;
   listReactEmotionPost: reactEmotionPostType[];
 }
 
@@ -42,6 +44,8 @@ const postSlice = createSlice({
       icon: FaEarthAmericas,
     },
     listPost: [],
+    isLoadingPost: false,
+    endOfData: false,
     listReactEmotionPost: [],
   } as postType,
 
@@ -100,17 +104,35 @@ const postSlice = createSlice({
             action.payload,
           ];
         }
-        console.log(state.listReactEmotionPost);
       } else state.listReactEmotionPost.push(action.payload);
     },
 
     removeReactEmotionPost: (state, action) => {
-      state.listReactEmotionPost = state.listReactEmotionPost.filter(
-        (item) =>
-          item.user_id !== action.payload.user_id &&
-          item.post_id !== action.payload.post_id
+      const listReactEmotionPostCopy = JSON.parse(
+        JSON.stringify(state.listReactEmotionPost)
       );
+      const filteredEmotionPosts = listReactEmotionPostCopy.filter(
+        (item: reactEmotionPostType) => {
+          return !(
+            item.user_id === action.payload.user_id &&
+            item.post_id === action.payload.post_id
+          );
+        }
+      );
+      state.listReactEmotionPost = filteredEmotionPosts;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(getAllPost.pending, (state) => {
+      state.isLoadingPost = true;
+    });
+    builder.addCase(getAllPost.fulfilled, (state, action) => {
+      state.isLoadingPost = false;
+      if (action.payload.allPosts.length < 3) {
+        state.endOfData = true; // Đánh dấu đã hết dữ liệu nếu trả về ít hơn `limit`
+      }
+      state.listPost = [...state.listPost, ...action.payload.allPosts];
+    });
   },
 });
 
@@ -129,3 +151,18 @@ export const {
 } = postSlice.actions;
 const postReducer = postSlice.reducer;
 export default postReducer;
+
+export const getAllPost = createAsyncThunk(
+  "post/getAllPost",
+  async (
+    { limit, offset }: { limit: number; offset: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await postAPI.getAllPost({ limit, offset });
+      return response;
+    } catch (err: unknown) {
+      return rejectWithValue(err);
+    }
+  }
+);

@@ -58,7 +58,7 @@ const ReactEmotionPost = ({
     setOptimisticLike({
       isLiking: true,
       emotionName: emotion.emotion_name,
-      postId: postId,
+      postId,
     });
     setIsHoverLike({
       isClickTabComment: isHoverLike.isClickTabComment,
@@ -178,6 +178,7 @@ const ReactEmotionPost = ({
     emotionName: string;
     postId: string;
   }) => {
+    if (emotion.postId !== item.id) return null;
     switch (emotion?.emotionName) {
       case "like":
         return (

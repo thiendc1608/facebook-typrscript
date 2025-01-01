@@ -57,4 +57,36 @@ const createPost = asyncHandler(async (req, res) => {
   });
 });
 
-export { createPost };
+const getAllPosts = asyncHandler(async (req, res) => {
+  const { offset, limit } = req.query;
+  try {
+    const allPosts = await db.Post.findAll({
+      limit: +limit, // Giới hạn số bài đăng trả về
+      offset: +offset,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: db.User,
+          attributes: ["firstName", "lastName", "avatar"],
+          as: "userOwnPost",
+        },
+      ],
+      raw: true,
+      nest: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Get all posts successfully",
+      allPosts,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: err.message,
+    });
+  }
+});
+
+export { createPost, getAllPosts };

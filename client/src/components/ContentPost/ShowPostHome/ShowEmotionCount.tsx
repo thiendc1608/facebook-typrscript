@@ -1,32 +1,21 @@
-import { postResponseType } from "@/apis/postApi";
 import { showModal } from "@/redux/modalSlice";
 import { postType } from "@/redux/postSlice";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ShowEmojiDetail from "./ShowEmojiDetail";
-
-export interface EmotionPostData {
-  [emotion_name: string]: {
-    emoji_post: string;
-    listUser: {
-      firstName: string;
-      lastName: string;
-      avatar: string;
-    }[];
-  };
-}
+import { EmotionPostData } from "@/types";
 
 interface ShowEmotionCountProps {
-  item: postResponseType;
+  idPost: string;
 }
 
-const ShowEmotionCount = ({ item }: ShowEmotionCountProps) => {
+const ShowEmotionCount = ({ idPost }: ShowEmotionCountProps) => {
   const dispatch = useDispatch();
   const { listReactEmotionPost } = useSelector(
     (state: { post: postType }) => state.post
   );
   const filterListEmotion = listReactEmotionPost.filter(
-    (el) => el.post_id === item.id
+    (el) => el.post_id === idPost
   );
   const [isHoverShowUserReact, setIsHoverShowUserReact] = useState(false);
 

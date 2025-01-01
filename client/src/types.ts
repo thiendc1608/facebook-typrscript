@@ -319,25 +319,32 @@ export interface commentReactType {
   };
 }
 
-export interface commentDataType {
+interface commentDataType {
   id: number;
   post_id: string;
-  user_id: string;
+  user_id: string; // id nguoi comment
   user: {
+    // thong tin nguoi comment
     lastName: string;
     firstName: string;
     avatar: string;
   };
-  comment_text: string;
+  comment_text: string; // noi dung comment
   parent_comment_id: number | null;
   createdAt: Date;
 }
 
-export type infoComment = commentDataType & {
-  user_id?: string;
-  emotion_id?: number;
-  emotion?: {
-    emotion_name: string;
-    emotion_comment: string;
+export interface EmotionPostData {
+  [emotion_name: string]: {
+    emoji_post: string;
+    listUser: {
+      firstName: string;
+      lastName: string;
+      avatar: string;
+    }[];
   };
-};
+}
+interface commentEmotionType {
+  emotion_comment: EmotionPostData | null;
+}
+export type infoComment = commentDataType & commentEmotionType;

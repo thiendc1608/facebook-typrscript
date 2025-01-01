@@ -1,14 +1,18 @@
 import { useEffect } from "react";
 
 interface emojiInserterProps {
-  currentPostId: string;
-  insertEmojiPostId: string;
-  divRef: React.RefObject<HTMLDivElement>;
-  emoji: string;
-  setCursorToEnd: (editableDiv: HTMLDivElement) => void;
-  setInputValue: (value: string) => void;
+  currentPostId: string; // ID của bài post
+  replyCommentId?: number; // ID của bình luận con (nếu có)
+  parentCommentId?: number; // ID của bình luận cha nếu đang là bình luận con
+  insertEmojiPostId: string; // Post hoặc comment ID để xác định phần cần chèn emoji
+  divRef: React.RefObject<HTMLDivElement>; // Ref của div input
+  emoji: string; // Emoji mà người dùng chọn
+  setCursorToEnd: (editableDiv: HTMLDivElement) => void; // Hàm di chuyển con trỏ đến cuối
+  setInputValue: (value: string) => void; // Hàm cập nhật giá trị input
 }
 const useEmojiInserter = ({
+  replyCommentId,
+  parentCommentId,
   currentPostId,
   insertEmojiPostId,
   divRef,
@@ -17,12 +21,19 @@ const useEmojiInserter = ({
   setInputValue,
 }: emojiInserterProps) => {
   useEffect(() => {
-    if (currentPostId === insertEmojiPostId && divRef.current && emoji) {
+    if (
+      (!parentCommentId && !replyCommentId) ||
+      (parentCommentId &&
+        replyCommentId === parentCommentId &&
+        divRef &&
+        emoji &&
+        currentPostId === insertEmojiPostId)
+    ) {
       const editableDiv = divRef.current;
-      editableDiv.focus(); // Focus the div
+      editableDiv!.focus(); // Focus the div
 
       // Place the cursor at the end
-      setCursorToEnd(editableDiv);
+      setCursorToEnd(editableDiv!);
 
       const selection = window.getSelection();
       const range = selection?.getRangeAt(0);
@@ -46,10 +57,10 @@ const useEmojiInserter = ({
         selection?.addRange(range);
 
         // Update the value of the input (inner text of the div)
-        setInputValue(editableDiv.innerText);
+        setInputValue(editableDiv!.innerText);
       }
     }
-  }, [emoji, divRef]);
+  }, [emoji, divRef, replyCommentId, currentPostId, insertEmojiPostId]);
 };
 
 export default useEmojiInserter;

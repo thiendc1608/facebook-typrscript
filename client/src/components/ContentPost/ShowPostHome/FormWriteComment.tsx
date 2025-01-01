@@ -6,10 +6,12 @@ import {
   addEmojiToCommentPost,
   commentType,
   setListComment,
+  updateComment,
 } from "@/redux/commentSlice";
 import { UserState } from "@/redux/userSlice";
 import {
   forwardRef,
+  memo,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -21,21 +23,32 @@ import { IoMdSend } from "react-icons/io";
 import { TiCameraOutline } from "react-icons/ti";
 import { useDispatch, useSelector } from "react-redux";
 import { executeCommentType } from "./ShowListComment";
+import { infoComment } from "@/types";
 
 interface FormWriteCommentProps {
+  replyText?: string | null;
+  replyCommentId?: number;
+  parentCommentId?: number | null;
+  listComment?: infoComment[];
   postId: string;
   commentId?: number;
   executeComment?: executeCommentType;
   setExecuteComment?: React.Dispatch<React.SetStateAction<executeCommentType>>;
   defaultValueComment?: string;
+  responseUserComment?: string;
+  commentResponse?: executeCommentType[];
+  setCommentResponse?: React.Dispatch<
+    React.SetStateAction<executeCommentType[]>
+  >;
 }
 
 const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
   (props, ref) => {
-    console.log(props.commentId);
-
-    const inputRef = useRef<HTMLDivElement | null>(null);
+    const divRefs = useRef<HTMLDivElement | null>(null);
     const [inputValue, setInputValue] = useState<string>("");
+    const [lastCommentedPost, setLastCommentedPost] = useState<string | null>(
+      null
+    );
     const { currentUser } = useSelector(
       (state: { user: UserState }) => state.user
     );
@@ -43,13 +56,13 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
       (state: { comment: commentType }) => state.comment
     );
     const dispatch = useDispatch();
-    const [pickerOpen, setPickerOpen] = useState<boolean>(false);
+
     useImperativeHandle(
       ref,
       () =>
         ({
           focus: () => {
-            inputRef.current?.focus();
+            divRefs.current?.focus();
           },
         } as HTMLDivElement)
     );
@@ -59,7 +72,33 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
         (e.target as HTMLElement).innerHTML = ""; // Xóa toàn bộ nội dung, bao gồm cả thẻ <br>
       }
       setInputValue((e.target as HTMLElement).innerText ?? "");
+      if (valueEmoji.isShowEmojiPost) {
+        dispatch(
+          addEmojiToCommentPost({
+            ...valueEmoji,
+            isShowEmojiPost: !valueEmoji.isShowEmojiPost,
+          })
+        );
+      }
     };
+
+    useEffect(() => {
+      if (inputValue && props.commentResponse) {
+        const commentResponse = props.commentResponse?.map((item) => {
+          if (
+            item.postId === props.postId &&
+            item.parentCommentId === props.parentCommentId
+          ) {
+            return {
+              ...item,
+              replyText: inputValue,
+            };
+          }
+          return item;
+        });
+        props.setCommentResponse!(commentResponse!);
+      }
+    }, [inputValue, props]);
 
     const setCursorToEnd = (editableDiv: HTMLDivElement): void => {
       const range = document.createRange();
@@ -71,9 +110,11 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
     };
 
     useEmojiInserter({
+      replyCommentId: props.replyCommentId,
+      parentCommentId: valueEmoji.parentCommentId || undefined,
       currentPostId: props.postId,
       insertEmojiPostId: valueEmoji.postId,
-      divRef: inputRef,
+      divRef: divRefs,
       emoji: valueEmoji.emoji,
       setCursorToEnd,
       setInputValue,
@@ -85,7 +126,7 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
         post_id: props.postId,
         user_id: currentUser!.id,
         comment_text: inputValue,
-        parent_comment_id: null,
+        parent_comment_id: +props.parentCommentId! || null,
       };
       try {
         if (props.executeComment && props.executeComment.isEditComment) {
@@ -99,13 +140,26 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
           };
           const response = await commentAPI.updateComment(mergedObj);
           if (response.success) {
-            dispatch(setListComment(response.comment));
+            dispatch(updateComment(response.comment));
+            dispatch(
+              addEmojiToCommentPost({
+                ...valueEmoji,
+                isShowEmojiPost: !valueEmoji.isShowEmojiPost,
+              })
+            );
           }
         } else {
           const response = await commentAPI.createComment(dataComment);
           if (response.success) {
             setInputValue("");
             dispatch(setListComment(response.comment));
+            dispatch(
+              addEmojiToCommentPost({
+                ...valueEmoji,
+                isShowEmojiPost: !valueEmoji.isShowEmojiPost,
+              })
+            );
+            setLastCommentedPost(props.postId);
           }
         }
       } catch (error) {
@@ -114,18 +168,66 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
     };
 
     useEffect(() => {
-      if (inputRef.current) {
-        inputRef.current!.innerHTML = "";
+      setTimeout(() => {
+        if (divRefs.current && props.responseUserComment && props.replyText) {
+          const p = document.createElement("p");
+          p.style.display = "flex";
+          const selection = window.getSelection();
+          const range = document.createRange();
+          if (
+            props.responseUserComment !==
+            currentUser?.lastName + " " + currentUser?.firstName
+          ) {
+            const span1 = document.createElement("span");
+            span1.className = "bg-[#C2D6F7]"; // Thêm class cho phần background
+            span1.innerHTML = props.responseUserComment;
+            p.appendChild(span1);
+
+            const space = document.createElement("span");
+            space.innerHTML = "&nbsp;";
+            p.appendChild(space);
+            // Đặt con trỏ vào cuối span1 (nếu span2 chưa có nội dung)
+            range.setStartAfter(span1);
+            range.collapse(true);
+          }
+          const span2 = document.createElement("span"); // Tạo một text node rỗng
+          span2.innerHTML = props.replyText;
+          p.appendChild(span2); // Thêm vào div
+
+          // Đặt con trỏ vào bên trong span2
+          setTimeout(() => {
+            range.selectNodeContents(span2); // Đảm bảo con trỏ được đặt vào span2
+            selection?.removeAllRanges();
+            selection?.addRange(range); // Thiết lập phạm vi con trỏ vào span2
+            divRefs.current!.focus(); // Đặt focus vào inputRef
+          }, 0); // Chạy
+          divRefs.current.appendChild(p);
+        }
+      }, 0);
+    }, [currentUser, props.responseUserComment]);
+
+    useEffect(() => {
+      if (lastCommentedPost === props.postId) {
+        setTimeout(() => {
+          divRefs.current?.focus();
+          divRefs.current!.innerHTML = "";
+          setLastCommentedPost(null);
+        }, 100);
+      }
+    }, [listComment, props.postId, lastCommentedPost]);
+
+    useEffect(() => {
+      if (divRefs.current) {
+        divRefs.current.innerHTML = "";
         setInputValue("");
-        inputRef.current!.focus();
       }
     }, [listComment]);
 
     useEffect(() => {
-      if (inputRef.current && props.defaultValueComment !== undefined) {
-        inputRef.current!.textContent = props.defaultValueComment;
-        inputRef.current!.focus();
-        setCursorToEnd(inputRef.current!);
+      if (divRefs.current && props.defaultValueComment !== undefined) {
+        divRefs.current.textContent = props.defaultValueComment;
+        divRefs.current.focus();
+        setCursorToEnd(divRefs.current);
       }
     }, [props.defaultValueComment]);
 
@@ -136,42 +238,47 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
         onSubmit={(e) => handleSendComment(e)}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-3 py-2">
+        <div className="px-3 pt-2">
           <div
+            ref={divRefs}
             className="w-full text-[#65686c] text-[15px] outline-none break-all leading-5 h-auto"
             contentEditable="true"
-            ref={inputRef}
             onKeyUp={(e: React.KeyboardEvent<HTMLDivElement>) =>
               handleOnChangeComment(e)
             }
+            dangerouslySetInnerHTML={{
+              __html: `<span class="bg-[#C2D6F7] h-5 w-auto">${props.responseUserComment}</span>`,
+            }}
           />
           <div className="flex justify-between items-center">
-            <ul className="flex items-center mt-2 gap-1">
+            <ul className="flex items-center">
               <li
-                className="relative cursor-pointer"
+                className="relative cursor-pointer w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E4E6E9]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setPickerOpen((prev) => !prev);
                   dispatch(
                     addEmojiToCommentPost({
                       ...valueEmoji,
                       isShowEmojiPost: !valueEmoji.isShowEmojiPost,
                       postId: props.postId,
+                      parentCommentId: props.parentCommentId,
                     })
                   );
                 }}
               >
                 <CiFaceSmile size={20} />
-                {pickerOpen && props.postId === valueEmoji.postId && (
-                  <div className="absolute bottom-[-30px] right-0">
-                    <EmojiPickerComponent setPickerOpen={setPickerOpen} />
-                  </div>
-                )}
+                {valueEmoji.isShowEmojiPost &&
+                  props.postId === valueEmoji.postId &&
+                  props.parentCommentId === valueEmoji.parentCommentId && (
+                    <div className="absolute bottom-[-30px] right-0">
+                      <EmojiPickerComponent />
+                    </div>
+                  )}
               </li>
-              <li className="cursor-pointer">
+              <li className="cursor-pointer w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E4E6E9]">
                 <TiCameraOutline size={20} />
               </li>
-              <li className="cursor-pointer">
+              <li className="cursor-pointer w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E4E6E9]">
                 <HiOutlineGif size={20} />
               </li>
             </ul>
@@ -197,4 +304,4 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
   }
 );
 
-export default FormWriteComment;
+export default memo(FormWriteComment);

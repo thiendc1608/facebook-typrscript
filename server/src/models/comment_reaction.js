@@ -12,13 +12,19 @@ module.exports = (sequelize, DataTypes) => {
       CommentReaction.belongsTo(models.User, {
         foreignKey: "user_id",
         targetKey: "id",
-        as: "user",
+        as: "userInfo",
       });
 
       CommentReaction.belongsTo(models.Emotion, {
         foreignKey: "emotion_id",
         targetKey: "id",
         as: "emotion",
+      });
+
+      CommentReaction.belongsTo(models.PostComment, {
+        foreignKey: "comment_id",
+        targetKey: "id",
+        as: "comment",
       });
     }
   }

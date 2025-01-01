@@ -27,7 +27,7 @@ const CommentPost = forwardRef<HTMLDivElement, CommentPostProps>(
               <div className="mt-[2px] mr-[6px]">
                 <img
                   src=""
-                  alt="anh dai dien"
+                  alt="anh"
                   className="w-[32px] h-[32px] rounded-full object-cover"
                 />
               </div>

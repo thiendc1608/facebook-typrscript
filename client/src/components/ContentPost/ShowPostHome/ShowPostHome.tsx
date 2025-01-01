@@ -22,6 +22,9 @@ import ReactEmotionPost from "./ReactEmotionPost";
 import ShowEmotionCount from "./ShowEmotionCount";
 import CommentPost from "./CommentPost";
 import { commentType } from "@/redux/commentSlice";
+import ShowPostSkeleton from "@/components/Skeleton/ShowPostSkeleton";
+import { useAppDispatch } from "@/redux/store";
+import { getAllPost } from "@/redux/postSlice";
 
 const ShowPostHome = () => {
   const dispatch = useDispatch();
@@ -36,18 +39,49 @@ const ShowPostHome = () => {
     isHover: false,
     post: null,
   });
+  const [start, setStart] = useState(0); // Điểm bắt đầu
+  const limit = 3; // Mỗi lần lấy 3 bài đăng
 
-  const { tagUserList, listPost, locationTag } = useSelector(
-    (state: { post: postType }) => state.post
-  );
+  const { tagUserList, listPost, isLoadingPost, locationTag, endOfData } =
+    useSelector((state: { post: postType }) => state.post);
 
   const { listComment } = useSelector(
     (state: { comment: commentType }) => state.comment
   );
 
+  const dispatchGetPost = useAppDispatch();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + window.innerHeight; // Vị trí cuộn hiện tại
+      const bottomPosition = document.documentElement.scrollHeight; // Vị trí cuối trang
+
+      // Nếu cuộn gần đến cuối trang, gọi loadPosts
+      if (scrollPosition >= bottomPosition - 100 && !endOfData) {
+        setStart((prev) => prev + 1);
+      }
+    };
+
+    // Gắn sự kiện cuộn khi component được mount
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup khi component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [endOfData]);
+
+  useEffect(() => {
+    // Gọi action getAllPost khi `start` thay đổi
+    if (!endOfData) {
+      dispatchGetPost(getAllPost({ offset: start * limit, limit }));
+    }
+  }, [dispatchGetPost, start, endOfData]);
+
   useEffect(() => {
     socket?.off("create_react_post");
     socket?.off("update_react_post");
+    socket?.off("remove_react");
 
     socket?.on("create_react_post", (data: { data: reactEmotionPostType }) => {
       dispatch(
@@ -70,8 +104,6 @@ const ShowPostHome = () => {
     });
 
     socket?.on("update_react_post", (data: { data: reactEmotionPostType }) => {
-      console.log(data);
-
       dispatch(
         setListReactEmotionPost({
           id: data.data.id,
@@ -105,21 +137,31 @@ const ShowPostHome = () => {
     return () => {
       socket?.off("create_react_post");
       socket?.off("update_react_post");
+      socket?.off("remove_react");
     };
   }, [socket, dispatch]);
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>, postId: string) => {
+  const handleClickTabComment = (
+    e: React.MouseEvent<HTMLDivElement>,
+    postId: string
+  ) => {
     e.stopPropagation();
-    // Focus vào input khi click vào div cha
-    const inputElement = contentRefs.current[postId];
-    if (inputElement) {
-      inputElement.focus();
-    }
     setIsHoverLike({ ...isHoverLike, isClickTabComment: true, post: null });
+    setTimeout(() => {
+      const inputElement = contentRefs.current[postId];
+      if (inputElement) {
+        inputElement.focus();
+      }
+    }, 50);
   };
 
   return (
     <div className="flex flex-col gap-5">
+      {isLoadingPost && (
+        <div className="flex flex-col gap-3">
+          <ShowPostSkeleton count_post={3} />
+        </div>
+      )}
       {listPost.length > 0 &&
         listPost.map((item) => (
           <div key={item.id} className="rounded-lg bg-white border">
@@ -142,9 +184,9 @@ const ShowPostHome = () => {
                         to={`/profile/${item.user_id}`}
                         className="text-[15px] text-[#080809] hover:underline cursor-pointer"
                       >
-                        {item.userOwnPost.last_name +
+                        {item.userOwnPost.lastName +
                           " " +
-                          item.userOwnPost.first_name}
+                          item.userOwnPost.firstName}
                       </Link>
                       {locationTag && (
                         <span>
@@ -224,16 +266,22 @@ const ShowPostHome = () => {
             )}
             <div className="px-3">
               <div className="flex items-center h-[37px] border-b border-solid border-[#d9d9d9]">
-                <ShowEmotionCount item={item} />
+                <ShowEmotionCount idPost={item.id} />
                 <div className="flex items-center gap-1 ml-auto">
-                  {listComment.length > 0 && (
-                    <div className="flex items-center gap-[2px] cursor-pointer">
-                      <span className="text-[#65676c] text-[15px] ">
-                        {listComment.length}
-                      </span>
-                      <GoComment size={20} />
-                    </div>
-                  )}
+                  {listComment.length > 0 &&
+                    listComment.filter((comment) => comment.post_id === item.id)
+                      .length > 0 && (
+                      <div className="flex items-center gap-[2px] cursor-pointer">
+                        <span className="text-[#65676c] text-[15px] ">
+                          {
+                            listComment.filter(
+                              (comment) => comment.post_id === item.id
+                            ).length
+                          }
+                        </span>
+                        <GoComment size={20} />
+                      </div>
+                    )}
                   <div className="flex items-center gap-[2px] cursor-pointer">
                     <span className="text-[#65676c] text-[15px] ">14</span>
                     <PiShareFatLight size={20} />
@@ -254,7 +302,7 @@ const ShowPostHome = () => {
                 <div
                   className="my-1 cursor-pointer hover:bg-[#F2F2F2] flex items-center justify-center rounded-lg"
                   onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-                    handleClick(e, item.id)
+                    handleClickTabComment(e, item.id)
                   }
                 >
                   <div className="py-[6px] px-1">
