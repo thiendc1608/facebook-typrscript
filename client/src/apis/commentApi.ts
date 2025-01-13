@@ -1,12 +1,14 @@
 import { CustomResponse, infoComment } from "@/types";
 import axiosClient from "./axiosClient";
 
-interface emotionCommentType {
+export interface emotionCommentType {
   id: number;
-  comment: {
-    id: number;
+  comment?: {
+    id?: number;
   };
+  post_id?: string;
   userInfo: {
+    id: string;
     lastName: string;
     firstName: string;
     avatar: string;
@@ -35,7 +37,7 @@ export const commentAPI = {
     >
   ): Promise<CustomResponse & { comment: infoComment }> => {
     const url = "/comment/update-comment";
-    return axiosClient.post(url, data);
+    return axiosClient.put(url, data);
   },
 
   deleteComment: (
@@ -52,5 +54,12 @@ export const commentAPI = {
   }): Promise<CustomResponse & { emotionComment: emotionCommentType }> => {
     const url = "/comment/react-emotion-comment";
     return axiosClient.post(url, data);
+  },
+
+  getAllComment: (): Promise<
+    CustomResponse & { listComment: infoComment[] }
+  > => {
+    const url = "/comment/get-all-comment";
+    return axiosClient.get(url);
   },
 };

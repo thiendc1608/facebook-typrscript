@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       PostComment.hasMany(models.CommentReaction, {
         foreignKey: "comment_id",
-        as: "commentReaction",
+        as: "emotion_comment",
       });
 
       PostComment.belongsTo(models.User, {

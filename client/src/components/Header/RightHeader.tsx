@@ -9,11 +9,13 @@ import {
   setIsOpenMessage,
   setIsOpenNotifications,
 } from "@/redux/notificationSlice";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { chattingUserType, selectRoom } from "@/redux/conversationSlice";
+import { PostContext } from "@/context/PostContext";
 
 const RightHeader = () => {
   const dispatch = useDispatch();
+  const { isHoverLike } = useContext(PostContext);
   const { isOpenNotifications, notifications, isOpenMessage } = useSelector(
     (state: { notification: notificationState }) => state.notification
   );
@@ -29,7 +31,12 @@ const RightHeader = () => {
   }, [notifications]);
   return (
     <>
-      <ul className="flex items-center justify-center gap-[10px] h-full">
+      <ul
+        className={cn(
+          "flex items-center justify-center gap-[10px] h-full",
+          isHoverLike && "h-[56px] justify-end"
+        )}
+      >
         <li
           className="w-10 h-10 rounded-full flex items-center justify-center bg-[#D8DADF] cursor-pointer"
           title="Menu"

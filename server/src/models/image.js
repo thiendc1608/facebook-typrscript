@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "image_id",
         as: "imageInfo",
       });
+
+      Image.hasOne(models.Post, {
+        foreignKey: "image_id",
+        as: "postImage",
+      });
     }
   }
   Image.init(

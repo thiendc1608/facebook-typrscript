@@ -292,20 +292,23 @@ export interface postDataType {
   post_background: string;
 }
 
-export interface reactEmotionPostType {
+export interface postResponseType {
   id: string;
   user_id: string;
-  post_id: string;
-  emotion_id: number;
-  emotion: {
-    emotion_name: string;
-    emotion_post: string;
+  post_content: string;
+  post_background: string;
+  post_object: string;
+  image_id: string | null;
+  imageInfo: {
+    message_image: string;
   };
-  userInfo: {
+  createdAt: string;
+  userOwnPost: {
     lastName: string;
     firstName: string;
     avatar: string;
   };
+  listReactEmotionPost: EmotionPostData[] | [];
 }
 
 export interface commentReactType {
@@ -332,19 +335,18 @@ interface commentDataType {
   comment_text: string; // noi dung comment
   parent_comment_id: number | null;
   createdAt: Date;
+  emotion_comment: EmotionPostData[] | [];
 }
 
 export interface EmotionPostData {
   [emotion_name: string]: {
     emoji_post: string;
     listUser: {
+      id: string;
       firstName: string;
       lastName: string;
       avatar: string;
     }[];
   };
 }
-interface commentEmotionType {
-  emotion_comment: EmotionPostData | null;
-}
-export type infoComment = commentDataType & commentEmotionType;
+export type infoComment = commentDataType;

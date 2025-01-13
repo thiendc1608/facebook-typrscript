@@ -1,5 +1,10 @@
-import { postAPI, postResponseType } from "@/apis/postApi";
-import { dataProvinceType, reactEmotionPostType, UserType } from "@/types";
+import { postAPI } from "@/apis/postApi";
+import {
+  dataProvinceType,
+  EmotionPostData,
+  postResponseType,
+  UserType,
+} from "@/types";
 import icons from "@/utils/icons";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { IconType } from "react-icons/lib";
@@ -23,7 +28,6 @@ export interface postType {
   listPost: postResponseType[];
   isLoadingPost: boolean;
   endOfData: boolean;
-  listReactEmotionPost: reactEmotionPostType[];
 }
 
 const postSlice = createSlice({
@@ -46,7 +50,6 @@ const postSlice = createSlice({
     listPost: [],
     isLoadingPost: false,
     endOfData: false,
-    listReactEmotionPost: [],
   } as postType,
 
   reducers: {
@@ -87,39 +90,123 @@ const postSlice = createSlice({
       state.listPost.unshift(action.payload);
     },
 
-    setListReactEmotionPost: (state, action) => {
-      const findExistEmotion = state.listReactEmotionPost.find(
-        (item) => item.id === action.payload.id
-      );
+    setReactEmotionPost: (state, action) => {
+      const emotionName = action.payload.emotion.emotion_name;
+      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
 
-      if (findExistEmotion) {
-        if (
-          action.payload.emotion.emotion_name !==
-          findExistEmotion.emotion.emotion_name
-        ) {
-          state.listReactEmotionPost = [
-            ...state.listReactEmotionPost.filter(
-              (item) => item.id !== action.payload.id
-            ),
-            action.payload,
+      // Tìm bai post có id tương ứng
+      const findPost = listPostCopy.find(
+        (post: postResponseType) => post.id === action.payload.post_id
+      ) as postResponseType;
+
+      if (findPost) {
+        // Tìm emotion đã tồn tại trong bình luận
+        let existingEmotion = findPost.listReactEmotionPost.find(
+          (emotion: EmotionPostData) => emotion[emotionName] !== undefined
+        );
+
+        if (!existingEmotion) {
+          // Nếu emotionName chưa có, thêm emotion vào
+          existingEmotion = {
+            [emotionName]: {
+              emoji_post: action.payload.emotion.emotion_post,
+              listUser: [],
+            },
+          };
+          // Thêm emotion vào danh sách emotion_comment
+          findPost.listReactEmotionPost = [
+            ...findPost.listReactEmotionPost,
+            existingEmotion,
           ];
         }
-      } else state.listReactEmotionPost.push(action.payload);
+
+        // Thêm user vào listUser của emotion
+        existingEmotion[emotionName].listUser.push(action.payload.userInfo);
+      }
+      state.listPost = listPostCopy;
+    },
+
+    updateReactEmotionPost: (state, action) => {
+      const emotionName = action.payload.emotion.emotion_name;
+      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
+
+      // Tìm bình luận có id tương ứng
+      const findPost = listPostCopy.find(
+        (post: postResponseType) => post.id === action.payload.post_id
+      ) as postResponseType;
+
+      // remove user_id trong emotion
+      findPost.listReactEmotionPost.forEach((post: EmotionPostData) => {
+        Object.keys(post).forEach((key) => {
+          const listUser = post[key].listUser;
+          // Tìm và xoá user có id trùng với userId trong listUser
+          const userIndex = listUser.findIndex(
+            (user) => user.id === action.payload.userInfo.id
+          );
+          if (userIndex !== -1) {
+            // Xoá user khỏi listUser
+            listUser.splice(userIndex, 1);
+          }
+          if (key === emotionName) {
+            post[key].listUser.push({
+              id: action.payload.userInfo.id,
+              firstName: action.payload.userInfo.firstName, // Bạn có thể cập nhật các giá trị khác
+              lastName: action.payload.userInfo.lastName,
+              avatar: action.payload.userInfo.avatar,
+            });
+          } else if (!(emotionName in post)) {
+            // Nếu không có newKey, tạo mới và thêm user vào
+            post[emotionName] = {
+              emoji_post: action.payload.emotion.emotion_post,
+              listUser: [
+                ...listUser,
+                {
+                  id: action.payload.userInfo.id,
+                  firstName: action.payload.userInfo.firstName, // Bạn có thể cập nhật các giá trị khác
+                  lastName: action.payload.userInfo.lastName,
+                  avatar: action.payload.userInfo.avatar,
+                },
+              ],
+            };
+          }
+          // Kiểm tra nếu listUser của key là rỗng thì xoá luôn key đó
+          if (post[key].listUser.length === 0) {
+            delete post[key];
+          }
+        });
+      });
+      state.listPost = listPostCopy;
     },
 
     removeReactEmotionPost: (state, action) => {
-      const listReactEmotionPostCopy = JSON.parse(
-        JSON.stringify(state.listReactEmotionPost)
+      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
+      const filterPost = listPostCopy.find(
+        (post: postResponseType) => post.id === action.payload.post_id
+      ) as postResponseType;
+
+      const finalReactEmotion = filterPost.listReactEmotionPost.find(
+        (emotion: EmotionPostData) =>
+          Object.keys(emotion)[0] === action.payload.nameEmotion
+      ) as EmotionPostData;
+      const deleteEmotion = Object.values(finalReactEmotion)[0].listUser.filter(
+        (item: {
+          id: string;
+          firstName: string;
+          lastName: string;
+          avatar: string;
+        }) => item.id !== action.payload.user_id
       );
-      const filteredEmotionPosts = listReactEmotionPostCopy.filter(
-        (item: reactEmotionPostType) => {
-          return !(
-            item.user_id === action.payload.user_id &&
-            item.post_id === action.payload.post_id
+
+      Object.values(finalReactEmotion)[0].listUser = deleteEmotion;
+      // Kiểm tra nếu danh sách người dùng rỗng, xóa đối tượng cảm xúc khỏi listReactEmotionPost
+      if (Object.values(finalReactEmotion)[0].listUser.length === 0) {
+        filterPost.listReactEmotionPost =
+          filterPost.listReactEmotionPost.filter(
+            (emotion: EmotionPostData) =>
+              Object.keys(emotion)[0] !== action.payload.nameEmotion
           );
-        }
-      );
-      state.listReactEmotionPost = filteredEmotionPosts;
+      }
+      state.listPost = listPostCopy;
     },
   },
   extraReducers: (builder) => {
@@ -146,7 +233,8 @@ export const {
   setLocationTag,
   setChooseGIF,
   setSelectObjectPost,
-  setListReactEmotionPost,
+  setReactEmotionPost,
+  updateReactEmotionPost,
   removeReactEmotionPost,
 } = postSlice.actions;
 const postReducer = postSlice.reducer;

@@ -18,9 +18,7 @@ import {
   useState,
 } from "react";
 import { CiFaceSmile } from "react-icons/ci";
-import { HiOutlineGif } from "react-icons/hi2";
 import { IoMdSend } from "react-icons/io";
-import { TiCameraOutline } from "react-icons/ti";
 import { useDispatch, useSelector } from "react-redux";
 import { executeCommentType } from "./ShowListComment";
 import { infoComment } from "@/types";
@@ -138,7 +136,10 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
             ...dataComment,
             id: props.commentId!,
           };
+
           const response = await commentAPI.updateComment(mergedObj);
+          console.log(response.comment);
+
           if (response.success) {
             dispatch(updateComment(response.comment));
             dispatch(
@@ -234,7 +235,7 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
     return (
       <form
         id="comment-post"
-        className="flex-1 relative rounded-2xl bg-[#F0F2F5] w-full"
+        className="flex-1 relative rounded-xl bg-[#F0F2F5] w-full"
         onSubmit={(e) => handleSendComment(e)}
         onClick={(e) => e.stopPropagation()}
       >
@@ -274,12 +275,6 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
                       <EmojiPickerComponent />
                     </div>
                   )}
-              </li>
-              <li className="cursor-pointer w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E4E6E9]">
-                <TiCameraOutline size={20} />
-              </li>
-              <li className="cursor-pointer w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E4E6E9]">
-                <HiOutlineGif size={20} />
               </li>
             </ul>
             <button

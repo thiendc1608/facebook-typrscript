@@ -522,7 +522,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("react_emotion_post", async (data) => {
-    const { user_id, post_id, emotion_id } = data;
+    const { user_id, post_id, emotion_id, nameEmotion } = data;
     try {
       const findReactEmotion = await db.PostReaction.findOne({
         where: { user_id, post_id },
@@ -530,39 +530,53 @@ io.on("connection", (socket) => {
       });
 
       if (findReactEmotion) {
-        // Nếu đã có cảm xúc, xóa
-        const resultUpdate = await db.PostReaction.update(
-          {
-            emotion_id,
-          },
-          {
-            where: { user_id, post_id },
+        // remove emotion post
+        if (+findReactEmotion.emotion_id === +emotion_id) {
+          const removeEmotion = await db.PostReaction.destroy({
+            where: { user_id, post_id, emotion_id },
+          });
+          if (removeEmotion !== 0) {
+            io.emit("remove_react", {
+              user_id,
+              post_id,
+              nameEmotion,
+            });
           }
-        );
+        } else {
+          // update emotion post
+          const resultUpdate = await db.PostReaction.update(
+            {
+              emotion_id,
+            },
+            {
+              where: { user_id, post_id },
+            }
+          );
 
-        if (resultUpdate[0] === 1) {
-          const updateReactEmotion = await db.PostReaction.findOne({
-            where: { user_id, post_id },
-            attributes: ["id", "user_id", "post_id", "emotion_id"],
-            include: [
-              {
-                model: db.Emotion,
-                as: "emotion",
-                attributes: ["emotion_name", "emotion_post"],
-              },
-              {
-                model: db.User,
-                as: "userInfo",
-                attributes: ["lastName", "firstName", "avatar"],
-              },
-            ],
-            raw: true,
-            nest: true,
-          });
+          if (resultUpdate[0] === 1) {
+            const updateReactEmotion = await db.PostReaction.findOne({
+              where: { user_id, post_id },
+              attributes: ["id", "post_id"],
+              include: [
+                {
+                  model: db.Emotion,
+                  as: "emotion",
+                  attributes: ["emotion_name", "emotion_post"],
+                },
+                {
+                  model: db.User,
+                  as: "userInfo",
+                  attributes: ["id", "lastName", "firstName", "avatar"],
+                },
+              ],
+              raw: true,
+              nest: true,
+            });
 
-          io.emit("update_react_post", {
-            data: updateReactEmotion,
-          });
+            io.emit("update_react_post", {
+              data: updateReactEmotion,
+            });
+          }
         }
       } else {
         // Tạo cảm xúc mới cho bài viết
@@ -579,7 +593,7 @@ io.on("connection", (socket) => {
               post_id: createReactEmotion.toJSON().post_id,
               user_id: createReactEmotion.toJSON().user_id,
             },
-            attributes: ["id", "user_id", "post_id", "emotion_id"],
+            attributes: ["id", "post_id"],
             include: [
               {
                 model: db.Emotion,
@@ -589,7 +603,7 @@ io.on("connection", (socket) => {
               {
                 model: db.User,
                 as: "userInfo",
-                attributes: ["lastName", "firstName", "avatar"],
+                attributes: ["id", "lastName", "firstName", "avatar"],
               },
             ],
             raw: true,
@@ -602,32 +616,7 @@ io.on("connection", (socket) => {
         }
       }
     } catch (error) {
-      console.log("Error creating post:", error);
-      socket.emit("error", "Error reacting post");
-    }
-  });
-
-  socket.on("remove_emotion_post", async (data) => {
-    const { user_id, post_id } = data;
-    try {
-      const findReactEmotion = await db.PostReaction.findOne({
-        where: { user_id, post_id },
-        raw: true,
-      });
-
-      if (findReactEmotion) {
-        // Nếu đã có cảm xúc, xóa
-        await db.PostReaction.destroy({
-          where: { user_id, post_id },
-        });
-
-        io.emit("remove_react", {
-          user_id,
-          post_id,
-        });
-      }
-    } catch (error) {
-      console.log("Error creating post:", error);
+      console.log("Error when react post:", error);
       socket.emit("error", "Error reacting post");
     }
   });

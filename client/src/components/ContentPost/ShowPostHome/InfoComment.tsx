@@ -6,7 +6,12 @@ import { executeCommentType } from "./ShowListComment";
 import React, { useState } from "react";
 import { UserState } from "@/redux/userSlice";
 import { commentAPI } from "@/apis/commentApi";
-import { commentType, setEmotionComment } from "@/redux/commentSlice";
+import {
+  commentType,
+  deleteEmotionComment,
+  setEmotionComment,
+  updateEmotionComment,
+} from "@/redux/commentSlice";
 import { cn } from "@/lib/utils";
 
 interface InfoCommentProps {
@@ -44,16 +49,29 @@ const InfoComment = ({
     isHover: false,
     commentId: null,
   });
+
   const showEmotionComment = listComment.find(
     (comment) => +comment.id === +el.id
-  )?.emotion_comment as EmotionPostData | undefined;
+  )?.emotion_comment as EmotionPostData[] | [];
 
-  const handleOnClickResponse = (e: React.MouseEvent<HTMLDivElement>) => {
+  const totalUserReact =
+    showEmotionComment &&
+    showEmotionComment.reduce((sum, obj) => {
+      // Lấy tất cả các đối tượng chứa "list"
+      for (const key in obj) {
+        if (obj[key]["listUser"]) {
+          sum += obj[key]["listUser"].length;
+        }
+      }
+      return sum;
+    }, 0);
+
+  const handleOnClickReply = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     const newCommentResponse: executeCommentType = {
       isEditComment: false,
       isDeleteComment: false,
-      isClickComment: false,
+      isClickOptionComment: false,
       isClickResponse: true,
       postId,
       commentId: null,
@@ -100,6 +118,10 @@ const InfoComment = ({
       default:
         break;
     }
+    setExecuteComment?.({
+      ...executeComment!,
+      isHover: false,
+    });
     try {
       if (emotionId !== null) {
         const dataReactEmotionComment = {
@@ -110,8 +132,13 @@ const InfoComment = ({
         const response = await commentAPI.reactEmotionComment(
           dataReactEmotionComment
         );
-        if (response.success) {
+        if (
+          response.success &&
+          response.message === "Create emotion comment successfully"
+        ) {
           dispatch(setEmotionComment(response.emotionComment));
+        } else {
+          dispatch(updateEmotionComment(response.emotionComment));
         }
       }
     } catch (error) {
@@ -133,10 +160,164 @@ const InfoComment = ({
     });
   };
 
+  const convertString = (text: string) => {
+    let textConvert = null;
+    switch (text) {
+      case "Thích":
+        textConvert = "like";
+        break;
+      case "Yêu thích":
+        textConvert = "heart";
+        break;
+      case "Haha":
+        textConvert = "haha";
+        break;
+      case "Wow":
+        textConvert = "wow";
+        break;
+      case "Buồn":
+        textConvert = "sad";
+        break;
+      case "Phẫn nộ":
+        textConvert = "angry";
+        break;
+      default:
+        break;
+    }
+    return textConvert;
+  };
+
+  const handleClickLike = async (
+    e: React.MouseEvent<HTMLDivElement>,
+    commentId: number
+  ) => {
+    setExecuteComment?.({
+      ...executeComment!,
+      isHover: false,
+    });
+    e.stopPropagation();
+    let emotionId: number | null = null;
+    switch ((e.target as HTMLElement).textContent) {
+      case "Thích":
+        emotionId = 1;
+        break;
+      case "Yêu thích":
+        emotionId = 2;
+        break;
+      case "Haha":
+        emotionId = 3;
+        break;
+      case "Wow":
+        emotionId = 4;
+        break;
+      case "Buồn":
+        emotionId = 5;
+        break;
+      case "Phẫn nộ":
+        emotionId = 6;
+        break;
+      default:
+        break;
+    }
+    try {
+      const dataReactEmotionComment = {
+        user_id: currentUser!.id,
+        comment_id: commentId,
+        emotion_id: emotionId!,
+      };
+      const response = await commentAPI.reactEmotionComment(
+        dataReactEmotionComment
+      );
+      if (
+        response.success &&
+        response.message === "Delete emotion comment successfully"
+      ) {
+        dispatch(
+          deleteEmotionComment({
+            user_id: currentUser!.id,
+            comment_id: commentId,
+            nameEmotion: convertString(
+              (e.target as HTMLElement).textContent as string
+            ),
+          })
+        );
+      } else {
+        dispatch(setEmotionComment(response.emotionComment));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  function findKeyByValue(el: EmotionPostData[]) {
+    // Duyệt qua mỗi đối tượng trong mảng
+    if (el && el.length > 0) {
+      for (const obj of el) {
+        // Duyệt qua từng key trong mỗi đối tượng
+        for (const key in obj) {
+          if (obj[key].listUser) {
+            // Tìm kiếm người dùng trong listUser có id trùng với id truyền vào
+            const user = obj[key].listUser.find(
+              (user) => user.id === currentUser?.id
+            );
+            if (user) {
+              return key; // Trả về key nếu tìm thấy
+            }
+          }
+        }
+      }
+    }
+    return null; // Trả về null nếu không tìm thấy giá trị
+  }
+
+  const renderEmotionName = (el: infoComment) => {
+    const emotionName = findKeyByValue(el.emotion_comment!);
+    switch (emotionName) {
+      case "like":
+        return (
+          <span className="text-[#0866ff] cursor-pointer hover:underline hover:text-[#0866ff]">
+            Thích
+          </span>
+        );
+      case "heart":
+        return (
+          <span className="text-[#EF424A] cursor-pointer hover:underline hover:text-[#EF424A]">
+            Yêu thích
+          </span>
+        );
+      case "haha":
+        return (
+          <span className="text-[#F8B734] cursor-pointer hover:underline hover:text-[#F8B734]">
+            Haha
+          </span>
+        );
+      case "wow":
+        return (
+          <span className="text-[#F8B734] cursor-pointer hover:underline hover:text-[#F8B734]">
+            Wow
+          </span>
+        );
+      case "sad":
+        return (
+          <span className="text-[#F8B734] cursor-pointer hover:underline hover:text-[#F8B734]">
+            Buồn
+          </span>
+        );
+      case "angry":
+        return (
+          <span className="text-[#E9710F] cursor-pointer hover:underline hover:text-[#E9710F]">
+            Phẫn nộ
+          </span>
+        );
+      default:
+        return "Thích";
+    }
+  };
+
   return (
     <div className="w-full flex items-center justify-start gap-3 pt-[3px] ml-1 text-[#65686c] text-[13px] cursor-pointer">
       <span className="hover:underline text-center">
-        {formatTimeAgo(el.createdAt)?.replace(" trước", "")}
+        {formatTimeAgo(el.createdAt, true)}
       </span>
       <span
         className="relative text-center font-semibold"
@@ -156,8 +337,11 @@ const InfoComment = ({
             commentId: null,
           })
         }
+        onClick={(e: React.MouseEvent<HTMLDivElement>) =>
+          handleClickLike(e, el.id)
+        }
       >
-        Thích
+        {renderEmotionName(el)}
         {executeComment!.isHover &&
           executeComment!.postId === postId &&
           executeComment!.commentId === el.id && (
@@ -184,13 +368,11 @@ const InfoComment = ({
       </span>
       <span
         className="text-center"
-        onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-          handleOnClickResponse(e)
-        }
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => handleOnClickReply(e)}
       >
         Phản hồi
       </span>
-      {showEmotionComment !== undefined && (
+      {showEmotionComment && showEmotionComment.length > 0 && (
         <div
           className="relative p-1 w-auto h-auto rounded-lg hover:bg-[#f2f2f2]"
           onMouseEnter={handleShowUserReact}
@@ -201,23 +383,25 @@ const InfoComment = ({
               <span
                 className={cn(
                   "flex flex-col gap-2 absolute top-full right-0 w-[60px] h-auto bg-[#000000cc] p-3 rounded-lg z-[1]",
-                  Object.keys(showEmotionComment).length === 1 &&
-                    "w-auto right-[-20px]"
+                  showEmotionComment.length === 1 && "w-auto right-[-20px]"
                 )}
               >
-                {Object.keys(showEmotionComment).length === 1 ? (
+                {showEmotionComment.length === 1 ? (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
                       <img
-                        src={Object.values(showEmotionComment)[0].emoji_post}
+                        src={Object.values(showEmotionComment[0])[0].emoji_post}
                         alt="emoji_post"
                         className="w-[18px] h-[18px]"
                       />
                       <span className="text-[#e2e5e9] text-[13px]">
-                        {Object.values(showEmotionComment)[0].listUser.length}
+                        {
+                          Object.values(showEmotionComment[0])[0].listUser
+                            .length
+                        }
                       </span>
                     </div>
-                    {Object.values(showEmotionComment)[0].listUser.map(
+                    {Object.values(showEmotionComment[0])[0].listUser.map(
                       (elm, idx) => (
                         <div key={idx} className="flex items-center gap-1">
                           <span className="text-[#e2e5e9] text-[13px] whitespace-nowrap">
@@ -228,16 +412,16 @@ const InfoComment = ({
                     )}
                   </div>
                 ) : (
-                  Object.keys(showEmotionComment).length > 1 &&
-                  Object.values(showEmotionComment).map((elm, idx) => (
+                  showEmotionComment.length > 1 &&
+                  showEmotionComment.map((elm, idx) => (
                     <div key={idx} className="flex items-center gap-2">
                       <img
-                        src={elm.emoji_post}
+                        src={Object.values(elm)[0].emoji_post}
                         alt="emoji_post"
                         className="w-[18px] h-[18px]"
                       />
                       <span className="text-[#e2e5e9] text-[13px]">
-                        {elm.listUser.length}
+                        {Object.values(elm)[0].listUser.length}
                       </span>
                     </div>
                   ))
@@ -247,12 +431,12 @@ const InfoComment = ({
 
           <div className="flex items-center gap-1 ">
             <span className="text-[#65676c] text-[14px]">
-              {Object.values(showEmotionComment).length}
+              {totalUserReact > 0 && totalUserReact}
             </span>
-            {Object.values(showEmotionComment).map((el, idx) => (
+            {showEmotionComment.map((el, idx) => (
               <div key={idx}>
                 <img
-                  src={el.emoji_post}
+                  src={Object.values(el)[0].emoji_post}
                   alt="emoji_post"
                   className="w-[18px] h-[18px]"
                 />

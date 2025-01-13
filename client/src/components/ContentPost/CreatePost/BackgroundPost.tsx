@@ -47,7 +47,7 @@ const BackgroundPost = ({
 
   const [isScrolling, setIsScrolling] = useState(false);
   const [isElementHidden, setIsElementHidden] = useState(false);
-  
+
   const { selectImageList } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
@@ -163,9 +163,13 @@ const BackgroundPost = ({
   }, []);
 
   useEffect(() => {
-    const editableDiv = divRef.current;
-    editableDiv?.focus();
-  }, [isAddImageVideo]);
+    if (divRef.current) {
+      const editableDiv = divRef.current;
+      editableDiv!.innerHTML = textPost;
+      setCursorToEnd(editableDiv);
+      editableDiv?.focus();
+    }
+  }, [isAddImageVideo, textPost]);
 
   // Logic để ẩn phần tử khi thanh cuộn xuất hiện
   useEffect(() => {
@@ -283,7 +287,6 @@ const BackgroundPost = ({
             colorBackground.color !== "rgba(255, 255, 255, 1)" &&
               "place-holder-center caret-slate-200 text-white text-center"
           )}
-          defaultValue={textPost}
           onInput={(e: React.ChangeEvent<HTMLDivElement>) => handleOnInput(e)}
         />
       )}

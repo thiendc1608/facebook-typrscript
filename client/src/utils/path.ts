@@ -37,6 +37,7 @@ export const path = {
   AD_CAMPAIGN: "ad_campaign",
   CLIMATE_SCIENCE_INFO: "climatescieninfo",
   VIDEO_GAMING: "gaming",
+  DETAIL_POST: "post/:id",
 };
 
 export const backGroundContent = [

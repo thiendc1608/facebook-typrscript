@@ -15,8 +15,9 @@ module.exports = (sequelize, DataTypes) => {
         as: "userOwnPost",
       });
 
-      Post.hasOne(models.Image, {
+      Post.belongsTo(models.Image, {
         foreignKey: "image_id",
+        targetKey: "id",
         as: "imageInfo",
       });
 

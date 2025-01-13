@@ -41,13 +41,16 @@ const createPost = asyncHandler(async (req, res) => {
     post_content: post.post_content,
     post_object: post.post_object,
     image_id: user.image_id,
-    list_image: getImagePost ? JSON.parse(getImagePost.message_image) : null,
+    imageInfo: {
+      message_image: getImagePost ? getImagePost.message_image : null,
+    },
     createdAt: post.createdAt,
     userOwnPost: {
-      last_name: user.lastName,
-      first_name: user.firstName,
+      lastName: user.lastName,
+      firstName: user.firstName,
       avatar: user.avatar,
     },
+    listReactEmotionPost: [],
   };
 
   res.status(200).json({
@@ -70,15 +73,24 @@ const getAllPosts = asyncHandler(async (req, res) => {
           attributes: ["firstName", "lastName", "avatar"],
           as: "userOwnPost",
         },
+        {
+          model: db.Image,
+          attributes: ["message_image"],
+          as: "imageInfo",
+        },
       ],
       raw: true,
       nest: true,
     });
 
+    let updatedPostArray = allPosts.map((obj) => {
+      return { ...obj, listReactEmotionPost: [] }; // Thêm thuộc tính mới vào mỗi object
+    });
+
     res.status(200).json({
       success: true,
       message: "Get all posts successfully",
-      allPosts,
+      allPosts: updatedPostArray,
     });
   } catch (err) {
     res.status(500).json({

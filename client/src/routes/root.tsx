@@ -16,6 +16,7 @@ export default function Root() {
   const { showImage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
+
   const dispatch = useDispatch();
   useEffect(() => {
     const getProvinceCity = async () => {
@@ -32,10 +33,11 @@ export default function Root() {
     <>
       {showImage.isShowImage && (
         <div className="fixed inset-0 bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]">
-          <ShowImage />
+          <ShowImage showImage={showImage} />
         </div>
       )}
       {isShowModal && <Modal>{childrenModal}</Modal>}
+
       <Header />
       <div className="bg-[#F0F2F5] top-[56px] relative z-0 min-h-[calc(100vh-56px)]">
         <Outlet />

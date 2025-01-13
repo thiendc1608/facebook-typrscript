@@ -1,53 +1,57 @@
 import { chattingUserType } from "@/redux/conversationSlice";
 import { UserState } from "@/redux/userSlice";
-import { emotionType } from "@/types";
-import { useSelector } from "react-redux";
+import { EmotionPostData, emotionType, postResponseType } from "@/types";
+import { useDispatch, useSelector } from "react-redux";
 import { AiOutlineLike, AiFillLike } from "react-icons/ai";
 import { Socket } from "socket.io-client";
-import { postResponseType } from "@/apis/postApi";
 import "./ShowPostHome.css";
-import { useState } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FaHeart } from "react-icons/fa6";
+import { PostContext } from "@/context/PostContext";
+import { removeReactEmotionPost } from "@/redux/postSlice";
 
 interface ReactEmotionPostProps {
   socket: Socket | null;
-  isHoverLike: {
-    isClickTabComment: boolean;
-    isHover: boolean;
-    post: postResponseType | null;
-  };
-  setIsHoverLike: React.Dispatch<
-    React.SetStateAction<{
-      isClickTabComment: boolean;
-      isHover: boolean;
-      post: postResponseType | null;
-    }>
-  >;
   item: postResponseType;
 }
 
-const ReactEmotionPost = ({
-  socket,
-  isHoverLike,
-  setIsHoverLike,
-  item,
-}: ReactEmotionPostProps) => {
+const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
+  const dispatch = useDispatch();
   const { emojiList } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
+
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const [optimisticLike, setOptimisticLike] = useState<{
-    isLiking: boolean;
-    emotionName: string;
-    postId: string;
-  }>({
-    isLiking: false,
-    emotionName: "",
-    postId: "",
-  });
+
+  const { isHoverLike, setIsHoverLike, postClickImage } =
+    useContext(PostContext);
+
+  useEffect(() => {
+    socket?.off("remove_react");
+
+    socket?.on(
+      "remove_react",
+      async (data: {
+        user_id: string;
+        post_id: string;
+        nameEmotion: string;
+      }) => {
+        dispatch(
+          removeReactEmotionPost({
+            user_id: data.user_id,
+            post_id: data.post_id,
+            nameEmotion: convertString(data.nameEmotion),
+          })
+        );
+      }
+    );
+    return () => {
+      socket?.off("remove_react");
+    };
+  }, [socket, dispatch]);
 
   const handleClickEmotion = async (
     e: React.MouseEvent<HTMLDivElement>,
@@ -55,15 +59,10 @@ const ReactEmotionPost = ({
     postId: string
   ) => {
     e.stopPropagation();
-    setOptimisticLike({
-      isLiking: true,
-      emotionName: emotion.emotion_name,
-      postId,
-    });
     setIsHoverLike({
-      isClickTabComment: isHoverLike.isClickTabComment,
+      isClickTabComment: false,
       isHover: false,
-      post: null,
+      postId: null,
     });
     let emotionId: number | null = null;
     switch (emotion.emotion_name) {
@@ -102,20 +101,33 @@ const ReactEmotionPost = ({
       socket?.on("error", (data) => {
         toast.error(data);
       });
-      setOptimisticLike({
-        isLiking: false,
-        emotionName: "",
-        postId: "",
-      });
     }
   };
 
-  const renderEmotionIcon = (emotion: {
-    isLiking: boolean;
-    emotionName: string;
-    postId: string;
-  }) => {
-    switch (emotion?.emotionName) {
+  function findKeyByValue(el: EmotionPostData[]) {
+    // Duyệt qua mỗi đối tượng trong mảng
+    if (el && el.length > 0) {
+      for (const obj of el) {
+        // Duyệt qua từng key trong mỗi đối tượng
+        for (const key in obj) {
+          if (obj[key].listUser) {
+            // Tìm kiếm người dùng trong listUser có id trùng với id truyền vào
+            const user = obj[key].listUser.find(
+              (user) => user.id === currentUser?.id
+            );
+            if (user) {
+              return key; // Trả về key nếu tìm thấy
+            }
+          }
+        }
+      }
+    }
+    return null; // Trả về null nếu không tìm thấy giá trị
+  }
+
+  const renderEmotionIcon = () => {
+    const emotionName = findKeyByValue(item.listReactEmotionPost!);
+    switch (emotionName) {
       case "like":
         return (
           <div className="py-[6px] px-1 zoomEmotion">
@@ -173,13 +185,9 @@ const ReactEmotionPost = ({
     }
   };
 
-  const renderEmotionText = (emotion: {
-    isLiking: boolean;
-    emotionName: string;
-    postId: string;
-  }) => {
-    if (emotion.postId !== item.id) return null;
-    switch (emotion?.emotionName) {
+  const renderEmotionText = () => {
+    const emotionName = findKeyByValue(item.listReactEmotionPost!);
+    switch (emotionName) {
       case "like":
         return (
           <span className="py-[6px] px-1 text-[#0866ff] text-[15px]">
@@ -215,104 +223,142 @@ const ReactEmotionPost = ({
     }
   };
 
-  const handleRemoveEmotion = (e: React.MouseEvent, postId: string) => {
-    e.stopPropagation();
-    socket?.emit("remove_emotion_post", {
-      user_id: currentUser!.id,
-      post_id: postId,
-    });
-    setOptimisticLike({
-      isLiking: false,
-      emotionName: "",
-      postId: "",
-    });
+  const convertString = (text: string) => {
+    let textConvert = null;
+    switch (text) {
+      case "Thích":
+        textConvert = "like";
+        break;
+      case "Yêu thích":
+        textConvert = "heart";
+        break;
+      case "Haha":
+        textConvert = "haha";
+        break;
+      case "Wow":
+        textConvert = "wow";
+        break;
+      case "Buồn":
+        textConvert = "sad";
+        break;
+      case "Phẫn nộ":
+        textConvert = "angry";
+        break;
+      default:
+        break;
+    }
+    return textConvert;
   };
+
+  const handleClickLike = (e: React.MouseEvent, postId: string) => {
+    e.stopPropagation();
+    setIsHoverLike({
+      isClickTabComment: false,
+      isHover: false,
+      postId: null,
+    });
+    let emotionId: number | null = null;
+    switch ((e.target as HTMLElement).textContent) {
+      case "Thích":
+        emotionId = 1;
+        break;
+      case "Yêu thích":
+        emotionId = 2;
+        break;
+      case "Haha":
+        emotionId = 3;
+        break;
+      case "Wow":
+        emotionId = 4;
+        break;
+      case "Buồn":
+        emotionId = 5;
+        break;
+      case "Phẫn nộ":
+        emotionId = 6;
+        break;
+      default:
+        break;
+    }
+    try {
+      if (emotionId !== null) {
+        const dataReactEmotionPost = {
+          user_id: currentUser!.id,
+          post_id: postId,
+          emotion_id: emotionId,
+          nameEmotion: (e.target as HTMLElement).textContent,
+        };
+        socket?.emit("react_emotion_post", dataReactEmotionPost);
+      }
+    } catch (error) {
+      console.error(error);
+      socket?.on("error", (data) => {
+        toast.error(data);
+      });
+    }
+  };
+
+  const handleHoverIn = useCallback(() => {
+    setIsHoverLike((prevState) => ({
+      ...prevState,
+      isHover: true,
+      postId: item.id,
+    }));
+  }, [item.id, setIsHoverLike]);
+
+  const handleHoverOut = useCallback(() => {
+    setIsHoverLike((prevState) => ({
+      ...prevState,
+      isHover: false,
+      postId: null,
+    }));
+  }, [setIsHoverLike]);
 
   return (
     <div className="flex-1 px-2">
       <div
         className="relative my-1 cursor-pointer hover:bg-[#F2F2F2] flex items-center justify-center rounded-lg"
-        onMouseEnter={() =>
-          setIsHoverLike({
-            isClickTabComment: isHoverLike.isClickTabComment,
-            isHover: true,
-            post: item,
-          })
-        }
-        onMouseLeave={() =>
-          setIsHoverLike({
-            isClickTabComment: isHoverLike.isClickTabComment,
-            isHover: false,
-            post: item,
-          })
-        }
-        onClick={(e) => handleRemoveEmotion(e, item.id)}
+        onMouseEnter={handleHoverIn} // Tạo sự kiện hover vào
+        onMouseLeave={handleHoverOut} // Tạo sự kiện hover ra
+        onClick={(e) => handleClickLike(e, item.id)}
       >
-        {item.id === optimisticLike.postId ? (
-          <>
-            {optimisticLike?.isLiking && (
-              <>
-                {renderEmotionIcon(optimisticLike)}
-                {renderEmotionText(optimisticLike)}
-              </>
-            )}
-            {/* Phần hover emoji */}
-            {isHoverLike.isHover && isHoverLike.post?.id === item.id && (
-              <div className="absolute bottom-7 left-[-4px] py-[6px] h-[49px] bg-white rounded-3xl shadow-bgContent">
-                <div className="flex items-center ">
-                  {emojiList.map((emotion: emotionType) => (
-                    <div key={emotion.id} className="px-1">
-                      <div
-                        className="cursor-pointer w-[35px] h-[35px] hover:scale-125"
-                        title={emotion.emotion_name}
-                        onClick={(e) => handleClickEmotion(e, emotion, item.id)}
-                      >
-                        <img
-                          src={emotion.emotion_icon}
-                          alt="emoji"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                  ))}
+        {/* Phần hover emoji */}
+        {isHoverLike.isHover && isHoverLike.postId === item?.id && (
+          <div className="absolute bottom-7 left-[-4px] py-[6px] h-[49px] bg-white rounded-3xl shadow-bgContent">
+            <div className="flex items-center ">
+              {emojiList.map((emotion: emotionType) => (
+                <div key={emotion.id} className="px-1">
+                  <div
+                    className="cursor-pointer w-[35px] h-[35px] hover:scale-125"
+                    title={emotion.emotion_name}
+                    onClick={(e) => handleClickEmotion(e, emotion, item.id)}
+                  >
+                    <img
+                      src={emotion.emotion_icon}
+                      alt="emoji"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
+          </div>
+        )}
+
+        {findKeyByValue(item.listReactEmotionPost) !== null ? (
+          <>
+            {renderEmotionIcon()}
+            {renderEmotionText()}
           </>
         ) : (
           <>
-            {!optimisticLike.isLiking && (
-              <>
-                <div className="py-[6px] px-1 zoomEmotion">
-                  <AiOutlineLike size={20} />
-                </div>
-                <span className="py-[6px] px-1 text-[#65686c] text-[15px]">
-                  Thích
-                </span>
-                {isHoverLike.isHover && isHoverLike.post?.id === item.id && (
-                  <div className="absolute bottom-8 left-[-4px] py-[6px] h-[49px] bg-white rounded-3xl shadow-bgContent">
-                    <div className="flex items-center ">
-                      {emojiList.map((emotion: emotionType) => (
-                        <div key={emotion.id} className="px-1">
-                          <div
-                            className="cursor-pointer w-[35px] h-[35px] hover:scale-125"
-                            title={emotion.emotion_name}
-                            onClick={(e) =>
-                              handleClickEmotion(e, emotion, item.id)
-                            }
-                          >
-                            <img
-                              src={emotion.emotion_icon}
-                              alt="emoji"
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
+            <div className="py-[6px] px-1 zoomEmotion">
+              <AiOutlineLike size={20} />
+            </div>
+            {!postClickImage && (
+              <span className="py-[6px] px-1 text-[#65686c] text-[15px]">
+                Thích
+              </span>
             )}
           </>
         )}

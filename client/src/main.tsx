@@ -43,6 +43,8 @@ import CreateStories from "./components/Reels/Stories/CreateStories";
 import CreateStoriesView from "./pages/CreateStoriesView";
 import { SocketProvider } from "./context/SocketContext";
 import { SkeletonTheme } from "react-loading-skeleton";
+import ShowDetailPost from "./components/ContentPost/ShowPostHome/ShowDetailPost";
+import { PostProvider } from "./context/PostContext";
 
 const router = createBrowserRouter([
   {
@@ -145,6 +147,10 @@ const router = createBrowserRouter([
     element: <CreateStories />,
   },
   {
+    path: `${path.DETAIL_POST}`,
+    element: <ShowDetailPost />,
+  },
+  {
     path: `${path.LOGIN}`,
     element: <Login />,
   },
@@ -182,9 +188,11 @@ createRoot(document.getElementById("root")!).render(
     </Provider> */}
     <SkeletonTheme baseColor="#E8E9EA" highlightColor="#999">
       <SocketProvider>
-        <Provider store={store}>
-          <RouterProvider router={router} />
-        </Provider>
+        <PostProvider>
+          <Provider store={store}>
+            <RouterProvider router={router} />
+          </Provider>
+        </PostProvider>
       </SocketProvider>
     </SkeletonTheme>
     <ToastContainer

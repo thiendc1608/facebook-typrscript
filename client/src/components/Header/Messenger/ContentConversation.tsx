@@ -38,7 +38,7 @@ const ContentConversation = () => {
     (state: { message: messageSliceType }) => state.message
   );
 
-  const listMessageOfChat = private_chat.current_messages.filter(
+  const listMessageOfChat = private_chat.current_messages?.filter(
     (el) => el.conversation_id === private_chat.current_conversation?.id
   );
 

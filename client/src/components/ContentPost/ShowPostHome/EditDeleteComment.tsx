@@ -2,7 +2,7 @@ import React from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { executeCommentType } from "./ShowListComment";
 import { infoComment } from "@/types";
-interface InfoCommentProps {
+interface EditDeleteCommentProps {
   el: infoComment;
   postId: string;
   executeComment?: executeCommentType;
@@ -15,7 +15,7 @@ const EditDeleteComment = ({
   executeComment,
   setExecuteComment,
   handleDeleteComment,
-}: InfoCommentProps) => {
+}: EditDeleteCommentProps) => {
   return (
     <div
       className="relative w-[32px] h-[32px] rounded-full hover:bg-[#f2f2f2] flex items-center justify-center cursor-pointer"
@@ -25,14 +25,14 @@ const EditDeleteComment = ({
         e.stopPropagation();
         setExecuteComment?.({
           ...executeComment!,
-          isClickComment: !executeComment!.isClickComment,
+          isClickOptionComment: !executeComment!.isClickOptionComment,
           postId: el.post_id,
           commentId: el.id,
         });
       }}
     >
       <BsThreeDots size={18} color="#606366" />
-      {executeComment!.isClickComment &&
+      {executeComment!.isClickOptionComment &&
         executeComment!.postId === postId &&
         executeComment!.commentId === el.id && (
           <div className="absolute w-auto top-10 left-0 py-2 h-[86px] bg-white rounded-xl shadow-bgContent z-[10]">
@@ -43,7 +43,7 @@ const EditDeleteComment = ({
                 setExecuteComment?.({
                   ...executeComment!,
                   isEditComment: true,
-                  isClickComment: false,
+                  isClickOptionComment: false,
                 });
               }}
             >

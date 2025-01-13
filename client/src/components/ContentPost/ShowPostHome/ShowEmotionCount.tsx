@@ -6,33 +6,16 @@ import ShowEmojiDetail from "./ShowEmojiDetail";
 import { EmotionPostData } from "@/types";
 
 interface ShowEmotionCountProps {
-  idPost: string;
+  postId: string;
 }
 
-const ShowEmotionCount = ({ idPost }: ShowEmotionCountProps) => {
+const ShowEmotionCount = ({ postId }: ShowEmotionCountProps) => {
   const dispatch = useDispatch();
-  const { listReactEmotionPost } = useSelector(
-    (state: { post: postType }) => state.post
-  );
-  const filterListEmotion = listReactEmotionPost.filter(
-    (el) => el.post_id === idPost
-  );
+  const { listPost } = useSelector((state: { post: postType }) => state.post);
+  const filterListEmotion = listPost.find((el) => el.id === postId);
   const [isHoverShowUserReact, setIsHoverShowUserReact] = useState(false);
 
   const emotionPostData: EmotionPostData = {};
-  filterListEmotion.forEach((el) => {
-    const emotionName = el.emotion.emotion_name;
-
-    // Nếu chưa có message_id này trong groupedData, tạo một nhóm mới
-    if (!emotionPostData[emotionName]) {
-      emotionPostData[emotionName] = {
-        emoji_post: el.emotion.emotion_post,
-        listUser: [],
-      };
-    }
-    // Thêm emoji_dropper_id vào mảng list của nhóm tương ứng
-    emotionPostData[emotionName].listUser.push(el.userInfo);
-  });
 
   return (
     <div
@@ -47,26 +30,27 @@ const ShowEmotionCount = ({ idPost }: ShowEmotionCountProps) => {
             childrenModal: (
               <ShowEmojiDetail
                 data={emotionPostData}
-                filterListEmotion={filterListEmotion}
+                filterListEmotion={filterListEmotion!.listReactEmotionPost}
               />
             ),
           })
         );
       }}
     >
-      {Object.values(emotionPostData).map((el, idx) => (
+      {filterListEmotion!.listReactEmotionPost.map((el, idx) => (
         <div key={idx} className="flex items-center">
           <img
-            src={el.emoji_post}
+            src={Object.values(el)[0].emoji_post}
             alt="emoji_post"
-            className="w-[20px] h-[20px]"
+            className="w-[17px] h-[17px]"
           />
         </div>
       ))}
       <span className="text-[#65676c] text-[15px] pl-1 cursor-pointer hover:underline">
-        {filterListEmotion.length > 0 && filterListEmotion.length}
+        {filterListEmotion!.listReactEmotionPost.length > 0 &&
+          filterListEmotion!.listReactEmotionPost.length}
       </span>
-      {isHoverShowUserReact && (
+      {/* {isHoverShowUserReact && (
         <div className="absolute top-[-45px] right-[-40px] my-[2px] w-auto rounded-xl overflow-hidden z-[100]">
           <div className="p-3 bg-[#303030] text-white w-full h-auto">
             {filterListEmotion.map((user, idx) => (
@@ -79,7 +63,7 @@ const ShowEmotionCount = ({ idPost }: ShowEmotionCountProps) => {
             ))}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };
