@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { commentType } from "@/redux/commentSlice";
 import ShowListComment from "./ShowListComment";
 import FormWriteComment from "./FormWriteComment";
-import { postResponseType } from "@/apis/postApi";
+import { postResponseType } from "@/types";
 import { cn } from "@/lib/utils";
 import { PostContext } from "@/context/PostContext";
 

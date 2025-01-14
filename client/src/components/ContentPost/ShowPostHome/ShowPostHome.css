@@ -24,3 +24,5 @@ form#comment-post > div > div[contentEditable="true"]:empty::before {
 form#comment-post > div > div[contentEditable="true"]:not(:empty)::before {
   visibility: hidden;
 }
+
+.hover-img { transition: transform 0.2s ease-in-out; will-change: transform; /* Optimize for animations */ }

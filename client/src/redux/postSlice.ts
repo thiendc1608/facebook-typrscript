@@ -130,51 +130,81 @@ const postSlice = createSlice({
       const emotionName = action.payload.emotion.emotion_name;
       const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
 
-      // Tìm bình luận có id tương ứng
+      // Tìm bài viết với post_id tương ứng
       const findPost = listPostCopy.find(
         (post: postResponseType) => post.id === action.payload.post_id
       ) as postResponseType;
 
-      // remove user_id trong emotion
+      // Kiểm tra nếu không tìm thấy bài viết thì dừng lại
+      if (!findPost) return;
+
+      // Duyệt qua các cảm xúc đã có trong bài viết
+      let emotionExist = false; // Để kiểm tra xem cảm xúc có tồn tại hay không
+
+      // Duyệt qua các cảm xúc có trong bài viết
       findPost.listReactEmotionPost.forEach((post: EmotionPostData) => {
+        // Kiểm tra tất cả các cảm xúc trong bài viết
         Object.keys(post).forEach((key) => {
           const listUser = post[key].listUser;
-          // Tìm và xoá user có id trùng với userId trong listUser
-          const userIndex = listUser.findIndex(
-            (user) => user.id === action.payload.userInfo.id
-          );
-          if (userIndex !== -1) {
-            // Xoá user khỏi listUser
-            listUser.splice(userIndex, 1);
+
+          // Nếu cảm xúc cũ có người dùng và họ thay đổi cảm xúc, cần xoá người dùng khỏi cảm xúc cũ
+          if (key !== emotionName) {
+            const userIndex = listUser.findIndex(
+              (user) => user.id === action.payload.userInfo.id
+            );
+            if (userIndex !== -1) {
+              listUser.splice(userIndex, 1); // Xoá người dùng khỏi cảm xúc cũ
+            }
           }
+
+          // Nếu cảm xúc này là cảm xúc mới (emotionName), thêm người dùng vào
           if (key === emotionName) {
-            post[key].listUser.push({
-              id: action.payload.userInfo.id,
-              firstName: action.payload.userInfo.firstName, // Bạn có thể cập nhật các giá trị khác
-              lastName: action.payload.userInfo.lastName,
-              avatar: action.payload.userInfo.avatar,
-            });
-          } else if (!(emotionName in post)) {
-            // Nếu không có newKey, tạo mới và thêm user vào
-            post[emotionName] = {
-              emoji_post: action.payload.emotion.emotion_post,
-              listUser: [
-                ...listUser,
-                {
-                  id: action.payload.userInfo.id,
-                  firstName: action.payload.userInfo.firstName, // Bạn có thể cập nhật các giá trị khác
-                  lastName: action.payload.userInfo.lastName,
-                  avatar: action.payload.userInfo.avatar,
-                },
-              ],
-            };
+            emotionExist = true; // Cảm xúc đã tồn tại trong bài viết
+            const userIndex = listUser.findIndex(
+              (user) => user.id === action.payload.userInfo.id
+            );
+            if (userIndex === -1) {
+              listUser.push({
+                id: action.payload.userInfo.id,
+                firstName: action.payload.userInfo.firstName,
+                lastName: action.payload.userInfo.lastName,
+                avatar: action.payload.userInfo.avatar,
+              });
+            }
           }
-          // Kiểm tra nếu listUser của key là rỗng thì xoá luôn key đó
+
+          // Nếu listUser của cảm xúc nào rỗng thì xoá luôn cảm xúc đó
           if (post[key].listUser.length === 0) {
             delete post[key];
           }
         });
       });
+
+      // Nếu cảm xúc mới không có trong bài viết, tạo mới
+      if (!emotionExist) {
+        // Thêm cảm xúc mới vào mảng listReactEmotionPost
+        const newEmotion = {
+          [emotionName]: {
+            emoji_post: action.payload.emotion.emotion_post,
+            listUser: [
+              {
+                id: action.payload.userInfo.id,
+                firstName: action.payload.userInfo.firstName,
+                lastName: action.payload.userInfo.lastName,
+                avatar: action.payload.userInfo.avatar,
+              },
+            ],
+          },
+        };
+
+        (findPost.listReactEmotionPost as EmotionPostData[]).push(newEmotion); // Thêm vào mảng cảm xúc
+      }
+
+      // Loại bỏ phần tử trống ({}) nếu có trong listReactEmotionPost
+      findPost.listReactEmotionPost = findPost.listReactEmotionPost.filter(
+        (post) => Object.keys(post).length > 0
+      );
+
       state.listPost = listPostCopy;
     },
 

@@ -60,7 +60,7 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
   ) => {
     e.stopPropagation();
     setIsHoverLike({
-      isClickTabComment: false,
+      ...isHoverLike,
       isHover: false,
       postId: null,
     });
@@ -253,7 +253,7 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
   const handleClickLike = (e: React.MouseEvent, postId: string) => {
     e.stopPropagation();
     setIsHoverLike({
-      isClickTabComment: false,
+      ...isHoverLike,
       isHover: false,
       postId: null,
     });
@@ -299,20 +299,19 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
   };
 
   const handleHoverIn = useCallback(() => {
-    setIsHoverLike((prevState) => ({
-      ...prevState,
+    setIsHoverLike({
+      ...isHoverLike,
       isHover: true,
       postId: item.id,
-    }));
-  }, [item.id, setIsHoverLike]);
+    });
+  }, [item.id, isHoverLike, setIsHoverLike]);
 
   const handleHoverOut = useCallback(() => {
-    setIsHoverLike((prevState) => ({
-      ...prevState,
+    setIsHoverLike({
+      ...isHoverLike,
       isHover: false,
-      postId: null,
-    }));
-  }, [setIsHoverLike]);
+    });
+  }, [isHoverLike, setIsHoverLike]);
 
   return (
     <div className="flex-1 px-2">

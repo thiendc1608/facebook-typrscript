@@ -1,5 +1,5 @@
-import { postResponseType } from "@/apis/postApi";
 import { PostContext } from "@/context/PostContext";
+import { postResponseType } from "@/types";
 import { memo, useContext } from "react";
 import { Link } from "react-router-dom";
 

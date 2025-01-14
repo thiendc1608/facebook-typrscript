@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "post_id",
         otherKey: "emotion_id",
       });
+
+      Post.hasMany(models.PostReaction, {
+        foreignKey: "post_id",
+        as: "postReaction",
+      });
     }
   }
   Post.init(

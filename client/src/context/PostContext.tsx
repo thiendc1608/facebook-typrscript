@@ -1,4 +1,4 @@
-import { postResponseType } from "@/apis/postApi";
+import { postResponseType } from "@/types";
 import { useRef, useState } from "react";
 import { createContext } from "react";
 
