@@ -46,7 +46,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
   const [emoji, setEmoji] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>("");
-  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedImageVideos, setSelectedImageVideos] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   const { selectImageList } = useSelector(
@@ -163,7 +163,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
     }
   }, [reply_message]);
 
-  const handleSelectImage = async (files: File[]) => {
+  const handleSelectImageVideo = async (files: File[]) => {
     if (!files?.length) return;
     setLoading(true);
     const data = new FormData();
@@ -172,14 +172,14 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
         toast.warning("File not support");
         return;
       }
-      setSelectedImages((prev) => [...prev, file]);
+      setSelectedImageVideos((prev) => [...prev, file]);
       data.append("imageInfo", file);
     }
     try {
-      const response = await conversationAPI.uploadImages(data);
+      const response = await conversationAPI.uploadImageVideos(data);
       if (response.success) {
-        dispatch(setSelectedImageList(response.images));
-        setFileNameCloudinaryList((prev) => [...prev, ...response.images]);
+        dispatch(setSelectedImageList(response.imageVideos));
+        setFileNameCloudinaryList((prev) => [...prev, ...response.imageVideos]);
       } else {
         toast.error(response.message);
       }
@@ -191,7 +191,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
   };
 
   const handleDeleteImage = async (idx: number, imageList: File) => {
-    setSelectedImages((prev) => prev.filter((_, index) => index !== idx));
+    setSelectedImageVideos((prev) => prev.filter((_, index) => index !== idx));
     const originalImage = fileNameCloudinaryList?.filter(
       (item) => item.originalname === imageList.name
     );
@@ -284,7 +284,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
           setInputValue("");
           divRef.current!.focus();
         }
-        setSelectedImages([]);
+        setSelectedImageVideos([]);
         dispatch(setSelectedImageList([]));
         setFileNameCloudinaryList([]);
         dispatch(setReplyMsg(null));
@@ -368,20 +368,20 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
               accept="image/*"
               hidden
               multiple
-              onChange={(e) => handleSelectImage([...e.target.files!])}
+              onChange={(e) => handleSelectImageVideo([...e.target.files!])}
             />
           </div>
         )}
 
         <div className="w-full bg-[#F0F2F5] rounded-2xl overflow-hidden">
           <div className="flex flex-col min-h-[36px]">
-            {selectedImages.length > 0 && (
+            {selectedImageVideos.length > 0 && (
               <div className="absolute bottom-10 p-3 rounded-tl-xl rounded-tr-xl bg-[#F0F2F5] w-[75%] overflow-x-auto z-[1000]">
                 <ul className="flex gap-3">
                   <li className="min-w-[48px] h-[48px] rounded-lg bg-[#e2e5e9] flex items-center justify-center">
                     <RiImageAddFill size={26} />
                   </li>
-                  {selectedImages?.map((imageList, idx) => (
+                  {selectedImageVideos?.map((imageList, idx) => (
                     <li
                       key={idx}
                       className="relative min-w-[48px] h-[48px] rounded-lg bg-[#e2e5e9]"
@@ -440,7 +440,7 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
         />
       )}
       {inputValue ||
-      selectedImages.length > 0 ||
+      selectedImageVideos.length > 0 ||
       updateMessage.messageValue?.conversation_id ===
         props.showConversation?.conversation?.id ? (
         <button

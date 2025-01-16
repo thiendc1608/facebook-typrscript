@@ -7,15 +7,14 @@ interface ShowEmotionCountProps {
   postId: string;
 }
 
-const ShowEmotionCount = ({ postId }: ShowEmotionCountProps) => {
+const ShowEmotionCountPost = ({ postId }: ShowEmotionCountProps) => {
   const { listPost } = useSelector((state: { post: postType }) => state.post);
   const [isHoverShowUserReact, setIsHoverShowUserReact] = useState(false);
   // Dùng ref để lưu timeout
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const filterListEmotion = useCallback(
-    () =>
-      listPost.find((el) => el.id === postId) as postResponseType | undefined,
+    () => listPost.find((el) => el.id === postId) as postResponseType,
     [listPost, postId]
   );
 
@@ -67,7 +66,7 @@ const ShowEmotionCount = ({ postId }: ShowEmotionCountProps) => {
       onMouseEnter={handleMouseEnter} // Khi hover vào khu vực này
       onMouseLeave={handleMouseLeave} // Khi hover ra khu vực này
     >
-      {filterListEmotion()!.listReactEmotionPost.map((el, idx) => (
+      {filterListEmotion()?.listReactEmotionPost.map((el, idx) => (
         <div key={idx} className="flex items-center">
           <img
             src={Object.values(el)[0].emoji_post}
@@ -76,13 +75,14 @@ const ShowEmotionCount = ({ postId }: ShowEmotionCountProps) => {
           />
         </div>
       ))}
-      <div className="text-[#65676c] text-[15px] pl-1 cursor-pointer hover:underline">
-        {filterListEmotion()!.listReactEmotionPost.length > 0 &&
-          filterListEmotion()!.listReactEmotionPost.reduce(
+      {filterListEmotion()?.listReactEmotionPost.length > 0 && (
+        <div className="text-[#65676c] text-[15px] pl-1 cursor-pointer hover:underline">
+          {filterListEmotion()!.listReactEmotionPost.reduce(
             (acc, cur) => acc + Object.values(cur)[0].listUser.length,
             0
           )}
-      </div>
+        </div>
+      )}
       {isHoverShowUserReact && (
         <div className="absolute top-[-45px] right-[-40px] my-[2px] w-auto rounded-xl overflow-hidden z-[100]">
           <div className="p-3 bg-[#303030] text-white w-full h-auto">
@@ -102,4 +102,4 @@ const ShowEmotionCount = ({ postId }: ShowEmotionCountProps) => {
   );
 };
 
-export default ShowEmotionCount;
+export default ShowEmotionCountPost;

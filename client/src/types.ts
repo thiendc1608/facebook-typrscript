@@ -258,12 +258,8 @@ export interface messageReactType {
 export type allMessageType = messageType & senderInfoType & messageReactType;
 
 export interface imageCloudinaryType {
-  fieldname: string;
   originalname: string;
-  encoding: string;
-  mimetype: string;
   path: string;
-  size: number;
   filename: string;
 }
 

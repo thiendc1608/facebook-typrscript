@@ -267,21 +267,28 @@ const getAllImage = asyncHandler(async (req, res) => {
   });
 });
 
-const uploadImage = asyncHandler(async (req, res) => {
-  const images = req.files?.map((el) => el);
+const uploadImageVideo = asyncHandler(async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        message: "No files uploaded.",
+      });
+    }
+    const files = req.files;
+    const fileUrls = files.map((file) => ({
+      path: file.path,
+      originalname: file.originalname,
+      filename: file.filename,
+    }));
 
-  if (!images) {
-    return res.status(400).json({
-      success: false,
-      message: "Upload image failed",
+    res.status(200).json({
+      success: true,
+      message: "Files uploaded successfully!",
+      imageVideos: fileUrls, // Trả về URL của các file đã upload
     });
+  } catch (error) {
+    res.status(500).send("Error uploading files: " + error.message);
   }
-
-  res.status(200).json({
-    success: true,
-    message: "Upload image successfully",
-    images,
-  });
 });
 
 const createMessage = asyncHandler(async (req, res) => {
@@ -353,7 +360,7 @@ export {
   deleteConversation,
   getAllMessage,
   createMessage,
-  uploadImage,
+  uploadImageVideo,
   deleteImage,
   getAllMessageSearch,
   getAllNickName,

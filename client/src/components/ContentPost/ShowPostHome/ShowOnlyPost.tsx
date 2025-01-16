@@ -9,7 +9,6 @@ import parse from "html-react-parser";
 import DisplayImages from "../CreatePost/DisplayImages";
 import { FaUserFriends } from "react-icons/fa";
 import ReactEmotionPost from "./ReactEmotionPost";
-import ShowEmotionCount from "./ShowEmotionCount";
 import CommentPost from "./CommentPost";
 import { postType } from "@/redux/postSlice";
 import { useSelector } from "react-redux";
@@ -19,6 +18,7 @@ import { SocketContext } from "@/context/SocketContext";
 import { PostContext } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { postResponseType } from "@/types";
+import ShowEmotionCountPost from "./ShowEmotionCountPost";
 
 const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
   const { socket } = useContext(SocketContext)!;
@@ -131,12 +131,10 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
         </div>
       )}
       {item?.imageInfo.message_image && (
-        <div className="w-full h-auto">
-          <DisplayImages
-            selectImageList={JSON.parse(item?.imageInfo.message_image)}
-            post={item}
-          />
-        </div>
+        <DisplayImages
+          selectImageList={JSON.parse(item?.imageInfo.message_image)}
+          post={item}
+        />
       )}
       <div className="px-3">
         <div
@@ -145,10 +143,9 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
             !postClickImage && "border-t border-solid border-[#d9d9d9]"
           )}
         >
-          <ShowEmotionCount postId={item?.id} />
+          <ShowEmotionCountPost postId={item?.id} />
           <div className="flex items-center gap-1 ml-auto">
             {listComment &&
-              listComment?.length > 0 &&
               listComment?.filter((comment) => comment.post_id === item?.id)
                 .length > 0 && (
                 <div className="flex items-center gap-[2px] cursor-pointer">
@@ -172,7 +169,7 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
 
       {/*  */}
       <div className="px-2 flex items-center">
-        <ReactEmotionPost socket={socket} item={item} />
+        <ReactEmotionPost socket={socket} postId={item?.id} />
         <div className="flex-1 px-2">
           <div
             className="my-1 cursor-pointer hover:bg-[#F2F2F2] flex items-center justify-center rounded-lg"

@@ -1,14 +1,44 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import ShowOnlyPost from "./ShowOnlyPost";
 import { IoMdClose } from "react-icons/io";
 import { Link, useNavigate } from "react-router-dom";
 import { PostContext } from "@/context/PostContext";
 import RightHeader from "@/components/Header/RightHeader";
 import ShowImage from "@/components/Header/Messenger/MediaFile/ShowImage";
+import { useDispatch } from "react-redux";
+import { SocketContext } from "@/context/SocketContext";
+import { updateReactEmotionPost } from "@/redux/postSlice";
+import { emotionCommentType } from "@/apis/commentApi";
 
 const ShowDetailPost = () => {
   const { postClickImage, setPostClickImage } = useContext(PostContext);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { socket } = useContext(SocketContext)!;
+
+  useEffect(() => {
+    if (!socket) {
+      console.log("Socket is undefined or not connected");
+      return;
+    }
+
+    const handleUpdateReactPost = (data: { data: emotionCommentType }) => {
+      dispatch(
+        updateReactEmotionPost({
+          post_id: data.data.post_id,
+          emotion: data.data.emotion,
+          userInfo: data.data.userInfo,
+        })
+      );
+    };
+
+    socket?.off("update_react_post", handleUpdateReactPost);
+    socket?.on("update_react_post", handleUpdateReactPost);
+
+    return () => {
+      socket?.off("update_react_post", handleUpdateReactPost);
+    };
+  }, [socket, dispatch]);
 
   return (
     <div className="flex h-screen w-screen">

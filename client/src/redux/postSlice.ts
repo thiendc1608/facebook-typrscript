@@ -135,9 +135,6 @@ const postSlice = createSlice({
         (post: postResponseType) => post.id === action.payload.post_id
       ) as postResponseType;
 
-      // Kiểm tra nếu không tìm thấy bài viết thì dừng lại
-      if (!findPost) return;
-
       // Duyệt qua các cảm xúc đã có trong bài viết
       let emotionExist = false; // Để kiểm tra xem cảm xúc có tồn tại hay không
 
@@ -204,7 +201,6 @@ const postSlice = createSlice({
       findPost.listReactEmotionPost = findPost.listReactEmotionPost.filter(
         (post) => Object.keys(post).length > 0
       );
-
       state.listPost = listPostCopy;
     },
 

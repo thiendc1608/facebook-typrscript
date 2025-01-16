@@ -58,8 +58,8 @@ const EditImages = () => {
         <div
           className={cn(
             "flex flex-col max-h-[410px] w-full overflow-y-scroll gap-1",
-            selectImageList.length >= 3 && "w-[900px] flex-row flex-wrap",
-            selectImageList.length >= 5 && "w-[1100px]"
+            selectImageList.length >= 3 && "grid grid-cols-2",
+            selectImageList.length >= 5 && "grid grid-cols-2"
           )}
         >
           {selectImageList.map((item, idx) => (
@@ -67,14 +67,23 @@ const EditImages = () => {
               key={idx}
               className={cn(
                 "h-[200px] w-full relative border border-black",
-                selectImageList.length >= 3 && "w-[438px] p-1 h-[300px]"
+                selectImageList.length >= 3 && "w-auto p-1 h-[300px]"
               )}
             >
-              <img
-                src={item}
-                alt={`image${idx}`}
-                className={cn("w-full h-full rounded-lg object-contain")}
-              />
+              {item?.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                // Hiển thị ảnh
+                <img
+                  loading="lazy"
+                  src={item}
+                  alt="anh"
+                  className="w-full h-full rounded-lg object-contain"
+                />
+              ) : (
+                // Hiển thị video
+                <video width="100%" controls className="h-full">
+                  <source src={item} type="video/mp4" />
+                </video>
+              )}
               <div className="absolute top-2 right-2">
                 <div className="rounded-full bg-white cursor-pointer hover:scale-y-110">
                   <IoMdClose

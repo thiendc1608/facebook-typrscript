@@ -9,6 +9,15 @@ import helmet from "helmet";
 // Khởi tạo ứng dụng Express
 const app = express();
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
+});
+
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -16,6 +25,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("combined"));

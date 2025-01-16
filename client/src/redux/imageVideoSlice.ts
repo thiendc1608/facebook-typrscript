@@ -4,7 +4,6 @@ export interface ImageVideoState {
   isAddImageVideo: boolean;
   showOrHiddenImageVideo: boolean;
   isEditImages: boolean;
-  imageList: File[];
 }
 
 const imageVideoSlice = createSlice({
@@ -14,7 +13,6 @@ const imageVideoSlice = createSlice({
     isAddImageVideo: false,
     showOrHiddenImageVideo: false, // khi chon background thi disable image/video
     isEditImages: false,
-    imageList: [] as File[],
   },
 
   reducers: {

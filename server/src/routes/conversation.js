@@ -1,6 +1,6 @@
 import express from "express";
 import * as conversationController from "../controllers/conversation.js";
-const fileUploader = require("../config/cloundinary.config.js");
+const fileUploader = require("../config/cloudinary.config.js");
 // import { verifyToken } from "../middlewares/verifyToken.js";
 
 const router = express.Router();
@@ -31,9 +31,9 @@ router.get(
 );
 
 router.post(
-  "/images/upload",
-  fileUploader.array("imageInfo", 10),
-  conversationController.uploadImage
+  "/imageVideos/upload",
+  fileUploader.array("imageInfo"),
+  conversationController.uploadImageVideo
 );
 
 router.delete(

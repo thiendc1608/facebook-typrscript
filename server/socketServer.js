@@ -6,10 +6,12 @@ import { v4 as uuidv4 } from "uuid";
 import { Server } from "socket.io";
 import db from "./src/models/index.js";
 import { Op, Sequelize } from "sequelize";
+
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
 connectDB();
@@ -523,6 +525,7 @@ io.on("connection", (socket) => {
 
   socket.on("react_emotion_post", async (data) => {
     const { user_id, post_id, emotion_id, nameEmotion } = data;
+
     try {
       const findReactEmotion = await db.PostReaction.findOne({
         where: { user_id, post_id },
@@ -532,15 +535,17 @@ io.on("connection", (socket) => {
       if (findReactEmotion) {
         // remove emotion post
         if (+findReactEmotion.emotion_id === +emotion_id) {
-          const removeEmotion = await db.PostReaction.destroy({
-            where: { user_id, post_id, emotion_id },
-          });
-          if (removeEmotion !== 0) {
-            io.emit("remove_react", {
-              user_id,
-              post_id,
-              nameEmotion,
+          if (nameEmotion !== undefined) {
+            const removeEmotion = await db.PostReaction.destroy({
+              where: { user_id, post_id, emotion_id },
             });
+            if (removeEmotion !== 0) {
+              io.emit("remove_react", {
+                user_id,
+                post_id,
+                nameEmotion,
+              });
+            }
           }
         } else {
           // update emotion post
@@ -552,7 +557,6 @@ io.on("connection", (socket) => {
               where: { user_id, post_id },
             }
           );
-
           if (resultUpdate[0] === 1) {
             const updateReactEmotion = await db.PostReaction.findOne({
               where: { user_id, post_id },
@@ -617,7 +621,7 @@ io.on("connection", (socket) => {
       }
     } catch (error) {
       console.log("Error when react post:", error);
-      socket.emit("error", "Error reacting post");
+      io.emit("error", "Error reacting post");
     }
   });
 });

@@ -54,10 +54,12 @@ const ShowPostHome = () => {
   }, [dispatchGetPost, start, endOfData]);
 
   useEffect(() => {
-    socket?.off("create_react_post");
-    socket?.off("update_react_post");
+    if (!socket) {
+      console.log("Socket is undefined or not connected");
+      return;
+    }
 
-    socket?.on("create_react_post", (data: { data: emotionCommentType }) => {
+    const handleCreateReactPost = (data: { data: emotionCommentType }) => {
       dispatch(
         setReactEmotionPost({
           post_id: data.data.post_id,
@@ -65,9 +67,10 @@ const ShowPostHome = () => {
           userInfo: data.data.userInfo,
         })
       );
-    });
+    };
 
-    socket?.on("update_react_post", (data: { data: emotionCommentType }) => {
+    const handleUpdateReactPost = (data: { data: emotionCommentType }) => {
+      console.log(data);
       dispatch(
         updateReactEmotionPost({
           post_id: data.data.post_id,
@@ -75,11 +78,16 @@ const ShowPostHome = () => {
           userInfo: data.data.userInfo,
         })
       );
-    });
+    };
+    socket?.off("create_react_post", handleCreateReactPost);
+    socket?.off("update_react_post", handleUpdateReactPost);
+
+    socket?.on("create_react_post", handleCreateReactPost);
+    socket?.on("update_react_post", handleUpdateReactPost);
 
     return () => {
-      socket?.off("create_react_post");
-      socket?.off("update_react_post");
+      socket?.off("create_react_post", handleCreateReactPost);
+      socket?.off("update_react_post", handleUpdateReactPost);
     };
   }, [socket, dispatch]);
 

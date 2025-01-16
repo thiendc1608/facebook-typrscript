@@ -61,14 +61,14 @@ export const conversationAPI = {
     return axiosClient.post(url, data);
   },
 
-  uploadImages: (
+  uploadImageVideos: (
     data: FormData
   ): Promise<
     CustomResponse & {
-      images: imageCloudinaryType[];
+      imageVideos: imageCloudinaryType[];
     }
   > => {
-    const url = "conversation/images/upload";
+    const url = "conversation/imageVideos/upload";
     return axiosClient.post(url, data, {
       headers: {
         "Content-Type": "multipart/form-data",

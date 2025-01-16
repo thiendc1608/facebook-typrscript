@@ -239,12 +239,16 @@ const BackgroundPost = ({
     }
   };
 
-  const handlePostImage = async (files: File[]) => {
+  const handlePostImageVideo = async (files: File[]) => {
     if (!files?.length) return;
     setLoading(true);
     const data = new FormData();
     for (const file of files) {
-      if (file.type !== "image/png" && file.type !== "image/jpeg") {
+      if (
+        file.type !== "image/png" &&
+        file.type !== "image/jpeg" &&
+        file.type !== "video/mp4"
+      ) {
         toast.warning("File not support");
         return;
       }
@@ -252,10 +256,10 @@ const BackgroundPost = ({
     }
 
     try {
-      const response = await conversationAPI.uploadImages(data);
+      const response = await conversationAPI.uploadImageVideos(data);
       if (response.success) {
         setLoading(false);
-        dispatch(setPostImageList(response.images));
+        dispatch(setPostImageList(response.imageVideos));
       } else {
         toast.error(response.message);
       }
@@ -305,12 +309,12 @@ const BackgroundPost = ({
           />
           <div className="mt-8 p-2 border border-solid border-[#CED0D4] rounded-lg h-auto relative">
             {isCheckIn === 0 ? (
-              <div className="bg-[#F7F8FA] hover:cursor-pointer hover:bg-[#EAEBED] rounded-lg min-h-[150px] flex items-center justify-center">
+              <div className="bg-[#F7F8FA] rounded-lg min-h-[150px] flex items-center justify-center">
                 {loading && (
                   <div className="absolute inset-0 w-full h-full bg-[rgba(72,72,72,0.7)] flex flex-col items-center justify-center gap-4">
                     <PulseLoader size={10} color="white" />
                     <span className="text-white text-[18px] whitespace-nowrap">
-                      Đang tải ảnh
+                      Đang tải ảnh/video
                     </span>
                   </div>
                 )}
@@ -321,10 +325,13 @@ const BackgroundPost = ({
                     <input
                       id="image-video"
                       type="file"
+                      name="imageInfo"
                       multiple
                       accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"
                       className="hidden"
-                      onChange={(e) => handlePostImage([...e.target.files!])}
+                      onChange={(e) =>
+                        handlePostImageVideo([...e.target.files!])
+                      }
                     />
                     <label
                       htmlFor="image-video"
@@ -360,7 +367,9 @@ const BackgroundPost = ({
                         multiple
                         accept="image/*,image/heif,image/heic,video/*,video/mp4,video/x-m4v,video/x-matroska,.mkv"
                         className="hidden"
-                        onChange={(e) => handlePostImage([...e.target.files!])}
+                        onChange={(e) =>
+                          handlePostImageVideo([...e.target.files!])
+                        }
                       />
                       <label
                         htmlFor="image-video"

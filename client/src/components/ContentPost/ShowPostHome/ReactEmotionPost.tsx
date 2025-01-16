@@ -1,6 +1,6 @@
 import { chattingUserType } from "@/redux/conversationSlice";
 import { UserState } from "@/redux/userSlice";
-import { EmotionPostData, emotionType, postResponseType } from "@/types";
+import { EmotionPostData, emotionType } from "@/types";
 import { useDispatch, useSelector } from "react-redux";
 import { AiOutlineLike, AiFillLike } from "react-icons/ai";
 import { Socket } from "socket.io-client";
@@ -9,25 +9,27 @@ import { useCallback, useContext, useEffect } from "react";
 import { toast } from "react-toastify";
 import { FaHeart } from "react-icons/fa6";
 import { PostContext } from "@/context/PostContext";
-import { removeReactEmotionPost } from "@/redux/postSlice";
+import { postType, removeReactEmotionPost } from "@/redux/postSlice";
 
 interface ReactEmotionPostProps {
   socket: Socket | null;
-  item: postResponseType;
+  postId: string;
 }
 
-const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
+const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
   const dispatch = useDispatch();
   const { emojiList } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-
+  const { listPost } = useSelector((state: { post: postType }) => state.post);
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
 
   const { isHoverLike, setIsHoverLike, postClickImage } =
     useContext(PostContext);
+
+  const detailPost = listPost && listPost.find((post) => post.id === postId);
 
   useEffect(() => {
     socket?.off("remove_react");
@@ -62,7 +64,6 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
     setIsHoverLike({
       ...isHoverLike,
       isHover: false,
-      postId: null,
     });
     let emotionId: number | null = null;
     switch (emotion.emotion_name) {
@@ -126,7 +127,7 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
   }
 
   const renderEmotionIcon = () => {
-    const emotionName = findKeyByValue(item.listReactEmotionPost!);
+    const emotionName = findKeyByValue(detailPost!.listReactEmotionPost!);
     switch (emotionName) {
       case "like":
         return (
@@ -186,7 +187,7 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
   };
 
   const renderEmotionText = () => {
-    const emotionName = findKeyByValue(item.listReactEmotionPost!);
+    const emotionName = findKeyByValue(detailPost!.listReactEmotionPost!);
     switch (emotionName) {
       case "like":
         return (
@@ -255,7 +256,6 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
     setIsHoverLike({
       ...isHoverLike,
       isHover: false,
-      postId: null,
     });
     let emotionId: number | null = null;
     switch ((e.target as HTMLElement).textContent) {
@@ -302,9 +302,9 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
     setIsHoverLike({
       ...isHoverLike,
       isHover: true,
-      postId: item.id,
+      postId: detailPost!.id,
     });
-  }, [item.id, isHoverLike, setIsHoverLike]);
+  }, [detailPost, isHoverLike, setIsHoverLike]);
 
   const handleHoverOut = useCallback(() => {
     setIsHoverLike({
@@ -319,10 +319,10 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
         className="relative my-1 cursor-pointer hover:bg-[#F2F2F2] flex items-center justify-center rounded-lg"
         onMouseEnter={handleHoverIn} // Tạo sự kiện hover vào
         onMouseLeave={handleHoverOut} // Tạo sự kiện hover ra
-        onClick={(e) => handleClickLike(e, item.id)}
+        onClick={(e) => handleClickLike(e, detailPost!.id)}
       >
         {/* Phần hover emoji */}
-        {isHoverLike.isHover && isHoverLike.postId === item?.id && (
+        {isHoverLike.isHover && isHoverLike.postId === detailPost?.id && (
           <div className="absolute bottom-7 left-[-4px] py-[6px] h-[49px] bg-white rounded-3xl shadow-bgContent">
             <div className="flex items-center ">
               {emojiList.map((emotion: emotionType) => (
@@ -330,7 +330,9 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
                   <div
                     className="cursor-pointer w-[35px] h-[35px] hover:scale-125"
                     title={emotion.emotion_name}
-                    onClick={(e) => handleClickEmotion(e, emotion, item.id)}
+                    onClick={(e) =>
+                      handleClickEmotion(e, emotion, detailPost.id)
+                    }
                   >
                     <img
                       src={emotion.emotion_icon}
@@ -344,10 +346,11 @@ const ReactEmotionPost = ({ socket, item }: ReactEmotionPostProps) => {
           </div>
         )}
 
-        {findKeyByValue(item.listReactEmotionPost) !== null ? (
+        {detailPost &&
+        findKeyByValue(detailPost.listReactEmotionPost) !== null ? (
           <>
             {renderEmotionIcon()}
-            {renderEmotionText()}
+            {!postClickImage && renderEmotionText()}
           </>
         ) : (
           <>

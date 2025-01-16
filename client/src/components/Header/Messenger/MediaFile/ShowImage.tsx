@@ -96,14 +96,29 @@ const ShowImage = ({
                   postClickImage && "h-screen mt-4 w-auto"
                 )}
               >
-                <img
-                  src={img}
-                  alt="anh"
-                  className={cn(
-                    "aspect-[4/3] object-contain",
-                    postClickImage && "aspect-[1/1]"
-                  )}
-                />
+                {img.match(/\.(jpeg|jpg|png|gif)$/i) ? (
+                  // Hiển thị ảnh
+                  <img
+                    loading="lazy"
+                    src={img}
+                    alt="anh"
+                    className={cn(
+                      "aspect-[4/3] object-contain",
+                      postClickImage && "aspect-[1/1]"
+                    )}
+                  />
+                ) : (
+                  // Hiển thị video
+                  <video
+                    width="100%"
+                    controls
+                    muted
+                    autoPlay
+                    className="h-full"
+                  >
+                    <source src={img} type="video/mp4" />
+                  </video>
+                )}
               </div>
             </SwiperSlide>
           ))}
