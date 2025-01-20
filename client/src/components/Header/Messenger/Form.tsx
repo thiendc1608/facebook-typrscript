@@ -32,6 +32,7 @@ import {
   setSelectedImageList,
 } from "@/redux/messageSlice";
 import { tinyChattingType } from "@/redux/notificationSlice";
+import { setCursorToEnd } from "@/utils/helpers";
 
 interface FormProps {
   index?: number;
@@ -85,17 +86,6 @@ const Form = forwardRef<HTMLDivElement, FormProps>((props, ref) => {
     }
     setInputValue((e.target as HTMLElement).innerText ?? "");
   };
-
-  function setCursorToEnd(element: HTMLElement) {
-    const range = document.createRange();
-    const selection = window.getSelection();
-
-    range.selectNodeContents(element); // Chọn toàn bộ nội dung
-    range.collapse(false); // Đặt con trỏ ở cuối
-
-    selection?.removeAllRanges(); // Xóa tất cả các vùng chọn hiện tại
-    selection?.addRange(range); // Thêm vùng chọn mới vào cuối
-  }
 
   useImperativeHandle(
     ref,

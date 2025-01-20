@@ -4,11 +4,47 @@ import { FiHome } from "react-icons/fi";
 import { LiaUserFriendsSolid } from "react-icons/lia";
 import { MdOutlineOndemandVideo } from "react-icons/md";
 import { RiGroup2Line } from "react-icons/ri";
-import { LuGamepad } from "react-icons/lu";
-import { path } from "@/utils/path";
 import RightHeader from "./RightHeader";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setConfirmCoverPicture,
+  setCoverPictureUser,
+  UserState,
+} from "@/redux/userSlice";
+import { Button } from "../ui/button";
+import { userAPI } from "@/apis/userApi";
+import { toast } from "react-toastify";
 
 const Header = () => {
+  const dispatch = useDispatch();
+  const { currentUser, isConfirmCoverPicture } = useSelector(
+    (state: { user: UserState }) => state.user
+  );
+
+  const handleSaveChange = async () => {
+    dispatch(setConfirmCoverPicture(false));
+    if (currentUser && currentUser.cover_picture) {
+      try {
+        const response = await userAPI.changeCoverPicture(
+          {
+            coverPicture: currentUser.cover_picture ?? "",
+            coverPicturePos: currentUser.cover_picture_pos ?? 0,
+          },
+          currentUser!.id
+        );
+        if (response.success) {
+          toast.success(response.message);
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    } else {
+      console.error("currentUser or cover_picture is null or undefined");
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white w-full h-[56px] px-4 shadow-default z-10">
       <div className="flex item-center justify-between leading-[56px]">
@@ -46,30 +82,45 @@ const Header = () => {
             </Link>
           </li>
           <li className="w-[111.59px] h-full flex items-center justify-center">
-            <Link to={`/${path.FRIENDS}`}>
-              <LiaUserFriendsSolid size={28} />
-            </Link>
+            <LiaUserFriendsSolid size={28} />
           </li>
           <li className="w-[111.59px] h-full flex items-center justify-center">
-            <Link to={`${path.WATCH}`}>
-              <MdOutlineOndemandVideo size={28} />
-            </Link>
+            <MdOutlineOndemandVideo size={28} />
           </li>
           <li className="w-[111.59px] h-full flex items-center justify-center">
-            <Link to={`/${path.GROUPS}`}>
-              <RiGroup2Line size={28} />
-            </Link>
-          </li>
-          <li className="w-[111.59px] h-full flex items-center justify-center">
-            <Link to={`/${path.GAMING_PLAY}`}>
-              <LuGamepad size={28} />
-            </Link>
+            <RiGroup2Line size={28} />
           </li>
         </ul>
         <div className="h-[56px]">
           <RightHeader />
         </div>
       </div>
+      {isConfirmCoverPicture && (
+        <div className="relative top-0 z-10 h-[60px] bg-black bg-opacity-40">
+          <div className="py-3 px-4 flex items-center justify-between">
+            <span className="text-white text-[15px]">
+              Ảnh bìa của bạn hiển thị công khai
+            </span>
+            <div className="flex gap-4">
+              <Button
+                className="w-[150px] bg-[#ffffff1a] hover:bg-[#ACACAC]"
+                onClick={() => {
+                  dispatch(setConfirmCoverPicture(false));
+                  dispatch(setCoverPictureUser(undefined));
+                }}
+              >
+                Huỷ
+              </Button>
+              <Button
+                className="w-[150px] bg-blue-600 hover:bg-blue-500"
+                onClick={handleSaveChange}
+              >
+                Lưu thay đổi
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

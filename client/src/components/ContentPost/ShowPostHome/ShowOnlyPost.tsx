@@ -4,7 +4,7 @@ import { IoMdClose } from "react-icons/io";
 import { GoComment } from "react-icons/go";
 import { PiShareFatLight } from "react-icons/pi";
 import { formatTimeAgo } from "@/utils/helpers";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import parse from "html-react-parser";
 import DisplayImages from "../CreatePost/DisplayImages";
 import { FaUserFriends } from "react-icons/fa";
@@ -13,7 +13,7 @@ import CommentPost from "./CommentPost";
 import { postType } from "@/redux/postSlice";
 import { useSelector } from "react-redux";
 import { commentType } from "@/redux/commentSlice";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { SocketContext } from "@/context/SocketContext";
 import { PostContext } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ import { postResponseType } from "@/types";
 import ShowEmotionCountPost from "./ShowEmotionCountPost";
 
 const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
+  const location = useLocation();
   const { socket } = useContext(SocketContext)!;
   const { tagUserList, locationTag } = useSelector(
     (state: { post: postType }) => state.post
@@ -28,8 +29,19 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
   const { listComment } = useSelector(
     (state: { comment: commentType }) => state.comment
   );
-  const { isHoverLike, postClickImage, contentRefs, handleClickTabComment } =
-    useContext(PostContext);
+  const {
+    isHoverLike,
+    postClickImage,
+    setPostClickImage,
+    contentRefs,
+    handleClickTabComment,
+  } = useContext(PostContext);
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      setPostClickImage(null);
+    }
+  }, [setPostClickImage, location]);
 
   return (
     <div
@@ -42,20 +54,26 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Link
-              to={`/profile/${item?.user_id}`}
+              to={{
+                pathname: "/profile",
+                search: `?id=${item?.id}`,
+              }}
               className="w-[40px] h-[40px] cursor-pointer"
             >
               <img
                 src={item?.userOwnPost.avatar}
                 alt="anh"
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full rounded-full object-cover hover:brightness-90"
               />
             </Link>
             <div className="flex flex-col gap-1">
-              <div className="text-[#050505] text-[15px] cursor-pointer">
+              <div className="text-[#050505] text-[15px] cursor-pointer break-words">
                 <Link
-                  to={`/profile/${item?.user_id}`}
-                  className="text-[15px] text-[#080809] hover:underline cursor-pointer"
+                  to={{
+                    pathname: "/profile",
+                    search: `?id=${item?.id}`,
+                  }}
+                  className="text-[15px] text-[#080809] hover:underline cursor-pointer font-semibold"
                 >
                   {`${item?.userOwnPost.lastName} ${item?.userOwnPost.firstName}`}
                 </Link>

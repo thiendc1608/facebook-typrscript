@@ -80,3 +80,16 @@ export const formatDate = (dateString: Date) => {
   // Đối với các ngày trước đó, hiển thị giờ + tên ngày trong tuần (T2, T3, ...)
   return `${format(vietnamTime, "HH:mm")} ${daysOfWeek[getDay(vietnamTime)]}`;
 };
+
+export const setCursorToEnd = (
+  element: HTMLDivElement | HTMLTextAreaElement
+) => {
+  const range = document.createRange();
+  const selection = window.getSelection();
+
+  range.selectNodeContents(element); // Chọn toàn bộ nội dung
+  range.collapse(false); // Đặt con trỏ ở cuối
+
+  selection?.removeAllRanges(); // Xóa tất cả các vùng chọn hiện tại
+  selection?.addRange(range); // Thêm vùng chọn mới vào cuối
+};

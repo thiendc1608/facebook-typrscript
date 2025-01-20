@@ -1,6 +1,5 @@
 import anonymousAvatar from "@/assets/images/default_avatar.jpg";
 import { Button } from "../ui/button";
-import { ImVideoCamera } from "react-icons/im";
 import { IoImagesOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 // import ViewerPost from "./CreatePost/ViewerPost";
@@ -49,19 +48,6 @@ const WriteStatus = () => {
         </div>
         <div className="mt-3 border-t border-solid border-[#dddfe2]">
           <div className="flex items-center p-2">
-            <Button
-              variant="ghost"
-              className="p-2 flex-1 rounded-lg hover:bg-[#F2F2F2]"
-            >
-              <div>
-                <ImVideoCamera
-                  style={{ width: "24px", height: "24px", color: "#E42645" }}
-                />
-              </div>
-              <span className="text-[#65676b] text-[15px]">
-                Video trực tiếp
-              </span>
-            </Button>
             <Button
               variant="ghost"
               className="p-2 flex-1 rounded-lg hover:bg-[#F2F2F2]"

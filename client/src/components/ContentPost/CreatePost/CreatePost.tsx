@@ -150,7 +150,12 @@ const CreatePost = () => {
             </div>
             <div className="mx-4">
               <div className="py-4 flex items-center gap-[10px]">
-                <Link to={`/profile/${currentUser?.id}`}>
+                <Link
+                  to={{
+                    pathname: "/profile",
+                    search: `?id=${currentUser?.id}`,
+                  }}
+                >
                   <img
                     src={currentUser?.avatar}
                     alt="anonymousAvatar"
@@ -160,7 +165,10 @@ const CreatePost = () => {
                 <div className="flex flex-col gap-[4px]">
                   <div className="text-[#050505] text-[15px] cursor-pointer">
                     <Link
-                      to={`/profile/${currentUser?.id}`}
+                      to={{
+                        pathname: "/profile",
+                        search: `?id=${currentUser?.id}`,
+                      }}
                       className="hover:underline cursor-pointer"
                     >
                       {currentUser?.lastName + " " + currentUser?.firstName}{" "}

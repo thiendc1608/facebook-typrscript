@@ -14,29 +14,12 @@ export const path = {
   OTP: "otp",
   RESET_PASSWORD: "reset-password",
   PROFILE: "profile",
-  FRIENDS: "friends",
-  MEMORIES: "memories",
   SAVED: "saved",
-  GROUPS: "groups",
-  VIDEO: "video",
-  WATCH: "watch",
-  MARKETPLACE: "marketplace",
-  ANALYTICS: "analytics",
   FEED: "feed",
-  FUNDRAISER: "fundraiser/explore",
-  GAMING_PLAY: "gaming/play",
-  FACEBOOK_PAY: "facebook_pay",
-  ADS_ACTIVITY: "ads/activity",
   MESSENGER: "messenger/t/:id",
   REELS: "reels",
   STORIES: "stories/create",
   STORIES_ID: "stories/:id",
-  EVENTS_BIRTHDAYS: "events/birthdays",
-  EVENTS: "events",
-  PAGES: "pages",
-  AD_CAMPAIGN: "ad_campaign",
-  CLIMATE_SCIENCE_INFO: "climatescieninfo",
-  VIDEO_GAMING: "gaming",
   DETAIL_POST: "post/:id",
 };
 
@@ -318,5 +301,28 @@ export const objectPost = [
     id: 3,
     name: "Only_me",
     icon: FaLock,
+  },
+];
+
+export const profileUserItems = [
+  {
+    id: 1,
+    nameItems: "Bài viết",
+  },
+  {
+    id: 2,
+    nameItems: "Giới thiệu",
+  },
+  {
+    id: 3,
+    nameItems: "Bạn bè",
+  },
+  {
+    id: 4,
+    nameItems: "Ảnh",
+  },
+  {
+    id: 5,
+    nameItems: "Reels",
   },
 ];

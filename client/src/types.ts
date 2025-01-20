@@ -25,12 +25,13 @@ export type UserType = {
   email: string;
   password: string;
   role: "admin" | "user";
-  phone: number;
+  phone: string;
   address: string;
   avatar: string;
-  cover_picture: string;
+  cover_picture: string | undefined;
+  cover_picture_pos: number | undefined;
   status_id: number;
-  describe_yourself: string;
+  bio: string;
   relationship_id: number;
   date_of_birth: string;
   lastActive: string;

@@ -21,7 +21,12 @@ router.get("/all-users/:id", userController.getAllUsers);
 router.get("/current-user", userController.getCurrentUser);
 router.post("/add-remove-friend/:userId", userController.addAndRemoveFriend);
 router.post("/confirm-friend/:userId", userController.confirmFriendRequest);
-
 router.put("/update-status/:userId", userController.updateStatus);
+router.put("/change-cover-picture/:userId", userController.changeCoverPicture);
+router.put("/change-avatar/:userId", userController.changeAvatar);
+router.put("/change-bio/:userId", userController.changeBio);
+router.put("/change-address/:userId", userController.changeAddress);
+router.put("/change-phone/:userId", userController.changePhone);
+router.put("/change-email/:userId", userController.changeEmail);
 
 export default router;

@@ -27,7 +27,7 @@ export interface postType {
   };
   listPost: postResponseType[];
   isLoadingPost: boolean;
-  endOfData: boolean;
+  endOfDataPost: boolean;
 }
 
 const postSlice = createSlice({
@@ -49,7 +49,7 @@ const postSlice = createSlice({
     },
     listPost: [],
     isLoadingPost: false,
-    endOfData: false,
+    endOfDataPost: false,
   } as postType,
 
   reducers: {
@@ -242,7 +242,7 @@ const postSlice = createSlice({
     builder.addCase(getAllPost.fulfilled, (state, action) => {
       state.isLoadingPost = false;
       if (action.payload.allPosts.length < 3) {
-        state.endOfData = true; // Đánh dấu đã hết dữ liệu nếu trả về ít hơn `limit`
+        state.endOfDataPost = true; // Đánh dấu đã hết dữ liệu nếu trả về ít hơn `limit`
       }
       state.listPost = [...state.listPost, ...action.payload.allPosts];
     });

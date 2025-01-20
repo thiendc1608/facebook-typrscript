@@ -25,8 +25,6 @@ const CustomInput = () => {
     resolver: zodResolver(RegisterSchema),
   });
 
-  const [listDate, setListDate] = useState<number[]>([]);
-
   useEffect(() => {
     if (+month === 2) {
       if (year % 4 === 0) {
@@ -41,6 +39,7 @@ const CustomInput = () => {
     }
   }, [month, year]);
 
+  const [listDate, setListDate] = useState<number[]>([]);
   const listMonth = Array.from({ length: 12 }, (_, i) => i + 1);
   const listYear = range(1905, new Date().getFullYear() + 1, 1).reverse();
 

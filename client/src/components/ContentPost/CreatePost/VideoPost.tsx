@@ -90,7 +90,8 @@ const VideoPost = ({ post, media }: VideoPostProps) => {
                     "w-full h-auto hover:cursor-pointer",
                     media.length === 4 && "col-span-1"
                   )}
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsHoverLike({
                       ...isHoverLike,
                       isClickTabComment: true,
@@ -103,7 +104,10 @@ const VideoPost = ({ post, media }: VideoPostProps) => {
                     loading="lazy"
                     src={item}
                     alt="anh"
-                    className="w-full h-[250px] object-cover border border-solid border-[#f2f2f2]"
+                    className={cn(
+                      "w-full h-[250px] object-cover border border-solid border-[#f2f2f2]",
+                      media.length === 1 && "h-auto"
+                    )}
                   />
                 </Link>
               ) : (
@@ -214,8 +218,10 @@ const VideoPost = ({ post, media }: VideoPostProps) => {
                 {item?.match(/\.(jpeg|jpg|png|gif)$/i) ? (
                   <Link
                     to={`/post/${post?.id}`}
+                    state={{ indexImage: index }}
                     className="w-full max-h-[210px] border border-solid border-[#f2f2f2]"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setIsHoverLike({
                         ...isHoverLike,
                         isClickTabComment: true,
@@ -266,8 +272,10 @@ const VideoPost = ({ post, media }: VideoPostProps) => {
                   {item?.match(/\.(jpeg|jpg|png|gif)$/i) ? (
                     <Link
                       to={`/post/${post?.id}`}
+                      state={{ indexImage: idx + 2 }}
                       className="hover:cursor-pointer w-full max-h-[210px] border border-solid border-[#f2f2f2]"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setIsHoverLike({
                           ...isHoverLike,
                           isClickTabComment: true,
@@ -284,10 +292,24 @@ const VideoPost = ({ post, media }: VideoPostProps) => {
                       />
                     </Link>
                   ) : (
-                    // Hiển thị video
-                    <video width="100%" controls className="h-full">
-                      <source src={item} type="video/mp4" />
-                    </video>
+                    <div className="w-full h-auto">
+                      {/* Hiển thị video */}
+                      <video
+                        ref={
+                          mediaRefs.current[
+                            idx + 2
+                          ] as React.RefObject<HTMLVideoElement>
+                        }
+                        controls
+                        muted
+                        style={{ width: "100%", height: "100%" }}
+                        onClick={() => handlePlayPause(idx + 2)} // Nhấn để phát/dừng video
+                        onMouseEnter={() => handleMouseEnter(idx + 2)} // Khi di chuột vào video
+                        onMouseLeave={handleMouseLeave} // Khi rời chuột khỏi video
+                      >
+                        <source src={item} type="video/mp4" />
+                      </video>
+                    </div>
                   )}
                   {media.length > 5 && idx === 2 && (
                     <div className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">

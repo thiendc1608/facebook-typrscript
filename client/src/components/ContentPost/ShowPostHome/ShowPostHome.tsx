@@ -16,12 +16,12 @@ import { emotionCommentType } from "@/apis/commentApi";
 
 const ShowPostHome = () => {
   const dispatch = useDispatch();
-  const dispatchGetPost = useAppDispatch();
+  const dispatchGetData = useAppDispatch();
   const { socket } = useContext(SocketContext)!;
   const [start, setStart] = useState(0); // Điểm bắt đầu
   const limit = 3; // Mỗi lần lấy 3 bài đăng
 
-  const { listPost, isLoadingPost, endOfData } = useSelector(
+  const { listPost, isLoadingPost, endOfDataPost } = useSelector(
     (state: { post: postType }) => state.post
   );
 
@@ -31,7 +31,7 @@ const ShowPostHome = () => {
       const bottomPosition = document.documentElement.scrollHeight; // Vị trí cuối trang
 
       // Nếu cuộn gần đến cuối trang, gọi loadPosts
-      if (scrollPosition >= bottomPosition - 100 && !endOfData) {
+      if (scrollPosition >= bottomPosition - 100 && !endOfDataPost) {
         setStart((prev) => prev + 1);
       }
     };
@@ -43,15 +43,15 @@ const ShowPostHome = () => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [endOfData]);
+  }, [endOfDataPost]);
 
   useEffect(() => {
     // Gọi action getAllPost khi `start` thay đổi
-    if (!endOfData) {
-      dispatchGetPost(getAllPost({ offset: start * limit, limit }));
-      dispatchGetPost(getAllComment());
+    if (!endOfDataPost) {
+      dispatchGetData(getAllPost({ offset: start * limit, limit }));
+      dispatchGetData(getAllComment());
     }
-  }, [dispatchGetPost, start, endOfData]);
+  }, [dispatchGetData, start, endOfDataPost]);
 
   useEffect(() => {
     if (!socket) {

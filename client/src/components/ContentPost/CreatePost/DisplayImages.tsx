@@ -15,7 +15,7 @@ const DisplayImages = ({
   return (
     <>
       {!postClickImage && (
-        <div className="w-full h-[500px] border-t border-solid border-[#dddfe2]">
+        <div className="w-full max-h-[500px] border-t border-solid border-[#dddfe2]">
           {selectImageList.length === 1 &&
             (post ? (
               <VideoPost post={post} media={selectImageList} />

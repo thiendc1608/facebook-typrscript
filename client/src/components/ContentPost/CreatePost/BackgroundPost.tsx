@@ -22,6 +22,7 @@ import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
 import { messageSliceType, setPostImageList } from "@/redux/messageSlice";
 import PulseLoader from "react-spinners/PulseLoader";
+import { setCursorToEnd } from "@/utils/helpers";
 
 interface BackgroundPostProps {
   colorBackground: {
@@ -179,17 +180,6 @@ const BackgroundPost = ({
       setIsElementHidden(false); // Hiện phần tử khi không có thanh cuộn
     }
   }, [isScrolling]);
-
-  function setCursorToEnd(element: HTMLElement) {
-    const range = document.createRange();
-    const selection = window.getSelection();
-
-    range.selectNodeContents(element); // Chọn toàn bộ nội dung
-    range.collapse(false); // Đặt con trỏ ở cuối
-
-    selection?.removeAllRanges(); // Xóa tất cả các vùng chọn hiện tại
-    selection?.addRange(range); // Thêm vùng chọn mới vào cuối
-  }
 
   useEffect(() => {
     if (divRef.current && emoji) {

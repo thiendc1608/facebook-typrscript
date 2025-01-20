@@ -1,7 +1,7 @@
 import ContentPost from "@/components/ContentPost/ContentPost";
 import Rightbar from "@/components/Rightbar/Rightbar";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import { UserState } from "@/redux/userSlice";
+import { setConfirmCoverPicture, UserState } from "@/redux/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { SocketContext } from "@/context/SocketContext";
@@ -72,6 +72,10 @@ const Home = () => {
     };
     document.addEventListener("click", handleCloseNotification);
     return () => document.removeEventListener("click", handleCloseNotification);
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(setConfirmCoverPicture(false));
   }, [dispatch]);
 
   useEffect(() => {

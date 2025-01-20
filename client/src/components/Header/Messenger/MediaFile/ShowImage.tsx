@@ -13,6 +13,7 @@ import { IoMdClose } from "react-icons/io";
 import { useContext, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { PostContext } from "@/context/PostContext";
+import { useLocation } from "react-router-dom";
 
 const ShowImage = ({
   showImage,
@@ -26,15 +27,16 @@ const ShowImage = ({
     (state: { message: messageSliceType }) => state.message
   );
   const { postClickImage } = useContext(PostContext);
+  const swiperRef = useRef<SwiperRef>(null);
 
   const dispatch = useDispatch();
-  const swiperRef = useRef<SwiperRef>(null);
+  const location = useLocation();
 
   useEffect(() => {
     if (swiperRef.current) {
-      swiperRef.current.swiper.slideTo(idImage);
+      swiperRef.current.swiper.slideTo(idImage || location?.state?.indexImage);
     }
-  }, [idImage]);
+  }, [idImage, location]);
 
   const handleThumbnailClick = (index: number) => {
     if (swiperRef.current) {

@@ -22,6 +22,7 @@ import { IoMdSend } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { executeCommentType } from "./ShowListComment";
 import { infoComment } from "@/types";
+import { setCursorToEnd } from "@/utils/helpers";
 
 interface FormWriteCommentProps {
   replyText?: string | null;
@@ -97,15 +98,6 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
         props.setCommentResponse!(commentResponse!);
       }
     }, [inputValue, props]);
-
-    const setCursorToEnd = (editableDiv: HTMLDivElement): void => {
-      const range = document.createRange();
-      const selection = window.getSelection();
-      range.selectNodeContents(editableDiv);
-      range.collapse(false); // Move the cursor to the end
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    };
 
     useEmojiInserter({
       replyCommentId: props.replyCommentId,

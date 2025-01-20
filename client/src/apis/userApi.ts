@@ -3,10 +3,10 @@ import axiosClient from "./axiosClient";
 
 export const userAPI = {
   getCurrentUser: (
-    userId: string
+    id: string
   ): Promise<CustomResponse & { user: UserType }> => {
     const url: string = "user/current-user";
-    return axiosClient.get(url, { params: userId });
+    return axiosClient.get(url, { params: { id } });
   },
 
   getOtherUsers: (
@@ -47,5 +47,58 @@ export const userAPI = {
   ): Promise<CustomResponse> => {
     const url: string = `user/update-status/${userId}`;
     return axiosClient.put(url, { status });
+  },
+
+  changeCoverPicture: (
+    data: {
+      coverPicture: string;
+      coverPicturePos: number;
+    },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-cover-picture/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeAvatar: (
+    data: {
+      avatar: string;
+    },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-avatar/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeBio: (
+    data: { bio: string },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-bio/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeAddress: (
+    data: { address: string | null },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-address/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changePhone: (
+    data: { phone: string | null },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-phone/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeEmail: (
+    data: { email: string | null },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-email/${userId}`;
+    return axiosClient.put(url, data);
   },
 };

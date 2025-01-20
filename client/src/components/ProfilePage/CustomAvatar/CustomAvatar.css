@@ -1,0 +1,22 @@
+.App {
+    font-family: sans-serif;
+    padding: 16px;
+    max-height: 500px;
+    overflow-y: scroll;
+  }
+  
+.Crop-Controls {
+  margin-bottom: 10px;
+}
+.Crop-Controls > * {
+  margin-bottom: 3px;
+}
+
+img {
+  max-width: 100%;
+}
+
+textarea::placeholder {
+  color: #b7b8bb;
+  font-size: 14px
+}

@@ -3,9 +3,10 @@ import db from "../models";
 const asyncHandler = require("express-async-handler");
 
 const getCurrentUser = asyncHandler(async (req, res) => {
-  const { userId } = req.user;
+  // const { userId } = req.user;
+  const { id } = req.query;
   const user = await db.User.findOne({
-    where: { id: userId },
+    where: { id },
     attributes: { exclude: ["password"] },
     raw: true,
   });
@@ -161,6 +162,164 @@ const updateStatus = asyncHandler(async (req, res) => {
   });
 });
 
+const changeCoverPicture = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { coverPicture, coverPicturePos } = req.body;
+  const result = await db.User.update(
+    {
+      cover_picture: coverPicture,
+      cover_picture_pos: coverPicturePos,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user cover picture",
+    });
+  }
+  const changeCoverPicture = await db.User.findOne({
+    where: {
+      id: userId,
+    },
+    raw: true,
+  });
+  return res.status(200).json({
+    success: true,
+    message: "Change cover picture successfully",
+  });
+});
+
+const changeAvatar = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { avatar } = req.body;
+  const result = await db.User.update(
+    {
+      avatar,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user avatar",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Change avatar successfully",
+  });
+});
+
+const changeBio = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { bio } = req.body;
+  const result = await db.User.update(
+    {
+      bio,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user bio",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update bio successfully",
+  });
+});
+
+const changeAddress = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { address } = req.body;
+  const result = await db.User.update(
+    {
+      address,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user address",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update address successfully",
+  });
+});
+
+const changePhone = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { phone } = req.body;
+  const result = await db.User.update(
+    {
+      phone,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user phone",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update phone successfully",
+  });
+});
+
+const changeEmail = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { email } = req.body;
+  const result = await db.User.update(
+    {
+      email,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user email",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update email successfully",
+  });
+});
+
 export {
   getCurrentUser,
   getOtherUsers,
@@ -168,4 +327,10 @@ export {
   confirmFriendRequest,
   getAllUsers,
   updateStatus,
+  changeCoverPicture,
+  changeAvatar,
+  changeBio,
+  changeAddress,
+  changePhone,
+  changeEmail,
 };

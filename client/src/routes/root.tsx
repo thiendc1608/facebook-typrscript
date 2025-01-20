@@ -39,7 +39,7 @@ export default function Root() {
       {isShowModal && <Modal>{childrenModal}</Modal>}
 
       <Header />
-      <div className="bg-[#F0F2F5] top-[56px] relative z-0 min-h-[calc(100vh-56px)]">
+      <div className="bg-[#F0F2F5] top-[56px] relative min-h-screen">
         <Outlet />
       </div>
     </>
