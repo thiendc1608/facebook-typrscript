@@ -21,7 +21,9 @@ const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
   const { emojiList } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-  const { listPost } = useSelector((state: { post: postType }) => state.post);
+  const { listAllPost } = useSelector(
+    (state: { post: postType }) => state.post
+  );
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
@@ -29,7 +31,8 @@ const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
   const { isHoverLike, setIsHoverLike, postClickImage } =
     useContext(PostContext);
 
-  const detailPost = listPost && listPost.find((post) => post.id === postId);
+  const detailPost =
+    listAllPost && listAllPost.find((post) => post.id === postId);
 
   useEffect(() => {
     socket?.off("remove_react");

@@ -31,7 +31,7 @@ const DisplayImages = ({
                   />
                 ) : (
                   // Hiển thị video
-                  <video width="100%" height="100%" controls>
+                  <video width="100%" controls className="h-full">
                     <source src={selectImageList[0]} type="video/mp4" />
                   </video>
                 )}
@@ -57,7 +57,7 @@ const DisplayImages = ({
                       />
                     ) : (
                       // Hiển thị video
-                      <video width="100%" height="100%" controls>
+                      <video width="100%" controls className="h-full">
                         <source src={item} type="video/mp4" />
                       </video>
                     )}

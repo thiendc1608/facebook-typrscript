@@ -90,6 +90,20 @@ const userSlice = createSlice({
       } as UserType;
     },
 
+    setDOB: (state, action) => {
+      state.currentUser = {
+        ...state.currentUser,
+        date_of_birth: action.payload.date_of_birth,
+      } as UserType;
+    },
+
+    setGender: (state, action) => {
+      state.currentUser = {
+        ...state.currentUser,
+        gender: action.payload.gender,
+      } as UserType;
+    },
+
     setConfirmCoverPicture: (state, action) => {
       state.isConfirmCoverPicture = action.payload;
     },
@@ -122,6 +136,8 @@ export const {
   setAddress,
   setPhone,
   setEmail,
+  setDOB,
+  setGender,
 } = userSlice.actions;
 const userReducer = userSlice.reducer;
 export default userReducer;

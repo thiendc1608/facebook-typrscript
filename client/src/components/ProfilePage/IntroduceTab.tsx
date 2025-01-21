@@ -3,6 +3,8 @@ import { useState } from "react";
 import ResidencePlace from "./ResidencePlace";
 import PhoneInformation from "./PhoneInformation";
 import EmailInformation from "./EmailInformation";
+import DateOfBirth from "./DateOfBirth";
+import GenderInformation from "./GenderInformation";
 
 const IntroduceTab = () => {
   const [selectTab, setSelectTab] = useState("Nơi sống");
@@ -44,6 +46,8 @@ const IntroduceTab = () => {
           <div className="flex flex-col gap-4">
             <PhoneInformation />
             <EmailInformation />
+            <DateOfBirth />
+            <GenderInformation />
           </div>
         )}
       </div>

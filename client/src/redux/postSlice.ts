@@ -25,9 +25,10 @@ export interface postType {
     name: string;
     icon: IconType;
   };
-  listPost: postResponseType[];
+  listAllPost: postResponseType[];
   isLoadingPost: boolean;
   endOfDataPost: boolean;
+  listUserPost: postResponseType[];
 }
 
 const postSlice = createSlice({
@@ -47,9 +48,10 @@ const postSlice = createSlice({
       name: "Public",
       icon: FaEarthAmericas,
     },
-    listPost: [],
+    listAllPost: [],
     isLoadingPost: false,
     endOfDataPost: false,
+    listUserPost: [],
   } as postType,
 
   reducers: {
@@ -87,12 +89,12 @@ const postSlice = createSlice({
     },
 
     setListPost: (state, action) => {
-      state.listPost.unshift(action.payload);
+      state.listAllPost.unshift(action.payload);
     },
 
     setReactEmotionPost: (state, action) => {
       const emotionName = action.payload.emotion.emotion_name;
-      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
+      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
 
       // Tìm bai post có id tương ứng
       const findPost = listPostCopy.find(
@@ -123,12 +125,12 @@ const postSlice = createSlice({
         // Thêm user vào listUser của emotion
         existingEmotion[emotionName].listUser.push(action.payload.userInfo);
       }
-      state.listPost = listPostCopy;
+      state.listAllPost = listPostCopy;
     },
 
     updateReactEmotionPost: (state, action) => {
       const emotionName = action.payload.emotion.emotion_name;
-      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
+      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
 
       // Tìm bài viết với post_id tương ứng
       const findPost = listPostCopy.find(
@@ -201,11 +203,11 @@ const postSlice = createSlice({
       findPost.listReactEmotionPost = findPost.listReactEmotionPost.filter(
         (post) => Object.keys(post).length > 0
       );
-      state.listPost = listPostCopy;
+      state.listAllPost = listPostCopy;
     },
 
     removeReactEmotionPost: (state, action) => {
-      const listPostCopy = JSON.parse(JSON.stringify(state.listPost));
+      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
       const filterPost = listPostCopy.find(
         (post: postResponseType) => post.id === action.payload.post_id
       ) as postResponseType;
@@ -232,9 +234,14 @@ const postSlice = createSlice({
               Object.keys(emotion)[0] !== action.payload.nameEmotion
           );
       }
-      state.listPost = listPostCopy;
+      state.listAllPost = listPostCopy;
+    },
+
+    setListUserPost: (state, action) => {
+      state.listUserPost = action.payload;
     },
   },
+
   extraReducers: (builder) => {
     builder.addCase(getAllPost.pending, (state) => {
       state.isLoadingPost = true;
@@ -244,7 +251,7 @@ const postSlice = createSlice({
       if (action.payload.allPosts.length < 3) {
         state.endOfDataPost = true; // Đánh dấu đã hết dữ liệu nếu trả về ít hơn `limit`
       }
-      state.listPost = [...state.listPost, ...action.payload.allPosts];
+      state.listAllPost = [...state.listAllPost, ...action.payload.allPosts];
     });
   },
 });
@@ -262,6 +269,7 @@ export const {
   setReactEmotionPost,
   updateReactEmotionPost,
   removeReactEmotionPost,
+  setListUserPost,
 } = postSlice.actions;
 const postReducer = postSlice.reducer;
 export default postReducer;

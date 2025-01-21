@@ -347,7 +347,6 @@ const deleteImage = asyncHandler(async (req, res) => {
   cloudinary.uploader
     .destroy(`${req.params.folder}/${req.params.image_id}`)
     .then((result) => {
-      console.log(result);
       res.status(200).json({
         success: true,
         message: "Delete image successfully",

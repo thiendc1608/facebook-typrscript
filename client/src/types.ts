@@ -53,6 +53,26 @@ export enum UserGender {
   Male = "male",
   Female = "female",
 }
+
+export const ProfileDOBSchema = z.object({
+  date: z
+    .number()
+    .min(1, "Date must be at least 1")
+    .max(31, "Date must be at most 31"),
+  month: z
+    .number()
+    .min(1, "Month must be at least 1")
+    .max(12, "Month must be at most 12"),
+  year: z
+    .number()
+    .min(1900, "Year must be at least 1900")
+    .max(2100, "Year must be at most 2100"),
+});
+
+export const GenderSchame = z.object({
+  gender: z.enum([UserGender.Male, UserGender.Female]),
+});
+
 export const RegisterSchema = z.object({
   firstName: z
     .string()

@@ -28,5 +28,7 @@ router.put("/change-bio/:userId", userController.changeBio);
 router.put("/change-address/:userId", userController.changeAddress);
 router.put("/change-phone/:userId", userController.changePhone);
 router.put("/change-email/:userId", userController.changeEmail);
+router.put("/change-DOB/:userId", userController.changeDOB);
+router.put("/change-gender/:userId", userController.changeGender);
 
 export default router;

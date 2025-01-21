@@ -12,7 +12,7 @@ export const userAPI = {
   getOtherUsers: (
     userId: string
   ): Promise<
-    CustomResponse & { allUser: UserType[]; allMadeFriend: UserType[] }
+    CustomResponse & { allUserNotFriend: UserType[]; allUserFriend: UserType[] }
   > => {
     const url: string = `user/other-users/${userId}`;
     return axiosClient.get(url);
@@ -99,6 +99,22 @@ export const userAPI = {
     userId: string
   ): Promise<CustomResponse> => {
     const url: string = `user/change-email/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeDOB: (
+    data: { date_of_birth: string | null },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-DOB/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  changeGender: (
+    data: { gender: string | null },
+    userId: string
+  ): Promise<CustomResponse> => {
+    const url: string = `user/change-gender/${userId}`;
     return axiosClient.put(url, data);
   },
 };

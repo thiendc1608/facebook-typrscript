@@ -319,7 +319,7 @@ export const profileUserItems = [
   },
   {
     id: 4,
-    nameItems: "Ảnh",
+    nameItems: "Ảnh/Video",
   },
   {
     id: 5,

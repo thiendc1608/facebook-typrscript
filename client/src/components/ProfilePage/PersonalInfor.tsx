@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import {
-  getUserCurrent,
   setConfirmCoverPicture,
   setCoverPictureUser,
   setPosCoverPicture,
@@ -12,9 +11,8 @@ import { FaPlus } from "react-icons/fa6";
 import { MdModeEdit } from "react-icons/md";
 import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
-import { useAppDispatch } from "@/redux/store";
 import {
   createSearchParams,
   useLocation,
@@ -31,7 +29,6 @@ const PersonalInfor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const dispatchGetUser = useAppDispatch();
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
@@ -41,10 +38,6 @@ const PersonalInfor = () => {
   const [topOffset, setTopOffset] = useState(0);
   const [showInstruct, setShowInstruct] = useState(false);
   const [selectItem, setSelectItem] = useState<string>("Bài viết");
-
-  useEffect(() => {
-    dispatchGetUser(getUserCurrent(searchParams.get("id")!));
-  }, [searchParams, dispatchGetUser]);
 
   const handleChangeCoverPicture = async (
     e: React.ChangeEvent<HTMLInputElement>
@@ -128,7 +121,7 @@ const PersonalInfor = () => {
       case "Bạn bè":
         itemName = "friends";
         break;
-      case "Ảnh":
+      case "Ảnh/Video":
         itemName = "photos";
         break;
       case "Reels":

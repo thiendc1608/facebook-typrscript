@@ -1,4 +1,4 @@
-import { Sequelize, where } from "sequelize";
+import { Op } from "sequelize";
 import db from "../models";
 const asyncHandler = require("express-async-handler");
 
@@ -27,24 +27,30 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const getOtherUsers = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
-  const allMadeFriend = await db.Friend.findAll({
-    attributes: ["user_response_id"],
-    include: [{ model: db.User, as: "friends" }],
-    where: {
-      user_request_id: userId,
-      status_id: 2,
-    },
-  });
   const otherUsers = await db.User.findAll({
     where: {
-      id: { [Sequelize.Op.ne]: userId },
+      id: { [Op.ne]: userId },
     },
     raw: true,
   });
 
+  const allUserFriend = await db.Friend.findAll({
+    where: {
+      [Op.and]: [
+        {
+          [Op.or]: [{ user_request_id: userId }, { user_response_id: userId }],
+        },
+        { status_id: 2 },
+      ],
+    },
+    attributes: ["user_response_id"],
+    include: [{ model: db.User, as: "friends" }],
+  });
+
   const allUserNotFriend = otherUsers.filter(
-    (user) => !allMadeFriend.some((id) => id.friends.id === user.id)
+    (user) => !allUserFriend.some((id) => id.friends.id === user.id)
   );
+
   if (!otherUsers) {
     return res.status(404).json({
       success: false,
@@ -54,7 +60,8 @@ const getOtherUsers = asyncHandler(async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Get all user successfully",
-    allUser: allUserNotFriend,
+    allUserFriend,
+    allUserNotFriend,
   });
 });
 
@@ -126,7 +133,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userList = await db.User.findAll({
     where: {
-      id: { [Sequelize.Op.ne]: id },
+      id: { [Op.ne]: id },
     },
     raw: true,
   });
@@ -320,6 +327,56 @@ const changeEmail = asyncHandler(async (req, res) => {
   });
 });
 
+const changeDOB = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { date_of_birth } = req.body;
+  const result = await db.User.update(
+    {
+      date_of_birth,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user DOB",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update DOB successfully",
+  });
+});
+
+const changeGender = asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const { gender } = req.body;
+  const result = await db.User.update(
+    {
+      gender,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    }
+  );
+  if (result < 1) {
+    return res.status(404).json({
+      success: false,
+      message: "Error when updating user gender",
+    });
+  }
+  return res.status(200).json({
+    success: true,
+    message: "Update gender successfully",
+  });
+});
+
 export {
   getCurrentUser,
   getOtherUsers,
@@ -333,4 +390,6 @@ export {
   changeAddress,
   changePhone,
   changeEmail,
+  changeDOB,
+  changeGender,
 };

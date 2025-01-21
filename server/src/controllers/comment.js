@@ -76,14 +76,11 @@ const updateComment = asyncHandler(async (req, res) => {
 
 const deleteComment = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(id);
-
   const result = await db.PostComment.destroy({
     where: {
       [Op.or]: [{ id: +id }, { parent_comment_id: +id }],
     },
   });
-  console.log(result);
 
   if (result === 0) {
     return res.status(404).json({

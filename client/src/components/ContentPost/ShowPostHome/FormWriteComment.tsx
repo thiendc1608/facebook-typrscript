@@ -130,7 +130,6 @@ const FormWriteComment = forwardRef<HTMLDivElement, FormWriteCommentProps>(
           };
 
           const response = await commentAPI.updateComment(mergedObj);
-          console.log(response.comment);
 
           if (response.success) {
             dispatch(updateComment(response.comment));

@@ -106,7 +106,7 @@ const PhoneInformation = () => {
         <>
           {currentUser?.phone ? (
             <div className="mt-4 flex items-center justify-between">
-              <p className="text-[#080809] text-[15px] self-start flex gap-2 items-center">
+              <div className="text-[#080809] text-[15px] self-start flex gap-2 items-center">
                 <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[#D6D9DD]">
                   <FaPhoneAlt size={20} />
                 </div>
@@ -116,7 +116,7 @@ const PhoneInformation = () => {
                   </span>
                   <span className="text-[#65686c] text-[12px]">Di động</span>
                 </div>
-              </p>
+              </div>
               <div className="flex items-center gap-4">
                 <IoEarth size={20} />
                 <div

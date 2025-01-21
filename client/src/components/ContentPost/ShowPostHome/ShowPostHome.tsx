@@ -21,7 +21,7 @@ const ShowPostHome = () => {
   const [start, setStart] = useState(0); // Điểm bắt đầu
   const limit = 3; // Mỗi lần lấy 3 bài đăng
 
-  const { listPost, isLoadingPost, endOfDataPost } = useSelector(
+  const { listAllPost, isLoadingPost, endOfDataPost } = useSelector(
     (state: { post: postType }) => state.post
   );
 
@@ -70,7 +70,6 @@ const ShowPostHome = () => {
     };
 
     const handleUpdateReactPost = (data: { data: emotionCommentType }) => {
-      console.log(data);
       dispatch(
         updateReactEmotionPost({
           post_id: data.data.post_id,
@@ -98,9 +97,9 @@ const ShowPostHome = () => {
           <ShowPostSkeleton count_post={3} />
         </div>
       )}
-      {listPost &&
-        listPost.length > 0 &&
-        listPost.map((item) => (
+      {listAllPost &&
+        listAllPost.length > 0 &&
+        listAllPost.map((item) => (
           <div key={uuidv4()}>
             <ShowOnlyPost item={item} />
           </div>

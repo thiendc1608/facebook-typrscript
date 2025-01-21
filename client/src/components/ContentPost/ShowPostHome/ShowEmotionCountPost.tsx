@@ -8,14 +8,16 @@ interface ShowEmotionCountProps {
 }
 
 const ShowEmotionCountPost = ({ postId }: ShowEmotionCountProps) => {
-  const { listPost } = useSelector((state: { post: postType }) => state.post);
+  const { listAllPost } = useSelector(
+    (state: { post: postType }) => state.post
+  );
   const [isHoverShowUserReact, setIsHoverShowUserReact] = useState(false);
   // Dùng ref để lưu timeout
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const filterListEmotion = useCallback(
-    () => listPost.find((el) => el.id === postId) as postResponseType,
-    [listPost, postId]
+    () => listAllPost.find((el) => el.id === postId) as postResponseType,
+    [listAllPost, postId]
   );
 
   const allUserEmotion =

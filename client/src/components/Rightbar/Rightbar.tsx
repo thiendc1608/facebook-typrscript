@@ -14,9 +14,9 @@ const Rightbar = () => {
   useEffect(() => {
     const fetchOtherUser = async () => {
       try {
-        const res = await userAPI.getOtherUsers(currentUser!.id);
-        if (res?.success) {
-          setFriendSuggestList(res.allUser);
+        const response = await userAPI.getOtherUsers(currentUser!.id);
+        if (response.success) {
+          setFriendSuggestList(response.allUserNotFriend);
         }
       } catch (error) {
         console.log(error);
