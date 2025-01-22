@@ -31,7 +31,7 @@ const CustomName = () => {
 
   const handleClickSubmitEdit = () => {
     socket?.emit("change_name", {
-      receiver_id: private_chat.current_conversation?.members?.user?.id,
+      receiver_id: private_chat.current_conversation?.members?.user_id,
       conversation_id: private_chat.current_conversation?.id,
       id: editName.id,
       sender_id: currentUser?.id,

@@ -93,3 +93,8 @@ export const setCursorToEnd = (
   selection?.removeAllRanges(); // Xóa tất cả các vùng chọn hiện tại
   selection?.addRange(range); // Thêm vùng chọn mới vào cuối
 };
+
+export function generateRandomFileName(extension = "png") {
+  const randomString = Math.random().toString(36).substring(2, 15); // Tạo chuỗi ngẫu nhiên
+  return `${randomString}.${extension}`; // Kết hợp với phần mở rộng
+}

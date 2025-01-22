@@ -1,9 +1,10 @@
 import { postType } from "@/redux/postSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../ui/button";
-import { showModal } from "@/redux/modalSlice";
+import { ModalState, showModal } from "@/redux/modalSlice";
 import CreatePost from "../ContentPost/CreatePost/CreatePost";
 import { addImageVideo, ImageVideoState } from "@/redux/imageVideoSlice";
+import { useEffect } from "react";
 
 const ImageVideoProfile = () => {
   const dispatch = useDispatch();
@@ -13,6 +14,21 @@ const ImageVideoProfile = () => {
   const { isAddImageVideo } = useSelector(
     (state: { imageVideo: ImageVideoState }) => state.imageVideo
   );
+  const { isShowModal } = useSelector(
+    (state: { modal: ModalState }) => state.modal
+  );
+
+  useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
 
   return (
     <div className="p-4 w-full bg-white rounded-md h-auto flex flex-col justify-center">

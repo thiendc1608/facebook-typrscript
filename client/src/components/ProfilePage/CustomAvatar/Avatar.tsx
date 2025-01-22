@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-
 import ReactCrop, {
   centerCrop,
   makeAspectCrop,
@@ -8,8 +7,6 @@ import ReactCrop, {
   convertToPixelCrop,
 } from "react-image-crop";
 import { canvasPreview } from "./canvasPreview";
-import { useDebounceEffect } from "./useDebounceEffect";
-
 import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
 import Swal from "sweetalert2";
@@ -17,7 +14,10 @@ import { showModal } from "@/redux/modalSlice";
 import { useDispatch, useSelector } from "react-redux";
 import "./CustomAvatar.css";
 import { setAvatar, UserState } from "@/redux/userSlice";
+import { useDebounceEffect } from "@/hooks/useDebounceEffect";
+import { generateRandomFileName } from "@/utils/helpers";
 import { userAPI } from "@/apis/userApi";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
 // This is to demonstate how to make and center a % aspect crop
@@ -42,12 +42,18 @@ function centerAspectCrop(
   );
 }
 
-const Avatar = () => {
+const Avatar = ({
+  setIsLoading,
+}: {
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>; // props function to set loading state
+}) => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
-  const [imgSrc, setImgSrc] = useState("");
+  const [searchParams] = useSearchParams();
+  const getUserId = searchParams.get("id")!;
+  const [imgSrc, setImgSrc] = useState(currentUser?.avatar || "");
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const blobUrlRef = useRef("");
@@ -113,23 +119,59 @@ const Avatar = () => {
       type: "image/png",
     });
 
-    if (blobUrlRef.current) {
-      URL.revokeObjectURL(blobUrlRef.current);
-    }
-    blobUrlRef.current = URL.createObjectURL(blob);
-    dispatch(setAvatar(blobUrlRef.current));
-    dispatch(
-      showModal({
-        isShowModal: false,
-        childrenModal: null,
-      })
-    );
-    const response = await userAPI.changeAvatar(
-      { avatar: blobUrlRef.current },
-      currentUser!.id
-    );
-    if (response) {
-      toast.success(response.message);
+    const randomFileName = generateRandomFileName("png");
+
+    // Tạo FormData để gửi file lên server
+    const formData = new FormData();
+    formData.append("file", blob, randomFileName);
+    formData.append("upload_preset", import.meta.env.VITE_UPLOAD_ASSETS_NAME);
+
+    try {
+      // Gửi ảnh lên Cloudinary
+      setIsLoading(true);
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${
+          import.meta.env.VITE_CLOUDINARY_NAME
+        }/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsLoading(false);
+        // Lấy URL ảnh từ Cloudinary
+        const imageUrl = data.secure_url; // URL ảnh đã được upload lên Cloudinary
+        const result = await userAPI.changeAvatar(
+          { avatar: imageUrl },
+          getUserId
+        );
+        if (result.success) {
+          toast.success(result.message);
+          dispatch(setAvatar(imageUrl));
+          dispatch(
+            showModal({
+              isShowModal: false,
+              childrenModal: null,
+            })
+          );
+        } else {
+          toast.error(result.message);
+        }
+        if (blobUrlRef.current) {
+          URL.revokeObjectURL(blobUrlRef.current);
+        }
+        blobUrlRef.current = imageUrl;
+      } else {
+        setIsLoading(false);
+        console.error("Error uploading to Cloudinary:", data.error.message);
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error("Error uploading avatar:", error);
     }
   }
 
@@ -213,6 +255,7 @@ const Avatar = () => {
             src={imgSrc}
             style={{ transform: `scale(${scale})` }}
             onLoad={onImageLoad}
+            crossOrigin="anonymous" // Cần thiết lập crossOrigin cho ảnh từ Cloudinary
           />
         </ReactCrop>
       )}
@@ -242,7 +285,7 @@ const Avatar = () => {
                   showCancelButton: true,
                   confirmButtonColor: "#3085d6",
                   cancelButtonColor: "#d33",
-                  confirmButtonText: "Bỏ",
+                  confirmButtonText: "Đồng ý",
                   cancelButtonText: "Huỷ",
                 }).then((result) => {
                   if (result.isConfirmed) {

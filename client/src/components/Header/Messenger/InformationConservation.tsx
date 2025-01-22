@@ -43,8 +43,8 @@ export interface changNickNameType {
   };
 }
 const InformationConservation = () => {
-  const { socket } = useContext(SocketContext)!;
   const dispatch = useDispatch();
+  const { socket } = useContext(SocketContext)!;
   const { private_chat, isShowContact } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );

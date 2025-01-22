@@ -74,7 +74,7 @@ const Modal = ({ children }: ModalProps) => {
           dispatch(setChangeEmojiMessage({ isChangeEmoji: false }));
         }
       }}
-      className="fixed inset-0 w-full h-full bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]"
+      className="fixed inset-0 w-screen h-full bg-[rgba(72,72,72,0.7)] flex items-center justify-center z-[100]"
     >
       {children}
       {isShowEmoji && <EmojiPickerComponent />}

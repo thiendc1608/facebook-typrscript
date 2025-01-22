@@ -14,5 +14,5 @@ export function useDebounceEffect(
     return () => {
       clearTimeout(timer);
     };
-  }, [...deps, waitTime]); // Ensure that the effect re-runs if either `deps` or `waitTime` changes
+  }, [...deps, waitTime, fn]); // Ensure that the effect re-runs if either `deps` or `waitTime` changes
 }

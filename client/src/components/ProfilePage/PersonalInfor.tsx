@@ -11,7 +11,7 @@ import { FaPlus } from "react-icons/fa6";
 import { MdModeEdit } from "react-icons/md";
 import { toast } from "react-toastify";
 import { conversationAPI } from "@/apis/conversationApi";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
 import {
   createSearchParams,
@@ -20,9 +20,10 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { profileUserItems } from "@/utils/path";
-import { showModal } from "@/redux/modalSlice";
+import { ModalState, showModal } from "@/redux/modalSlice";
 import EditAvatarModal from "./CustomAvatar/EditAvatarModal";
 import { cn } from "@/lib/utils";
+import EditPersonalPage from "./EditPersonalPage";
 
 const PersonalInfor = () => {
   const [searchParams] = useSearchParams();
@@ -39,6 +40,21 @@ const PersonalInfor = () => {
   const [showInstruct, setShowInstruct] = useState(false);
   const [selectItem, setSelectItem] = useState<string>("Bài viết");
 
+  const { isShowModal } = useSelector(
+    (state: { modal: ModalState }) => state.modal
+  );
+
+  useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
   const handleChangeCoverPicture = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -230,7 +246,17 @@ const PersonalInfor = () => {
                   <FaPlus />
                   <span className="text-white">Thêm vào tin</span>
                 </Button>
-                <Button className="bg-[#e2e5e9]">
+                <Button
+                  className="bg-[#e2e5e9] hover:bg-[#D6D9DD]"
+                  onClick={() => {
+                    dispatch(
+                      showModal({
+                        isShowModal: true,
+                        childrenModal: <EditPersonalPage />,
+                      })
+                    );
+                  }}
+                >
                   <MdModeEdit color="#080809" />
                   <span className="text-[#080809] text-[15px]">
                     Chỉnh sửa trang cá nhân

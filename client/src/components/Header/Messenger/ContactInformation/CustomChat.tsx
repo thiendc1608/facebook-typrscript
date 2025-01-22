@@ -2,9 +2,9 @@ import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { FaDotCircle } from "react-icons/fa";
 import { BiSolidLike } from "react-icons/bi";
 import { PiTextAaBold } from "react-icons/pi";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { showModal } from "@/redux/modalSlice";
+import { ModalState, showModal } from "@/redux/modalSlice";
 import CustomTheme from "./CustomTheme";
 import { messageSliceType, setChangeEmojiMessage } from "@/redux/messageSlice";
 import EmojiPickerComponent from "../EmojiPicker";
@@ -16,6 +16,21 @@ const CustomChat = () => {
   const { themeDefault, changeEmojiMessage } = useSelector(
     (state: { message: messageSliceType }) => state.message
   );
+  const { isShowModal } = useSelector(
+    (state: { modal: ModalState }) => state.modal
+  );
+
+  useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
 
   const handleCustomMessage = (title: string) => {
     if (title === "Đổi chủ đề") {

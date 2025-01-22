@@ -4,16 +4,32 @@ import { IoImagesOutline } from "react-icons/io5";
 import { useDispatch, useSelector } from "react-redux";
 // import ViewerPost from "./CreatePost/ViewerPost";
 import CreatePost from "./CreatePost/CreatePost";
-import { showModal } from "@/redux/modalSlice";
+import { ModalState, showModal } from "@/redux/modalSlice";
 import { addImageVideo, ImageVideoState } from "@/redux/imageVideoSlice";
 import { GiPositionMarker } from "react-icons/gi";
 import { setCheckIn } from "@/redux/postSlice";
+import { useEffect } from "react";
 
 const WriteStatus = () => {
   const dispatch = useDispatch();
   const { isAddImageVideo } = useSelector(
     (state: { imageVideo: ImageVideoState }) => state.imageVideo
   );
+  const { isShowModal } = useSelector(
+    (state: { modal: ModalState }) => state.modal
+  );
+
+  useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
 
   return (
     <>

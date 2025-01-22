@@ -43,6 +43,18 @@ const CreateStories = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
+
+  useEffect(() => {
     const handleClickOutTextArea = (e: Event) => {
       const clickTypeTextEle = document.getElementById("clickTypeText");
       if (e.target instanceof Node && !clickTypeTextEle?.contains(e.target))

@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
-import { showModal } from "@/redux/modalSlice";
+import { ModalState, showModal } from "@/redux/modalSlice";
 import { allMessageType, GroupedData } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ShowReactMessage from "../ShowReactMessage";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 interface ShowEmojiProps {
   el: allMessageType;
@@ -15,6 +15,21 @@ const ShowEmoji = ({ el, positionMes }: ShowEmojiProps) => {
     isHover: false,
     icon: "",
   });
+  const { isShowModal } = useSelector(
+    (state: { modal: ModalState }) => state.modal
+  );
+
+  useEffect(() => {
+    if (isShowModal) {
+      document.body.style.overflow = "hidden"; // Disable scroll
+    } else {
+      document.body.style.overflow = "auto"; // Re-enable scroll
+    }
+
+    return () => {
+      document.body.style.overflow = "auto"; // Cleanup
+    };
+  }, [isShowModal]);
 
   const handleMouseEnter = (icon: string) => {
     setIsHoverShowUserReact({
