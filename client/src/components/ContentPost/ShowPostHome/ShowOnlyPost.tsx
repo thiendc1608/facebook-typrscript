@@ -1,6 +1,5 @@
 import { FaEarthAmericas, FaLock } from "react-icons/fa6";
 import { BsThreeDots } from "react-icons/bs";
-import { IoMdClose } from "react-icons/io";
 import { GoComment } from "react-icons/go";
 import { PiShareFatLight } from "react-icons/pi";
 import { formatTimeAgo } from "@/utils/helpers";
@@ -10,25 +9,43 @@ import DisplayImages from "../CreatePost/DisplayImages";
 import { FaUserFriends } from "react-icons/fa";
 import ReactEmotionPost from "./ReactEmotionPost";
 import CommentPost from "./CommentPost";
-import { postType } from "@/redux/postSlice";
-import { useSelector } from "react-redux";
+import {
+  deletePost,
+  postType,
+  setInputTextPost,
+  setIsLoadingDeletePost,
+} from "@/redux/postSlice";
+import { useDispatch, useSelector } from "react-redux";
 import { commentType } from "@/redux/commentSlice";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "@/context/SocketContext";
 import { PostContext } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { postResponseType } from "@/types";
 import ShowEmotionCountPost from "./ShowEmotionCountPost";
+import { showModal } from "@/redux/modalSlice";
+import CreatePost from "../CreatePost/CreatePost";
+import { setPostImageList } from "@/redux/messageSlice";
+import { addImageVideo } from "@/redux/imageVideoSlice";
+import { UserState } from "@/redux/userSlice";
+import { postAPI } from "@/apis/postApi";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
 
 const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
   const location = useLocation();
+  const dispatch = useDispatch();
   const { socket } = useContext(SocketContext)!;
+  const { currentUser } = useSelector(
+    (state: { user: UserState }) => state.user
+  );
   const { tagUserList, locationTag } = useSelector(
     (state: { post: postType }) => state.post
   );
   const { listComment } = useSelector(
     (state: { comment: commentType }) => state.comment
   );
+  const [clickOptionPost, setClickOptionPost] = useState<string | null>(null);
   const {
     isHoverLike,
     postClickImage,
@@ -43,6 +60,74 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
     }
   }, [setPostClickImage, location]);
 
+  useEffect(() => {
+    const handleCloseOptionPost = (e: Event) => {
+      const closeEl = document.getElementById("option_post");
+      if (e.target instanceof Node && !closeEl?.contains(e.target))
+        setClickOptionPost(null);
+    };
+    document.addEventListener("click", handleCloseOptionPost);
+    return () => document.removeEventListener("click", handleCloseOptionPost);
+  }, [clickOptionPost]);
+
+  const handleEditPost = (
+    e: React.MouseEvent<HTMLLIElement>,
+    item: postResponseType
+  ) => {
+    e.stopPropagation();
+    setClickOptionPost(null);
+    dispatch(
+      showModal({
+        isShowModal: true,
+        childrenModal: <CreatePost isEditPost={true} post={item} />,
+      })
+    );
+    if (item.post_content) {
+      dispatch(setInputTextPost(item.post_content));
+    }
+    if (item.image_id) {
+      dispatch(setPostImageList(JSON.parse(item.imageInfo.message_image)));
+      dispatch(addImageVideo(true));
+    }
+  };
+
+  const handleDeletePost = async (
+    e: React.MouseEvent<HTMLLIElement>,
+    postId: string
+  ) => {
+    e.stopPropagation();
+    Swal.fire({
+      title: "Xoá bình luận?",
+      text: "Bạn có chắc chắn muốn xóa bài post này không?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      cancelButtonText: "Không",
+      confirmButtonText: "Xoá",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        setClickOptionPost(null);
+        try {
+          dispatch(setIsLoadingDeletePost(true));
+          const response = await postAPI.deletePost(postId);
+          if (response.success) {
+            dispatch(setIsLoadingDeletePost(false));
+            dispatch(deletePost(postId));
+            toast.success(response.message);
+          } else {
+            toast.error(response.message);
+          }
+        } catch (e) {
+          console.log(e);
+          dispatch(setIsLoadingDeletePost(false));
+        }
+      }
+    });
+  };
+
+  console.log(clickOptionPost);
+
   return (
     <div
       className={cn(
@@ -56,7 +141,7 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
             <Link
               to={{
                 pathname: "/profile",
-                search: `?id=${item?.id}`,
+                search: `?id=${item?.user_id}`,
               }}
               className="w-[40px] h-[40px] cursor-pointer"
             >
@@ -128,14 +213,56 @@ const ShowOnlyPost = ({ item }: { item: postResponseType }) => {
               </div>
             </div>
           </div>
-          <div className="flex items-center">
-            <div className="w-9 h-9 flex items-center justify-center cursor-pointer">
-              <BsThreeDots size={26} />
-            </div>
-            {!postClickImage && (
-              <div className="w-9 h-9 flex items-center justify-center cursor-pointer">
-                <IoMdClose size={26} />
-              </div>
+          <div
+            id="option_post"
+            className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-[#F2F2F2] cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Nếu click vào bài viết đang mở, đóng menu
+              if (clickOptionPost === item.id) {
+                setClickOptionPost(null); // Đóng menu
+              } else {
+                // Mở menu cho bài viết khác
+                setClickOptionPost(item.id);
+              }
+            }}
+          >
+            <BsThreeDots size={26} />
+            {item.id === clickOptionPost && (
+              <ul className="absolute top-full right-0 bg-white w-[250px] h-auto rounded-lg p-2 shadow-default divide-y">
+                <li className="flex flex-col p-2 h-auto w-full hover:bg-[#F2F2F2] cursor-pointer">
+                  <span className="text-[15px] text-[#080809]">
+                    Lưu bài viết
+                  </span>
+                  <span className="text-[12px] text-[#65686c]">
+                    Thêm vào danh sách mục đã lưu
+                  </span>
+                </li>
+                {item.user_id === currentUser?.id && (
+                  <>
+                    <li
+                      className="p-2 h-9 w-full hover:bg-[#F2F2F2] cursor-pointer"
+                      onClick={(e: React.MouseEvent<HTMLLIElement>) =>
+                        handleEditPost(e, item)
+                      }
+                    >
+                      <span className="text-[15px] text-[#080809]">
+                        Chỉnh sửa bài viết
+                      </span>
+                    </li>
+                    <li
+                      className="p-2 h-9 w-full hover:bg-[#F2F2F2] cursor-pointer"
+                      onClick={(e: React.MouseEvent<HTMLLIElement>) =>
+                        handleDeletePost(e, item.id)
+                      }
+                    >
+                      <span className="text-[15px] text-[#080809]">
+                        Xoá bài viết
+                      </span>
+                    </li>
+                  </>
+                )}
+              </ul>
             )}
           </div>
         </div>

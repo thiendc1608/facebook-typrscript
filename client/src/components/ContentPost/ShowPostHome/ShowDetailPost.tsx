@@ -23,6 +23,8 @@ const ShowDetailPost = () => {
     }
 
     const handleUpdateReactPost = (data: { data: emotionCommentType }) => {
+      console.log(data);
+
       dispatch(
         updateReactEmotionPost({
           post_id: data.data.post_id,

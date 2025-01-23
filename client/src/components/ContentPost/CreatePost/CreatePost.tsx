@@ -16,6 +16,7 @@ import {
   setCheckIn,
   setListPost,
   setSelectObjectPost,
+  updatePost,
 } from "@/redux/postSlice";
 import { objectPost } from "@/utils/path";
 import { UserState } from "@/redux/userSlice";
@@ -24,8 +25,13 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { Link } from "react-router-dom";
 import { messageSliceType, setSelectedImageList } from "@/redux/messageSlice";
 import { addImageVideo, ImageVideoState } from "@/redux/imageVideoSlice";
+import { postResponseType } from "@/types";
 
-const CreatePost = () => {
+interface CreatePostProps {
+  isEditPost?: boolean;
+  post?: postResponseType;
+}
+const CreatePost = ({ isEditPost, post }: CreatePostProps) => {
   const dispatch = useDispatch();
   const [isSelectMode, setIsSelectMode] = useState<boolean>(false);
   const [colorBackground, setColorBackground] = useState({
@@ -70,15 +76,9 @@ const CreatePost = () => {
           handleCloseSelectObject
         );
     }
-  }, [dispatch]);
+  }, [tagUserList, dispatch]);
 
   const handlePostArticle = async () => {
-    const newMessage = [];
-    if (selectImageList) {
-      if (selectImageList.length > 0) {
-        newMessage.push(["imageInfo", { list_image: selectImageList }]);
-      }
-    }
     const postArticle = {
       user_id: currentUser?.id,
       post_content: textPost,
@@ -88,13 +88,25 @@ const CreatePost = () => {
     };
     setIsLoading(true);
     try {
-      const response = await postAPI.createPost(postArticle);
-      if (response.success) {
-        dispatch(setListPost(response.post));
-        dispatch(resetTextPost());
-        dispatch(addEmojiToPost(""));
-        dispatch(setSelectedImageList([]));
-        dispatch(showModal({ isShowModal: false, childrenModal: null }));
+      if (isEditPost) {
+        const response = await postAPI.updatePost({
+          ...postArticle,
+          post_id: post!.id,
+        });
+        if (response.success) {
+          dispatch(updatePost(response.post));
+        }
+      } else {
+        const response = await postAPI.createPost(postArticle);
+        if (response.success) {
+          dispatch(setListPost(response.post));
+        }
+      }
+      dispatch(resetTextPost());
+      dispatch(addEmojiToPost(""));
+      dispatch(setSelectedImageList([]));
+      dispatch(showModal({ isShowModal: false, childrenModal: null }));
+      if (isAddImageVideo) {
         dispatch(addImageVideo(!isAddImageVideo));
       }
     } catch (error) {

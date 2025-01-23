@@ -189,15 +189,17 @@ const changeCoverPicture = asyncHandler(async (req, res) => {
       message: "Error when updating user cover picture",
     });
   }
-  const changeCoverPicture = await db.User.findOne({
+  const coverPictureUpdate = await db.User.findOne({
     where: {
       id: userId,
     },
+    attributes: ["cover_picture", "cover_picture_pos"],
     raw: true,
   });
   return res.status(200).json({
     success: true,
     message: "Change cover picture successfully",
+    coverPictureUpdate,
   });
 });
 

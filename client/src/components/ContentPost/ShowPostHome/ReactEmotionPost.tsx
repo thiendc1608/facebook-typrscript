@@ -21,9 +21,7 @@ const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
   const { emojiList } = useSelector(
     (state: { conversation: chattingUserType }) => state.conversation
   );
-  const { listAllPost } = useSelector(
-    (state: { post: postType }) => state.post
-  );
+  const { allPost } = useSelector((state: { post: postType }) => state.post);
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
@@ -32,7 +30,8 @@ const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
     useContext(PostContext);
 
   const detailPost =
-    listAllPost && listAllPost.find((post) => post.id === postId);
+    allPost.listAllPost &&
+    allPost.listAllPost.find((post) => post.id === postId);
 
   useEffect(() => {
     socket?.off("remove_react");
@@ -98,6 +97,7 @@ const ReactEmotionPost = ({ socket, postId }: ReactEmotionPostProps) => {
           post_id: postId,
           emotion_id: emotionId,
         };
+
         socket?.emit("react_emotion_post", dataReactEmotionPost);
       }
     } catch (error) {

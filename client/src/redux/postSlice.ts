@@ -25,8 +25,13 @@ export interface postType {
     name: string;
     icon: IconType;
   };
-  listAllPost: postResponseType[];
-  isLoadingPost: boolean;
+  allPost: {
+    listAllPost: postResponseType[];
+    isLoadingPost: boolean;
+  };
+  deletePost: {
+    isLoadingDeletePost: boolean;
+  };
   endOfDataPost: boolean;
   listUserPost: postResponseType[];
 }
@@ -48,8 +53,13 @@ const postSlice = createSlice({
       name: "Public",
       icon: FaEarthAmericas,
     },
-    listAllPost: [],
-    isLoadingPost: false,
+    allPost: {
+      listAllPost: [],
+      isLoadingPost: false,
+    },
+    deletePost: {
+      isLoadingDeletePost: false,
+    },
     endOfDataPost: false,
     listUserPost: [],
   } as postType,
@@ -89,12 +99,36 @@ const postSlice = createSlice({
     },
 
     setListPost: (state, action) => {
-      state.listAllPost.unshift(action.payload);
+      state.allPost.listAllPost.unshift(action.payload);
+    },
+
+    updatePost: (state, action) => {
+      const index = state.allPost.listAllPost.findIndex(
+        (post) => post.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.allPost.listAllPost.splice(index, 1, action.payload);
+      }
+    },
+
+    deletePost: (state, action) => {
+      const index = state.allPost.listAllPost.findIndex(
+        (post) => post.id === action.payload
+      );
+      if (index !== -1) {
+        state.allPost.listAllPost.splice(index, 1);
+      }
+    },
+
+    setIsLoadingDeletePost: (state, action) => {
+      state.deletePost.isLoadingDeletePost = action.payload;
     },
 
     setReactEmotionPost: (state, action) => {
       const emotionName = action.payload.emotion.emotion_name;
-      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
+      const listPostCopy = JSON.parse(
+        JSON.stringify(state.allPost.listAllPost)
+      );
 
       // Tìm bai post có id tương ứng
       const findPost = listPostCopy.find(
@@ -125,12 +159,14 @@ const postSlice = createSlice({
         // Thêm user vào listUser của emotion
         existingEmotion[emotionName].listUser.push(action.payload.userInfo);
       }
-      state.listAllPost = listPostCopy;
+      state.allPost.listAllPost = listPostCopy;
     },
 
     updateReactEmotionPost: (state, action) => {
       const emotionName = action.payload.emotion.emotion_name;
-      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
+      const listPostCopy = JSON.parse(
+        JSON.stringify(state.allPost.listAllPost)
+      );
 
       // Tìm bài viết với post_id tương ứng
       const findPost = listPostCopy.find(
@@ -203,11 +239,13 @@ const postSlice = createSlice({
       findPost.listReactEmotionPost = findPost.listReactEmotionPost.filter(
         (post) => Object.keys(post).length > 0
       );
-      state.listAllPost = listPostCopy;
+      state.allPost.listAllPost = listPostCopy;
     },
 
     removeReactEmotionPost: (state, action) => {
-      const listPostCopy = JSON.parse(JSON.stringify(state.listAllPost));
+      const listPostCopy = JSON.parse(
+        JSON.stringify(state.allPost.listAllPost)
+      );
       const filterPost = listPostCopy.find(
         (post: postResponseType) => post.id === action.payload.post_id
       ) as postResponseType;
@@ -234,7 +272,7 @@ const postSlice = createSlice({
               Object.keys(emotion)[0] !== action.payload.nameEmotion
           );
       }
-      state.listAllPost = listPostCopy;
+      state.allPost.listAllPost = listPostCopy;
     },
 
     setListUserPost: (state, action) => {
@@ -244,14 +282,17 @@ const postSlice = createSlice({
 
   extraReducers: (builder) => {
     builder.addCase(getAllPost.pending, (state) => {
-      state.isLoadingPost = true;
+      state.allPost.isLoadingPost = true;
     });
     builder.addCase(getAllPost.fulfilled, (state, action) => {
-      state.isLoadingPost = false;
+      state.allPost.isLoadingPost = false;
       if (action.payload.allPosts.length < 3) {
         state.endOfDataPost = true; // Đánh dấu đã hết dữ liệu nếu trả về ít hơn `limit`
       }
-      state.listAllPost = [...state.listAllPost, ...action.payload.allPosts];
+      state.allPost.listAllPost = [
+        ...state.allPost.listAllPost,
+        ...action.payload.allPosts,
+      ];
     });
   },
 });
@@ -270,6 +311,9 @@ export const {
   updateReactEmotionPost,
   removeReactEmotionPost,
   setListUserPost,
+  updatePost,
+  deletePost,
+  setIsLoadingDeletePost,
 } = postSlice.actions;
 const postReducer = postSlice.reducer;
 export default postReducer;

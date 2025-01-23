@@ -76,9 +76,14 @@ const messageSlice = createSlice({
     },
 
     setPostImageList: (state, action) => {
-      const listImageSelect: string[] = action.payload.map(
-        (item: imageCloudinaryType) => item.path
-      );
+      let listImageSelect: string[] = [];
+      if (typeof action.payload[0] === "string") {
+        listImageSelect = action.payload;
+      } else {
+        listImageSelect = action.payload.map(
+          (item: imageCloudinaryType) => item.path
+        );
+      }
       state.selectImageList = [...state.selectImageList, ...listImageSelect];
     },
 

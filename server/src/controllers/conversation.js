@@ -99,71 +99,75 @@ const deleteConversation = asyncHandler(async (req, res) => {
 
 const getAllMessage = asyncHandler(async (req, res) => {
   //Lấy tất cả các tin nhắn
-  const messages = await db.Message.findAll({
-    order: [["createdAt", "ASC"]],
-    include: [
-      {
-        model: db.Image,
-        attributes: ["message_image"],
-        as: "imageInfo",
-      },
-      {
-        model: db.User,
-        attributes: ["firstName", "lastName", "avatar"],
-        as: "senderInfo",
-      },
-      {
-        model: db.MessageReact,
-        attributes: ["message_id", "emoji_dropper_id", "emoji_icon"],
-        as: "messageReact",
-        required: false,
-        include: [
-          {
-            model: db.User,
-            attributes: ["firstName", "lastName", "avatar"],
-            as: "userReact",
-          },
-        ],
-      },
-      {
-        model: db.Message,
-        as: "info_reply", // Alias của bảng Message trong include
-        attributes: ["sender_id", "message"],
-        include: [
-          {
-            model: db.User,
-            as: "senderInfo", // Alias của bảng User
-            attributes: ["firstName", "lastName"],
-          },
-        ],
-      },
-    ],
-    nest: true,
-  });
+  try {
+    const messages = await db.Message.findAll({
+      order: [["createdAt", "ASC"]],
+      include: [
+        {
+          model: db.Image,
+          attributes: ["message_image"],
+          as: "imageInfo",
+        },
+        {
+          model: db.User,
+          attributes: ["firstName", "lastName", "avatar"],
+          as: "senderInfo",
+        },
+        {
+          model: db.MessageReact,
+          attributes: ["message_id", "emoji_dropper_id", "emoji_icon"],
+          as: "messageReact",
+          required: false,
+          include: [
+            {
+              model: db.User,
+              attributes: ["firstName", "lastName", "avatar"],
+              as: "userReact",
+            },
+          ],
+        },
+        {
+          model: db.Message,
+          as: "info_reply", // Alias của bảng Message trong include
+          attributes: ["sender_id", "message"],
+          include: [
+            {
+              model: db.User,
+              as: "senderInfo", // Alias của bảng User
+              attributes: ["firstName", "lastName"],
+            },
+          ],
+        },
+      ],
+      nest: true,
+    });
+  } catch (error) {
+    return res.status(200).json({
+      success: true,
+      message: "Not found message",
+      messages: [],
+      countReactMes: [],
+    });
+  }
 
   // Kiểm tra messageReact của từng tin nhắn, nếu không có thì ghi đè thành mảng rỗng
-  messages.forEach((message) => {
-    if (!message.messageReact) {
-      message.messageReact = []; // Ghi đè null thành mảng rỗng nếu không có dữ liệu messageReact
-    }
-  });
+  messages &&
+    messages.forEach((message) => {
+      if (!message.messageReact) {
+        message.messageReact = []; // Ghi đè null thành mảng rỗng nếu không có dữ liệu messageReact
+      }
+    });
 
   // Lấy tất cả các phản ứng (reactions) của tin nhắn
-  const countReactMes = await db.MessageReact.findAll({
-    attributes: [
-      "message_id",
-      "emoji_icon",
-      [Sequelize.fn("COUNT", Sequelize.col("emoji_icon")), "count"],
-    ],
-    group: ["message_id", "emoji_icon"], // Nhóm theo message_id và emoji_icon
-    raw: true,
-  });
-
-  if (!messages) {
-    return res.status(404).json({
-      success: false,
-      message: "Messages not found",
-      messages,
+  if (messages) {
+    const countReactMes = await db.MessageReact.findAll({
+      attributes: [
+        "message_id",
+        "emoji_icon",
+        [Sequelize.fn("COUNT", Sequelize.col("emoji_icon")), "count"],
+      ],
+      group: ["message_id", "emoji_icon"], // Nhóm theo message_id và emoji_icon
+      raw: true,
     });
   }
 

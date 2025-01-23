@@ -307,6 +307,8 @@ export interface postDataType {
   user_id?: string;
   post_content: string;
   post_background: string;
+  post_object: string;
+  list_image: string[] | null;
 }
 
 export interface postResponseType {

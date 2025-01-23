@@ -1,10 +1,11 @@
 // import { userAPI } from "@/apis/userApi";
 import { userAPI } from "@/apis/userApi";
-import { imageCloudinaryType, UserType } from "@/types";
+import { UserType } from "@/types";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 // import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 export interface UserState {
+  tabProfile: string;
   isConfirmCoverPicture?: boolean;
   isLoading: "loading" | "idle" | "failed";
   isLogin: boolean;
@@ -17,6 +18,7 @@ export interface UserState {
 const userSlice = createSlice({
   name: "user",
   initialState: {
+    tabProfile: "Bài viết",
     isConfirmCoverPicture: false,
     isLoading: "idle",
     isLogin: false,
@@ -38,20 +40,21 @@ const userSlice = createSlice({
       state.currentUser = action.payload.user;
     },
 
+    setTabProfile: (state, action) => {
+      state.tabProfile = action.payload;
+    },
+
     setCoverPictureUser: (state, action) => {
-      const listImageSelect: string = (
-        action.payload.image_name as imageCloudinaryType[]
-      )[0].path;
       state.currentUser = {
         ...state.currentUser,
-        cover_picture: listImageSelect,
+        cover_picture: action.payload,
       } as UserType;
     },
 
     setPosCoverPicture: (state, action) => {
       state.currentUser = {
         ...state.currentUser,
-        cover_picture_pos: action.payload.image_position,
+        cover_picture_pos: action.payload,
       } as UserType;
     },
 
@@ -138,6 +141,7 @@ export const {
   setEmail,
   setDOB,
   setGender,
+  setTabProfile,
 } = userSlice.actions;
 const userReducer = userSlice.reducer;
 export default userReducer;

@@ -55,7 +55,11 @@ export const userAPI = {
       coverPicturePos: number;
     },
     userId: string
-  ): Promise<CustomResponse> => {
+  ): Promise<
+    CustomResponse & {
+      coverPictureUpdate: { cover_picture: string; cover_picture_pos: number };
+    }
+  > => {
     const url: string = `user/change-cover-picture/${userId}`;
     return axiosClient.put(url, data);
   },

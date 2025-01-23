@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   postType,
   setReactEmotionPost,
@@ -11,7 +11,6 @@ import ShowPostSkeleton from "@/components/Skeleton/ShowPostSkeleton";
 import { useAppDispatch } from "@/redux/store";
 import { getAllPost } from "@/redux/postSlice";
 import ShowOnlyPost from "./ShowOnlyPost";
-import { v4 as uuidv4 } from "uuid";
 import { emotionCommentType } from "@/apis/commentApi";
 
 const ShowPostHome = () => {
@@ -19,11 +18,20 @@ const ShowPostHome = () => {
   const dispatchGetData = useAppDispatch();
   const { socket } = useContext(SocketContext)!;
   const [start, setStart] = useState(0); // Điểm bắt đầu
+  const isFetchingRef = useRef(false);
   const limit = 3; // Mỗi lần lấy 3 bài đăng
 
-  const { listAllPost, isLoadingPost, endOfDataPost } = useSelector(
+  const { allPost, endOfDataPost } = useSelector(
     (state: { post: postType }) => state.post
   );
+
+  // Initial fetch on mount
+  useEffect(() => {
+    if (allPost.listAllPost.length === 0) {
+      dispatchGetData(getAllPost({ offset: 0, limit }));
+      dispatchGetData(getAllComment());
+    }
+  }, [dispatchGetData, allPost.listAllPost.length]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,7 +39,12 @@ const ShowPostHome = () => {
       const bottomPosition = document.documentElement.scrollHeight; // Vị trí cuối trang
 
       // Nếu cuộn gần đến cuối trang, gọi loadPosts
-      if (scrollPosition >= bottomPosition - 100 && !endOfDataPost) {
+      if (
+        scrollPosition >= bottomPosition - 100 &&
+        !isFetchingRef.current &&
+        !endOfDataPost
+      ) {
+        isFetchingRef.current = true; // Đặt cờ isFetchingRef
         setStart((prev) => prev + 1);
       }
     };
@@ -46,12 +59,15 @@ const ShowPostHome = () => {
   }, [endOfDataPost]);
 
   useEffect(() => {
-    // Gọi action getAllPost khi `start` thay đổi
-    if (!endOfDataPost) {
-      dispatchGetData(getAllPost({ offset: start * limit, limit }));
-      dispatchGetData(getAllComment());
-    }
-  }, [dispatchGetData, start, endOfDataPost]);
+    const fetchPostsAndComments = async () => {
+      if (start > 0 || isFetchingRef.current) {
+        await dispatchGetData(getAllPost({ offset: start * limit, limit }));
+        await dispatchGetData(getAllComment());
+        isFetchingRef.current = false;
+      }
+    };
+    fetchPostsAndComments();
+  }, [dispatchGetData, start]);
 
   useEffect(() => {
     if (!socket) {
@@ -92,15 +108,15 @@ const ShowPostHome = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      {isLoadingPost && (
+      {allPost.isLoadingPost && (
         <div className="flex flex-col gap-3">
           <ShowPostSkeleton count_post={3} />
         </div>
       )}
-      {listAllPost &&
-        listAllPost.length > 0 &&
-        listAllPost.map((item) => (
-          <div key={uuidv4()}>
+      {allPost.listAllPost &&
+        allPost.listAllPost.length > 0 &&
+        allPost.listAllPost.map((item) => (
+          <div key={item.id}>
             <ShowOnlyPost item={item} />
           </div>
         ))}

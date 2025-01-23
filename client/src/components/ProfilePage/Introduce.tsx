@@ -4,11 +4,14 @@ import { IoEarth } from "react-icons/io5";
 import { cn } from "@/lib/utils";
 import { userAPI } from "@/apis/userApi";
 import { useDispatch, useSelector } from "react-redux";
-import { setBio, UserState } from "@/redux/userSlice";
+import { setBio, setTabProfile, UserState } from "@/redux/userSlice";
 import { toast } from "react-toastify";
 import useEditProfile from "@/hooks/useEditProfile";
+import { useNavigate } from "react-router-dom";
+import { path } from "@/utils/path";
 
 const Introduce = () => {
+  const navigate = useNavigate();
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
@@ -32,7 +35,7 @@ const Introduce = () => {
   };
 
   useEditProfile({
-    valueEdit: currentUser!.bio,
+    valueEdit: currentUser?.bio ?? "",
     isExecuteEdit: isAddBio,
     textAreaRef: bioRef,
   });
@@ -129,7 +132,13 @@ const Introduce = () => {
       <div className="p-4 bg-white rounded-lg">
         <div className="flex items-center justify-between">
           <span className="text-[#080809] text-[20px] font-semibold">Ảnh</span>
-          <button className="px-3 py-2 text-[15px] rounded-lg bg-white hover:bg-[#d6d9dd] text-[#005FC6]">
+          <button
+            className="px-3 py-2 text-[15px] rounded-lg bg-white hover:bg-[#d6d9dd] text-[#005FC6]"
+            onClick={() => {
+              dispatch(setTabProfile("Ảnh/Video"));
+              navigate(`/${path.PROFILE}?id=${currentUser!.id}&sk=photos`);
+            }}
+          >
             Xem tất cả ảnh
           </button>
         </div>
@@ -139,7 +148,13 @@ const Introduce = () => {
           <span className="text-[#080809] text-[20px] font-semibold">
             Bạn bè
           </span>
-          <button className="px-3 py-2 text-[15px] rounded-lg bg-white hover:bg-[#d6d9dd] text-[#005FC6]">
+          <button
+            className="px-3 py-2 text-[15px] rounded-lg bg-white hover:bg-[#d6d9dd] text-[#005FC6]"
+            onClick={() => {
+              dispatch(setTabProfile("Bạn bè"));
+              navigate(`/${path.PROFILE}?id=${currentUser!.id}&sk=friends`);
+            }}
+          >
             Xem tất cả bạn bè
           </button>
         </div>

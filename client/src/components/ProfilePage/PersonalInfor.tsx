@@ -3,6 +3,7 @@ import {
   setConfirmCoverPicture,
   setCoverPictureUser,
   setPosCoverPicture,
+  setTabProfile,
   UserState,
 } from "@/redux/userSlice";
 import { FaCamera } from "react-icons/fa";
@@ -30,7 +31,7 @@ const PersonalInfor = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { currentUser } = useSelector(
+  const { currentUser, tabProfile } = useSelector(
     (state: { user: UserState }) => state.user
   );
   const [isLoading, setLoading] = useState(false);
@@ -38,8 +39,6 @@ const PersonalInfor = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [topOffset, setTopOffset] = useState(0);
   const [showInstruct, setShowInstruct] = useState(false);
-  const [selectItem, setSelectItem] = useState<string>("Bài viết");
-
   const { isShowModal } = useSelector(
     (state: { modal: ModalState }) => state.modal
   );
@@ -55,6 +54,7 @@ const PersonalInfor = () => {
       document.body.style.overflow = "auto"; // Cleanup
     };
   }, [isShowModal]);
+
   const handleChangeCoverPicture = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -73,11 +73,7 @@ const PersonalInfor = () => {
           setLoading(false);
           setShowInstruct(true);
           dispatch(setConfirmCoverPicture(true));
-          dispatch(
-            setCoverPictureUser({
-              image_name: response.imageVideos,
-            })
-          );
+          dispatch(setCoverPictureUser(response.imageVideos[0].path));
         } else {
           toast.error(response.message);
         }
@@ -127,7 +123,7 @@ const PersonalInfor = () => {
   };
 
   const handleClickItems = (item: string) => {
-    setSelectItem(item);
+    dispatch(setTabProfile(item));
     const queries = Object.fromEntries(searchParams);
     let itemName = "";
     switch (item) {
@@ -187,31 +183,29 @@ const PersonalInfor = () => {
           </div>
         </div>
       ) : (
-        <>
-          <div
-            ref={containerRef}
-            className="relative h-[350px] mx-auto w-[70%] rounded-lg cursor-pointer overflow-hidden shadow-default"
-          >
-            {showInstruct && (
-              <div className="py-2 px-3 bg-[#1c1c1d99] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-10 text-white text-[15px] rounded-lg">
-                Dùng phím mũi tên lên, xuống để đặt lại hình ảnh
-              </div>
-            )}
-            <img
-              src={currentUser!.cover_picture}
-              loading="lazy"
-              alt="cover_picture"
-              tabIndex={0}
-              className="w-full object-cover"
-              ref={pictureRef}
-              style={{
-                position: "absolute",
-                top: `${currentUser?.cover_picture_pos}px`,
-              }}
-              onKeyDown={(e) => handleKeyDown(e)}
-            />
-          </div>
-        </>
+        <div
+          ref={containerRef}
+          className="relative h-[350px] mx-auto w-[70%] rounded-lg cursor-pointer overflow-hidden shadow-default"
+        >
+          {showInstruct && (
+            <div className="py-2 px-3 bg-[#1c1c1d99] absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] z-10 text-white text-[15px] rounded-lg">
+              Dùng phím mũi tên lên, xuống để đặt lại hình ảnh
+            </div>
+          )}
+          <img
+            src={currentUser!.cover_picture}
+            loading="lazy"
+            alt="cover_picture"
+            tabIndex={0}
+            className="w-full object-contain"
+            ref={pictureRef}
+            style={{
+              position: "absolute",
+              top: `${currentUser?.cover_picture_pos}px`,
+            }}
+            onKeyDown={(e) => handleKeyDown(e)}
+          />
+        </div>
       )}
 
       <div className="h-[144px]">
@@ -276,7 +270,7 @@ const PersonalInfor = () => {
                 key={item.id}
                 className={cn(
                   "py-[3px] h-full w-auto",
-                  selectItem === item.nameItems &&
+                  tabProfile === item.nameItems &&
                     "border-b-[3px] border-solid border-[#0861F2]"
                 )}
                 onClick={() => handleClickItems(item.nameItems)}
@@ -284,7 +278,7 @@ const PersonalInfor = () => {
                 <span
                   className={cn(
                     "px-4 text-[16px] h-full text-[#65686c] flex items-center cursor-pointer hover:bg-[#F2F2F2] rounded-md",
-                    selectItem === item.nameItems && "text-[#0861F2]"
+                    tabProfile === item.nameItems && "text-[#0861F2]"
                   )}
                 >
                   {item.nameItems}

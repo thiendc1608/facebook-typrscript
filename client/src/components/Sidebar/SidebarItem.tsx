@@ -36,7 +36,7 @@ const SidebarItem = ({ image, name, url }: SidebarItemProps) => {
           dispatch(setCurrentConversation(private_chat?.conversations[0]));
           dispatch(selectRoom({ room_id: private_chat?.conversations[0].id }));
         }}
-        className="p-2 h-[52px] flex items-center gap-[14px] hover:bg-[#E4E6E9] hover:rounded-lg"
+        className="p-2 w-full h-[52px] flex items-center gap-[14px] hover:bg-[#E4E6E9] hover:rounded-lg"
       >
         <img src={image} alt={name} className="w-8 h-8 rounded-full" />
         <span className="py-3 text-[#050505] text-[15px] font-medium">

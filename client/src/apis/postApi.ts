@@ -15,6 +15,18 @@ export const postAPI = {
     return axiosClient.post(url, data);
   },
 
+  updatePost: (
+    data: postDataType & { post_id: string }
+  ): Promise<CustomResponse & { post: postResponseType }> => {
+    const url = "/post/update-post";
+    return axiosClient.put(url, data);
+  },
+
+  deletePost: (post_id: string): Promise<CustomResponse> => {
+    const url = "/post/delete-post/" + post_id;
+    return axiosClient.delete(url);
+  },
+
   getAllPost: ({
     limit,
     offset,

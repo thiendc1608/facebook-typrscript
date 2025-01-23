@@ -48,7 +48,7 @@ const Sidebar = () => {
                 </Link>
               </li>
               {sideBar.map((item) => (
-                <li key={item.id}>
+                <li key={item.id} className="h-[52px]">
                   <SidebarItem {...item} />
                 </li>
               ))}

@@ -40,6 +40,9 @@ const Home = () => {
   }, [currentUser, socket]);
 
   useEffect(() => {
+    socket?.off("get_friend_request");
+    socket?.off("friendRequestConfirmed");
+
     socket?.on("get_friend_request", (data) => {
       dispatch(
         setNotifications({
@@ -49,6 +52,7 @@ const Home = () => {
         })
       );
     });
+
     socket?.on("friendRequestConfirmed", (data) => {
       dispatch(
         setNotifications({
@@ -58,6 +62,7 @@ const Home = () => {
         })
       );
     });
+
     return () => {
       socket?.off("get_friend_request");
       socket?.off("friendRequestConfirmed");
@@ -72,7 +77,7 @@ const Home = () => {
     };
     document.addEventListener("click", handleCloseNotification);
     return () => document.removeEventListener("click", handleCloseNotification);
-  }, [dispatch]);
+  }, [isOpenNotifications, dispatch]);
 
   useEffect(() => {
     dispatch(setConfirmCoverPicture(false));
@@ -95,7 +100,7 @@ const Home = () => {
 
   useEffect(() => {
     const fetchEmoji = async () => {
-      const response = await emojiAPI.getEmoji();
+      const response = await emojiAPI.getEmoji(); // luu vao redis
       if (response.success) {
         dispatch(setEmojiList(response.emojiList));
       }

@@ -525,7 +525,6 @@ io.on("connection", (socket) => {
 
   socket.on("react_emotion_post", async (data) => {
     const { user_id, post_id, emotion_id, nameEmotion } = data;
-
     try {
       const findReactEmotion = await db.PostReaction.findOne({
         where: { user_id, post_id },

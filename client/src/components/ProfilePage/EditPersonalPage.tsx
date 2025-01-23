@@ -1,5 +1,5 @@
 import { showModal } from "@/redux/modalSlice";
-import { UserState } from "@/redux/userSlice";
+import { setBio, UserState } from "@/redux/userSlice";
 import { IoMdClose } from "react-icons/io";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../ui/button";
@@ -7,12 +7,62 @@ import { FaHouseUser } from "react-icons/fa";
 import { PhoneCall } from "lucide-react";
 import { MdEmail } from "react-icons/md";
 import { LuCake, LuUsers } from "react-icons/lu";
+import EditAvatarModal from "./CustomAvatar/EditAvatarModal";
+import EditCoverPicture from "./EditCoverPicture";
+import { useRef, useState } from "react";
+import { IoEarth } from "react-icons/io5";
+import useEditProfile from "@/hooks/useEditProfile";
+import { toast } from "react-toastify";
+import { userAPI } from "@/apis/userApi";
+import { useNavigate } from "react-router-dom";
+import { path } from "@/utils/path";
 
 const EditPersonalPage = () => {
   const dispatch = useDispatch();
   const { currentUser } = useSelector(
     (state: { user: UserState }) => state.user
   );
+  const [isAddBio, setIsAddBio] = useState<boolean>(false);
+  const [contentBio, setContentBio] = useState<string>(currentUser?.bio ?? "");
+  const bioRef = useRef<HTMLTextAreaElement>(null);
+  const navigate = useNavigate();
+
+  const handleSaveBio = async () => {
+    setIsAddBio(false);
+    const response = await userAPI.changeBio(
+      { bio: contentBio },
+      currentUser!.id
+    );
+    if (response.success) {
+      toast.success(response.message);
+      dispatch(setBio({ bio: contentBio }));
+    } else {
+      toast.error(response.message);
+    }
+  };
+
+  useEditProfile({
+    valueEdit: currentUser!.bio,
+    isExecuteEdit: isAddBio,
+    textAreaRef: bioRef,
+  });
+
+  const handleEditBio = () => {
+    setIsAddBio(true);
+  };
+
+  const handleChangeCoverPicture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (file) {
+      dispatch(
+        showModal({
+          isShowModal: true,
+          childrenModal: <EditCoverPicture coverPicture={file} />,
+        })
+      );
+    }
+  };
 
   return (
     <div
@@ -58,6 +108,15 @@ const EditPersonalPage = () => {
             <Button
               variant="ghost"
               className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(
+                  showModal({
+                    isShowModal: true,
+                    childrenModal: <EditAvatarModal />,
+                  })
+                );
+              }}
             >
               Chỉnh sửa
             </Button>
@@ -73,22 +132,34 @@ const EditPersonalPage = () => {
 
         {/* Ảnh bìa */}
         <div className="flex flex-col gap-2 mt-4">
-          <div className="flex items-center justify-between">
+          <div className="relative flex items-center justify-between">
             <div className="w-full text-[#080809] text-[20px] mx-[10px]">
               Ảnh bìa
             </div>
-            <Button
-              variant="ghost"
-              className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
-            >
-              Thêm
-            </Button>
+
+            <div>
+              <input
+                type="file"
+                id="cover_photo"
+                hidden
+                accept="image/*"
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  handleChangeCoverPicture(e);
+                }}
+              />
+              <label
+                htmlFor="cover_photo"
+                className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC] flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer"
+              >
+                <span className="text-[15px]">Thêm</span>
+              </label>
+            </div>
           </div>
-          <div className="p-[6px] w-[500px] h-[185px] self-center">
+          <div className="relative p-[6px] w-[500px] h-[185px] self-center">
             <img
               src={currentUser!.cover_picture}
               alt="cover-picture"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
           </div>
         </div>
@@ -99,18 +170,91 @@ const EditPersonalPage = () => {
             <div className="w-full text-[#080809] text-[20px] mx-[10px]">
               Tiểu sử
             </div>
-            <Button
-              variant="ghost"
-              className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
-            >
-              Thêm
-            </Button>
+            {currentUser?.bio.length === 0 ? (
+              <Button
+                variant="ghost"
+                className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
+                onClick={handleEditBio}
+              >
+                Thêm
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
+                onClick={handleEditBio}
+              >
+                Chỉnh sửa
+              </Button>
+            )}
           </div>
-          <div className="p-[6px] self-center">
-            <span className="text-[#65686c] text-[17px]">
-              Mô tả bản thân...
-            </span>
-          </div>
+          {!isAddBio ? (
+            <>
+              {currentUser?.bio ? (
+                <div className="mt-4">
+                  <p className="text-[#080809] text-[15px] text-center self-start">
+                    {currentUser?.bio.split("\n").map((line, index) => (
+                      <span key={index}>
+                        {line}
+                        <br />
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              ) : (
+                <div className="p-[6px] self-center">
+                  <span className="text-[#65686c] text-[17px]">
+                    Mô tả bản thân...
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col gap-1 mt-2 mx-auto w-[215px]">
+              <textarea
+                ref={bioRef}
+                className="w-full h-[80px] rounded-lg border border-solid border-[#d7dade] outline-none p-3 resize-none focus:border-black text-[15px]"
+                name="bio"
+                id="bio"
+                cols={36}
+                rows={5}
+                autoFocus
+                placeholder="Mô tả về bạn"
+                value={bioRef.current?.value}
+                onChange={(e) => {
+                  if (e.target.value.length > 101) {
+                    return;
+                  }
+                  setContentBio(e.target.value);
+                }}
+              ></textarea>
+              <span className="text-[#65686c] text-[13px] self-end">
+                {`Còn ${101 - contentBio.length} ký tự`}
+              </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <IoEarth size={20} />
+                  <span className="text-[#080809] text-[15px] whitespace-nowrap">
+                    Công khai
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className="bg-[#e2e5e9] hover:bg-[#d6d9dd] text-[#080809] text-[13px]"
+                    onClick={() => setIsAddBio(false)}
+                  >
+                    Huỷ
+                  </Button>
+                  <Button
+                    className="text-[13px] bg-blue-500 hover:bg-blue-600 text-white hover:text-white"
+                    onClick={handleSaveBio}
+                  >
+                    Lưu
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Chỉnh sửa phần giới thiệu */}
@@ -122,6 +266,15 @@ const EditPersonalPage = () => {
             <Button
               variant="ghost"
               className="hover:bg-[#F2F2F2] text-[#1D71CC] hover:text-[#1D71CC]"
+              onClick={() => {
+                dispatch(
+                  showModal({
+                    isShowModal: false,
+                    childrenModal: null,
+                  })
+                );
+                navigate(`/${path.PROFILE}?id=${currentUser!.id}&sk=about`);
+              }}
             >
               Thêm
             </Button>
